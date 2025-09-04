@@ -1,0 +1,330 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  BUYER
+  SELLER
+  CONVEYANCER
+  ADMIN
+}
+
+enum PropertyType {
+  HOUSE
+  APARTMENT
+  TOWNHOUSE
+  LAND
+  RURAL
+  COMMERCIAL
+}
+
+enum PropertyStatus {
+  DRAFT
+  REVIEW
+  LIVE
+  PAUSED
+  ARCHIVED
+  SOLD
+}
+
+enum BadgeType {
+  CONTRACT
+  SMOKE_ALARM
+  POOL_SAFETY
+  BUILDING_PEST
+  TITLE_SEARCH
+  PRO_PHOTOS
+}
+
+enum BadgeStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  VERIFIED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PartnerType {
+  CONVEYANCER
+  INSPECTOR
+  PHOTOGRAPHER
+}
+
+enum PartnerStatus {
+  ACTIVE
+  PAUSED
+  INACTIVE
+}
+
+model User {
+  id                String              @id @default(cuid())
+  email             String              @unique
+  emailVerified     Boolean             @default(false)
+  passwordHash      String?
+  role              UserRole
+  firstName         String
+  lastName          String
+  phone             String?
+  phoneVerified     Boolean             @default(false)
+  avatarUrl         String?
+  stripeCustomerId  String?
+  twoFactorEnabled  Boolean             @default(false)
+  twoFactorSecret   String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  lastLoginAt       DateTime?
+
+  // Relations
+  properties        Property[]          @relation("SellerProperties")
+  payments          Payment[]
+  messagesSent      Message[]           @relation("SentMessages")
+  messagethreads    MessageThread[]     @relation("BuyerThreads")
+  partnerProfile    Partner?
+  auditLogs         AuditLog[]
+  favourites        Property[]          @relation("FavouriteProperties")
+  
+  @@index([email])
+  @@index([role])
+}
+
+model Property {
+  id                String              @id @default(cuid())
+  sellerId          String
+  seller            User                @relation("SellerProperties", fields: [sellerId], references: [id])
+  
+  // Address details
+  streetAddress     String
+  suburb            String
+  state             String              @default("QLD")
+  postcode          String
+  country           String              @default("Australia")
+  latitude          Float?
+  longitude         Float?
+  
+  // Property details
+  propertyType      PropertyType
+  bedrooms          Int
+  bathrooms         Int
+  carSpaces         Int
+  landSizeM2        Int?
+  buildYear         Int?
+  
+  // Listing details
+  title             String
+  description       String
+  askingPrice       Int
+  settlementTerms   String?
+  inclusions        String[]
+  exclusions        String[]
+  keyFeatures       String[]
+  status            PropertyStatus      @default(DRAFT)
+  
+  // SEO
+  slug              String              @unique
+  
+  // Timestamps
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  publishedAt       DateTime?
+  soldAt            DateTime?
+  
+  // Relations
+  media             Media[]
+  badges            Badge[]
+  payments          Payment[]
+  messageThreads    MessageThread[]
+  viewings          PropertyViewing[]
+  auditLogs         AuditLog[]
+  favouritedBy      User[]              @relation("FavouriteProperties")
+  
+  @@index([sellerId])
+  @@index([suburb])
+  @@index([status])
+  @@index([askingPrice])
+  @@index([bedrooms])
+  @@index([slug])
+}
+
+model Media {
+  id                String              @id @default(cuid())
+  propertyId        String
+  property          Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  url               String
+  thumbnailUrl      String?
+  type              String              @default("photo") // photo, video
+  isHero            Boolean             @default(false)
+  caption           String?
+  order             Int
+  uploadedAt        DateTime            @default(now())
+  
+  @@index([propertyId])
+}
+
+model Badge {
+  id                String              @id @default(cuid())
+  propertyId        String
+  property          Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  type              BadgeType
+  status            BadgeStatus         @default(NOT_STARTED)
+  issuerName        String?
+  issuerId          String?
+  issuer            Partner?            @relation(fields: [issuerId], references: [id])
+  documentUrl       String?
+  watermarkedUrl    String?
+  verifiedAt        DateTime?
+  expiresAt         DateTime?
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  @@unique([propertyId, type])
+  @@index([propertyId])
+  @@index([status])
+}
+
+model Payment {
+  id                String              @id @default(cuid())
+  userId            String
+  user              User                @relation(fields: [userId], references: [id])
+  propertyId        String?
+  property          Property?           @relation(fields: [propertyId], references: [id])
+  amount            Int                 // Amount in cents
+  currency          String              @default("AUD")
+  status            PaymentStatus       @default(PENDING)
+  stripePaymentIntentId String?         @unique
+  stripeRefundId    String?
+  items             Json                // JSON array of purchased items
+  metadata          Json?
+  failureReason     String?
+  refundAmount      Int?
+  refundReason      String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  @@index([userId])
+  @@index([propertyId])
+  @@index([status])
+  @@index([stripePaymentIntentId])
+}
+
+model MessageThread {
+  id                String              @id @default(cuid())
+  propertyId        String
+  property          Property            @relation(fields: [propertyId], references: [id])
+  sellerId          String
+  buyerId           String
+  buyer             User                @relation("BuyerThreads", fields: [buyerId], references: [id])
+  contactShared     Boolean             @default(false)
+  sellerConsent     Boolean             @default(false)
+  buyerConsent      Boolean             @default(false)
+  lastMessageAt     DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relations
+  messages          Message[]
+  
+  @@unique([propertyId, buyerId])
+  @@index([propertyId])
+  @@index([sellerId])
+  @@index([buyerId])
+}
+
+model Message {
+  id                String              @id @default(cuid())
+  threadId          String
+  thread            MessageThread       @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderId          String
+  sender            User                @relation("SentMessages", fields: [senderId], references: [id])
+  body              String
+  maskedBody        String?             // PII-masked version
+  attachments       Json?               // JSON array of attachment URLs
+  isRead            Boolean             @default(false)
+  readAt            DateTime?
+  createdAt         DateTime            @default(now())
+  
+  @@index([threadId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model Partner {
+  id                String              @id @default(cuid())
+  userId            String              @unique
+  user              User                @relation(fields: [userId], references: [id])
+  type              PartnerType
+  businessName      String
+  abn               String
+  contactEmail      String
+  contactPhone      String
+  address           String?
+  licenseNumber     String?
+  licenseExpiry     DateTime?
+  insuranceProvider String?
+  insuranceExpiry   DateTime?
+  status            PartnerStatus       @default(ACTIVE)
+  commissionRate    Float               @default(0.2) // 20% default commission
+  servicesOffered   String[]
+  serviceAreas      String[]            // List of suburbs/regions
+  rating            Float?
+  totalJobs         Int                 @default(0)
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  
+  // Relations
+  badges            Badge[]
+  
+  @@index([type])
+  @@index([status])
+  @@index([businessName])
+}
+
+model PropertyViewing {
+  id                String              @id @default(cuid())
+  propertyId        String
+  property          Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  viewerIp          String?
+  viewerUserId      String?
+  userAgent         String?
+  referrer          String?
+  viewedAt          DateTime            @default(now())
+  
+  @@index([propertyId])
+  @@index([viewedAt])
+}
+
+model AuditLog {
+  id                String              @id @default(cuid())
+  actorUserId       String?
+  actor             User?               @relation(fields: [actorUserId], references: [id])
+  objectType        String              // e.g., "property", "user", "payment"
+  objectId          String
+  action            String              // e.g., "created", "updated", "deleted"
+  changes           Json?               // JSON diff of changes
+  metadata          Json?               // Additional context
+  ipAddress         String?
+  userAgent         String?
+  createdAt         DateTime            @default(now())
+  
+  property          Property?           @relation(fields: [objectId], references: [id])
+  
+  @@index([actorUserId])
+  @@index([objectType, objectId])
+  @@index([createdAt])
+}
