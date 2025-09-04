@@ -38,6 +38,7 @@ const steps = [
 
 export default function ListPropertyPage() {
   const [currentStep, setCurrentStep] = useState(1)
+  const [photos, setPhotos] = useState<File[]>([])
   const [contractStatus, setContractStatus] = useState<'not_started' | 'in_progress' | 'completed'>('not_started')
   
   const {
