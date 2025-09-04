@@ -20,6 +20,17 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      "@next/next/no-img-element": "off",
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }],
+      "react/no-unescaped-entities": "error"
+    }
+  }
 ];
 
 export default eslintConfig;

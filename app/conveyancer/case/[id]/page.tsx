@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { FileText, Upload, Download, CheckCircle, AlertCircle, User, Home, Mail, Phone, MapPin, Calendar, ArrowLeft, Save, Send } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { FileText, Upload, Download, CheckCircle, AlertCircle, User, Home, Mail, Phone, MapPin, Calendar, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -75,7 +75,6 @@ const mockCaseData: CaseDetails = {
 }
 
 export default function ConveyancerCaseDetailPage() {
-  const params = useParams()
   const router = useRouter()
   const [caseData, setCaseData] = useState(mockCaseData)
   const [contractFile, setContractFile] = useState<File | null>(null)

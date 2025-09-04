@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Home, DollarSign, Camera, FileText, Shield, MessageSquare, CheckCircle, ArrowRight, Clock, AlertCircle, TrendingUp, Users, Zap, Calculator } from 'lucide-react'
+import { Home, DollarSign, Camera, FileText, Shield, MessageSquare, CheckCircle, ArrowRight, Users, Zap, Calculator } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -29,7 +29,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "How do I handle property viewings?",
-    answer: "You're in complete control. Arrange viewings directly with interested buyers through our secure messaging system. Share your contact details only when you're ready."
+    answer: "You&apos;re in complete control. Arrange viewings directly with interested buyers through our secure messaging system. Share your contact details only when you&apos;re ready."
   },
   {
     question: "What if I need help during the sale process?",
@@ -146,8 +146,8 @@ export default function HowToSellPage() {
               <div className="ml-4 flex-1">
                 <h3 className="font-semibold text-xl mb-2">Prepare Your Documents</h3>
                 <p className="text-gray-600 mb-3">
-                  Before listing, you'll need a Contract of Sale. Our conveyancer partners can prepare this for you, 
-                  typically within 2-3 business days. You'll also want to gather:
+                  Before listing, you&apos;ll need a Contract of Sale. Our conveyancer partners can prepare this for you, 
+                  typically within 2-3 business days. You&apos;ll also want to gather:
                 </p>
                 <ul className="list-disc list-inside text-gray-600 space-y-1">
                   <li>Property title details</li>
@@ -218,7 +218,7 @@ export default function HowToSellPage() {
               <div className="ml-4 flex-1">
                 <h3 className="font-semibold text-xl mb-2">Connect with Buyers</h3>
                 <p className="text-gray-600 mb-3">
-                  Once live, interested buyers can message you through our secure platform. You're in control:
+                  Once live, interested buyers can message you through our secure platform. You&apos;re in control:
                 </p>
                 <ul className="list-disc list-inside text-gray-600 space-y-1">
                   <li>Messages are PII-masked until both parties consent to share contact details</li>
@@ -303,7 +303,7 @@ export default function HowToSellPage() {
             <div className="mt-8 text-center">
               <div className="bg-green-100 rounded-lg p-4 inline-block">
                 <p className="text-2xl font-bold text-green-800">You Save $20,250!</p>
-                <p className="text-green-700 mt-1">That's money in your pocket, not the agent's</p>
+                <p className="text-green-700 mt-1">That&apos;s money in your pocket, not the agent&apos;s</p>
               </div>
             </div>
           </div>
@@ -378,7 +378,7 @@ export default function HowToSellPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Save Thousands?</h2>
           <p className="text-xl mb-8">
-            Join hundreds of Queensland homeowners who've sold without agent commission.
+            Join hundreds of Queensland homeowners who&apos;ve sold without agent commission.
           </p>
           <div className="flex justify-center space-x-4">
             <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100" asChild>

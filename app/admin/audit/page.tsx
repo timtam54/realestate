@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Activity, User, Home, DollarSign, Shield, FileText, AlertCircle, Search, Filter, Calendar, Download, Eye } from 'lucide-react'
+import { Activity, User, Home, DollarSign, Shield, FileText, Search, Download, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -20,10 +20,10 @@ interface AuditLog {
   objectId: string
   objectName: string
   details: {
-    before?: any
-    after?: any
+    before?: Record<string, unknown>
+    after?: Record<string, unknown>
     reason?: string
-    metadata?: any
+    metadata?: Record<string, unknown>
   }
   severity: 'info' | 'warning' | 'critical'
 }

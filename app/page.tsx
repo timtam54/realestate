@@ -1,14 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Home, Shield, DollarSign, CheckCircle, Building2, MapPin, Bed, Bath, Car, Camera } from 'lucide-react'
+import { Search, Home, Shield, CheckCircle, Building2, MapPin, Bed, Bath, Car, Camera } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedSuburb, setSelectedSuburb] = useState('')
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' })
   const [beds, setBeds] = useState('')
   const [baths, setBaths] = useState('')
 
@@ -281,7 +278,7 @@ export default function HomePage() {
               </div>
               <h3 className="font-semibold text-lg mb-2">Connect with Buyers</h3>
               <p className="text-gray-600">
-                Receive messages through our secure platform. Share contact details only when you're ready.
+                Receive messages through our secure platform. Share contact details only when you&apos;re ready.
               </p>
             </div>
           </div>

@@ -38,16 +38,12 @@ const steps = [
 
 export default function ListPropertyPage() {
   const [currentStep, setCurrentStep] = useState(1)
-  const [photos, setPhotos] = useState<File[]>([])
-  const [heroPhotoIndex, setHeroPhotoIndex] = useState(0)
   const [contractStatus, setContractStatus] = useState<'not_started' | 'in_progress' | 'completed'>('not_started')
   
   const {
     register,
     handleSubmit,
     formState: { errors },
-    watch,
-    setValue,
   } = useForm<PropertyFormData>({
     resolver: zodResolver(propertySchema),
     defaultValues: {

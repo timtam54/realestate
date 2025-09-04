@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useParams } from 'next/navigation'
 import { MapPin, Bed, Bath, Car, Home, Shield, CheckCircle, Camera, Heart, Share2, MessageSquare, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
@@ -63,7 +62,6 @@ const badgeInfo = {
 }
 
 export default function PropertyDetailPage() {
-  const params = useParams()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [showContactForm, setShowContactForm] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)

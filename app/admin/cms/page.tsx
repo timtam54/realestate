@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Save, Eye, Edit2, Plus, Trash2, GripVertical, Image } from 'lucide-react'
+import { FileText, Save, Plus, Trash2, GripVertical } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 

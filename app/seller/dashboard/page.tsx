@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Home, Eye, MessageSquare, Edit, Pause, Archive, TrendingUp, DollarSign, Calendar, BarChart3, X, Bed, Bath, Car, MapPin } from 'lucide-react'
+import { Plus, Home, Eye, MessageSquare, Edit, Pause, TrendingUp, DollarSign, Calendar, BarChart3, X, Bed, Bath, Car } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -370,7 +370,7 @@ export default function SellerDashboardPage() {
           {listings.length === 0 && (
             <div className="text-center py-12">
               <Home className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 mb-4">You don't have any listings yet</p>
+              <p className="text-gray-500 mb-4">You don&apos;t have any listings yet</p>
               <Button asChild>
                 <Link href="/seller/list-property">
                   <Plus className="h-4 w-4 mr-2" />

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FileText, Clock, CheckCircle, AlertCircle, Calendar, User, Home, Filter, Download, Upload } from 'lucide-react'
+import { FileText, Clock, CheckCircle, AlertCircle, Calendar, User, Filter, Download } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -88,7 +88,7 @@ const priorityConfig = {
 }
 
 export default function ConveyancerQueuePage() {
-  const [cases, setCases] = useState(mockCases)
+  const [cases] = useState(mockCases)
   const [filterStatus, setFilterStatus] = useState('all')
   const [filterPriority, setFilterPriority] = useState('all')
 
