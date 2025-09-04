@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Home, Eye, MessageSquare, Edit, Pause, Archive, TrendingUp, DollarSign, Calendar, BarChart3 } from 'lucide-react'
+import { Plus, Home, Eye, MessageSquare, Edit, Pause, Archive, TrendingUp, DollarSign, Calendar, BarChart3, X, Bed, Bath, Car, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -9,7 +9,17 @@ interface Listing {
   id: string
   title: string
   address: string
+  suburb?: string
+  state?: string
+  postcode?: string
   price: number
+  propertyType?: string
+  bedrooms?: number
+  bathrooms?: number
+  carSpaces?: number
+  landSize?: number
+  description?: string
+  features?: string[]
   status: 'draft' | 'review' | 'live' | 'paused' | 'sold'
   views: number
   inquiries: number
@@ -22,7 +32,17 @@ const mockListings: Listing[] = [
     id: '1',
     title: 'Modern Family Home in Edge Hill',
     address: '42 Sunset Drive, Edge Hill',
+    suburb: 'Edge Hill',
+    state: 'QLD',
+    postcode: '4870',
     price: 750000,
+    propertyType: 'house',
+    bedrooms: 4,
+    bathrooms: 2,
+    carSpaces: 2,
+    landSize: 800,
+    description: 'Beautiful modern family home with stunning views and spacious living areas. Perfect for growing families.',
+    features: ['Pool', 'Air Conditioning', 'Solar Panels', 'Security System'],
     status: 'live',
     views: 234,
     inquiries: 12,
@@ -33,7 +53,16 @@ const mockListings: Listing[] = [
     id: '2',
     title: 'Investment Property in Townsville',
     address: '88 Harbor View, Townsville',
+    suburb: 'Townsville',
+    state: 'QLD',
+    postcode: '4810',
     price: 425000,
+    propertyType: 'apartment',
+    bedrooms: 2,
+    bathrooms: 1,
+    carSpaces: 1,
+    description: 'Great investment opportunity in the heart of Townsville. Currently tenanted with excellent rental returns.',
+    features: ['Balcony', 'City Views', 'Secure Parking'],
     status: 'draft',
     views: 0,
     inquiries: 0,
@@ -52,6 +81,58 @@ const statusColors = {
 
 export default function SellerDashboardPage() {
   const [listings, setListings] = useState(mockListings)
+  const [editingListing, setEditingListing] = useState<Listing | null>(null)
+  const [formData, setFormData] = useState<Partial<Listing>>({})
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
+
+  const availableFeatures = [
+    'Pool', 'Air Conditioning', 'Solar Panels', 'Security System',
+    'Balcony', 'Garden', 'Garage', 'Dishwasher', 'Study',
+    'Ensuite', 'Built-in Robes', 'Courtyard', 'Deck', 'Heating'
+  ]
+
+  const openEditDialog = (listing: Listing) => {
+    setEditingListing(listing)
+    setFormData(listing)
+    setSelectedFeatures(listing.features || [])
+  }
+
+  const closeEditDialog = () => {
+    setEditingListing(null)
+    setFormData({})
+    setSelectedFeatures([])
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'price' || name === 'bedrooms' || name === 'bathrooms' || name === 'carSpaces' || name === 'landSize' 
+        ? parseInt(value) || 0 
+        : value
+    }))
+  }
+
+  const toggleFeature = (feature: string) => {
+    setSelectedFeatures(prev =>
+      prev.includes(feature)
+        ? prev.filter(f => f !== feature)
+        : [...prev, feature]
+    )
+  }
+
+  const handleSave = () => {
+    if (editingListing) {
+      setListings(prev =>
+        prev.map(listing =>
+          listing.id === editingListing.id
+            ? { ...listing, ...formData, features: selectedFeatures }
+            : listing
+        )
+      )
+      closeEditDialog()
+    }
+  }
 
   const stats = {
     totalListings: listings.length,
@@ -214,7 +295,7 @@ export default function SellerDashboardPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {listings.map((listing) => (
-                  <tr key={listing.id} className="hover:bg-gray-50">
+                  <tr key={listing.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => openEditDialog(listing)}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <img
@@ -257,13 +338,25 @@ export default function SellerDashboardPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button 
+                          className="text-blue-600 hover:text-blue-900"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            openEditDialog(listing)
+                          }}
+                        >
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button className="text-orange-600 hover:text-orange-900">
+                        <button 
+                          className="text-orange-600 hover:text-orange-900"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <Pause className="h-4 w-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          className="text-gray-600 hover:text-gray-900"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <BarChart3 className="h-4 w-4" />
                         </button>
                       </div>
@@ -287,6 +380,268 @@ export default function SellerDashboardPage() {
             </div>
           )}
         </div>
+
+        {/* Edit Listing Dialog */}
+        {editingListing && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold">Edit Listing</h2>
+                  <button
+                    onClick={closeEditDialog}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Property Details */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Property Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Property Title
+                      </label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={formData.title || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Property Type
+                      </label>
+                      <select
+                        name="propertyType"
+                        value={formData.propertyType || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select type</option>
+                        <option value="house">House</option>
+                        <option value="apartment">Apartment</option>
+                        <option value="townhouse">Townhouse</option>
+                        <option value="land">Land</option>
+                        <option value="rural">Rural</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Street Address
+                      </label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={formData.address || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Suburb
+                      </label>
+                      <input
+                        type="text"
+                        name="suburb"
+                        value={formData.suburb || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        State
+                      </label>
+                      <select
+                        name="state"
+                        value={formData.state || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select state</option>
+                        <option value="QLD">Queensland</option>
+                        <option value="NSW">New South Wales</option>
+                        <option value="VIC">Victoria</option>
+                        <option value="SA">South Australia</option>
+                        <option value="WA">Western Australia</option>
+                        <option value="TAS">Tasmania</option>
+                        <option value="NT">Northern Territory</option>
+                        <option value="ACT">ACT</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Postcode
+                      </label>
+                      <input
+                        type="text"
+                        name="postcode"
+                        value={formData.postcode || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Property Features */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Property Features</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Bed className="inline h-4 w-4 mr-1" />
+                        Bedrooms
+                      </label>
+                      <input
+                        type="number"
+                        name="bedrooms"
+                        value={formData.bedrooms || ''}
+                        onChange={handleInputChange}
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Bath className="inline h-4 w-4 mr-1" />
+                        Bathrooms
+                      </label>
+                      <input
+                        type="number"
+                        name="bathrooms"
+                        value={formData.bathrooms || ''}
+                        onChange={handleInputChange}
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Car className="inline h-4 w-4 mr-1" />
+                        Car Spaces
+                      </label>
+                      <input
+                        type="number"
+                        name="carSpaces"
+                        value={formData.carSpaces || ''}
+                        onChange={handleInputChange}
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <Home className="inline h-4 w-4 mr-1" />
+                        Land Size (m²)
+                      </label>
+                      <input
+                        type="number"
+                        name="landSize"
+                        value={formData.landSize || ''}
+                        onChange={handleInputChange}
+                        min="0"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Additional Features
+                    </label>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {availableFeatures.map((feature) => (
+                        <label
+                          key={feature}
+                          className="flex items-center space-x-2 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedFeatures.includes(feature)}
+                            onChange={() => toggleFeature(feature)}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm">{feature}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pricing */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Pricing</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Asking Price
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                        <input
+                          type="number"
+                          name="price"
+                          value={formData.price || ''}
+                          onChange={handleInputChange}
+                          className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Listing Status
+                      </label>
+                      <select
+                        name="status"
+                        value={formData.status || ''}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="draft">Draft</option>
+                        <option value="review">Under Review</option>
+                        <option value="live">Live</option>
+                        <option value="paused">Paused</option>
+                        <option value="sold">Sold</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Description</h3>
+                  <textarea
+                    name="description"
+                    value={formData.description || ''}
+                    onChange={handleInputChange}
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Describe your property..."
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-6 border-t">
+                  <Button variant="outline" onClick={closeEditDialog}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSave}>
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
