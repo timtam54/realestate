@@ -242,7 +242,7 @@ export default function HowToSellPage() {
                 <ul className="list-disc list-inside text-gray-600 space-y-1">
                   <li>Handle contract negotiations and amendments</li>
                   <li>Manage the settlement process</li>
-                  <li>Coordinate with the buyer's representatives</li>
+                  <li>Coordinate with the buyer&apos;s representatives</li>
                   <li>Ensure all legal requirements are met</li>
                 </ul>
               </div>
@@ -320,7 +320,7 @@ export default function HowToSellPage() {
               <h3 className="font-semibold text-lg mb-2">Professional Photography</h3>
               <p className="text-gray-600 mb-4">
                 High-quality photos can increase interest by up to 40%. Our verified photographers know how to 
-                showcase your property's best features.
+                showcase your property&apos;s best features.
               </p>
               <p className="text-2xl font-bold text-blue-600">From $350</p>
             </div>

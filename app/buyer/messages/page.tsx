@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MessageSquare, Send, Phone, Mail, MapPin, Calendar, Clock, CheckCircle, Lock, Unlock, AlertCircle, Home, User, ChevronLeft } from 'lucide-react'
+import { MessageSquare, Send, Lock, Unlock, AlertCircle, Home } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -362,7 +362,7 @@ export default function BuyerMessagesPage() {
                         <AlertCircle className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" />
                         <div className="text-sm text-yellow-800">
                           <p className="font-medium">Contact details are hidden</p>
-                          <p>Phone numbers and emails are masked for your safety. Click "Share Contact" when you're ready to exchange details.</p>
+                          <p>Phone numbers and emails are masked for your safety. Click &ldquo;Share Contact&rdquo; when you&apos;re ready to exchange details.</p>
                         </div>
                       </div>
                     </div>
@@ -406,7 +406,7 @@ export default function BuyerMessagesPage() {
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800">
-                    By sharing your contact information, the seller will be able to see your phone number and email address. Only share when you're comfortable doing so.
+                    By sharing your contact information, the seller will be able to see your phone number and email address. Only share when you&apos;re comfortable doing so.
                   </p>
                 </div>
 
@@ -428,7 +428,7 @@ export default function BuyerMessagesPage() {
                 {selectedThread.sellerConsent && !selectedThread.buyerConsent && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <p className="text-sm text-green-800">
-                      The seller has already agreed to share their contact information. Once you agree, both parties will see each other's details.
+                      The seller has already agreed to share their contact information. Once you agree, both parties will see each other&apos;s details.
                     </p>
                   </div>
                 )}
