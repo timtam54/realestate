@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BarChart3, Users, Home, DollarSign, FileText, TrendingUp, Shield, AlertCircle, Activity, UserCheck } from 'lucide-react'
+import { Users, Home, DollarSign, FileText, TrendingUp, Shield, AlertCircle, Activity, UserCheck } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 

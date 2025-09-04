@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Home, Mail, Lock, Eye, EyeOff, UserPlus } from 'lucide-react'
+import { Home, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -237,7 +237,7 @@ export default function SignInPage() {
           {/* Sign up link */}
           <div className="mt-6">
             <div className="text-center text-sm">
-              <span className="text-gray-600">Don't have an account?</span>{' '}
+              <span className="text-gray-600">Don&apos;t have an account?</span>{' '}
               <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign up now
               </Link>

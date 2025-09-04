@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Users, FileText, Camera, Shield, CheckCircle, XCircle, Clock, Edit, DollarSign, Percent, MapPin } from 'lucide-react'
+import { Users, FileText, Camera, Shield, CheckCircle, XCircle, Clock, Edit, DollarSign, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 

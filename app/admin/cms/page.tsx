@@ -139,7 +139,6 @@ export default function AdminCMSPage() {
   const [activeTab, setActiveTab] = useState<'homepage' | 'faqs' | 'terms' | 'privacy'>('homepage')
   const [editingFAQ, setEditingFAQ] = useState<string | null>(null)
   const [newFAQ, setNewFAQ] = useState({ question: '', answer: '', category: 'General' })
-  const [showPreview, setShowPreview] = useState(false)
   const [unsavedChanges, setUnsavedChanges] = useState(false)
 
   const handleSave = () => {
@@ -149,7 +148,7 @@ export default function AdminCMSPage() {
     alert('Content saved successfully!')
   }
 
-  const updateHomepage = (field: string, value: any) => {
+  const updateHomepage = (field: string, value: string | string[]) => {
     setContent({
       ...content,
       homepage: {

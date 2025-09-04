@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Home, Eye, Edit, Pause, Trash2, Star, AlertCircle, CheckCircle, Clock, Search, Filter, MoreVertical } from 'lucide-react'
+import { Home, Eye, Pause, Trash2, Star, AlertCircle, CheckCircle, Clock, Search, Filter, MoreVertical } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/app/components/ui/button'
 
@@ -401,7 +401,7 @@ export default function AdminListingsPage() {
             <div className="bg-white rounded-lg p-6 max-w-md">
               <h3 className="text-lg font-semibold mb-4">Confirm Action</h3>
               <p className="text-gray-600 mb-4">
-                Are you sure you want to unlist "{showConfirmDialog.listing.title}"? This action will be logged in the audit trail.
+                Are you sure you want to unlist &ldquo;{showConfirmDialog.listing.title}&rdquo;? This action will be logged in the audit trail.
               </p>
               <div className="flex justify-end space-x-3">
                 <Button variant="outline" onClick={() => setShowConfirmDialog(null)}>
