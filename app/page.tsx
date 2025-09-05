@@ -95,7 +95,7 @@ export default function HomePage() {
                 <option value="conveyancer">Conveyancer</option>
                 <option value="admin">Admin</option>
               </select>
-            </div>
+            </div> 
           </div>
         </div>
       </header>
