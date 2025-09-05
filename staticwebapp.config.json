@@ -1,0 +1,7 @@
+{
+  "buildProperties": {
+    "appBuildCommand": "npm run build",
+    "apiBuildCommand": "npm run build",
+    "skipGithubActionWorkflowGeneration": true
+  }
+}
