@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { FileText, Clock, CheckCircle, AlertCircle, Calendar, User, Filter, Download } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 interface ContractCase {
   id: string

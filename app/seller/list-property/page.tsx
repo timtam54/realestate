@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { ChevronRight, ChevronLeft, Home, DollarSign, Camera, Shield, CreditCard, CheckCircle } from 'lucide-react'
-import { Button } from '@/app/components/ui/button'
 import Link from 'next/link'
 
 const propertySchema = z.object({

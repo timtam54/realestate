@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FileText, Upload, Download, CheckCircle, AlertCircle, User, Home, Mail, Phone, MapPin, Calendar, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 interface CaseDetails {
   id: string

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Home, Eye, MessageSquare, Edit, Pause, TrendingUp, DollarSign, Calendar, BarChart3, X, Bed, Bath, Car } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
+import Login from '@/components/Login'
 
 interface Listing {
   id: string
@@ -80,10 +81,49 @@ const statusColors = {
 }
 
 export default function SellerDashboardPage() {
+  const { isAuthenticated, isLoading } = useAuth()
+  const [showLogin, setShowLogin] = useState(false)
   const [listings, setListings] = useState(mockListings)
   const [editingListing, setEditingListing] = useState<Listing | null>(null)
   const [formData, setFormData] = useState<Partial<Listing>>({})
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      setShowLogin(true)
+    }
+  }, [isAuthenticated, isLoading])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF6600]"></div>
+          <p className="mt-2 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <>
+        {showLogin && <Login onClose={() => window.location.href = '/'} />}
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-[#333333] mb-4">Authentication Required</h2>
+            <p className="text-gray-600 mb-6">Please sign in to access your seller dashboard</p>
+            <button
+              onClick={() => setShowLogin(true)}
+              className="bg-[#FF6600] text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition-colors font-medium"
+            >
+              Sign In to Continue
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   const availableFeatures = [
     'Pool', 'Air Conditioning', 'Solar Panels', 'Security System',

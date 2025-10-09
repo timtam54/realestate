@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Users, User, Mail, Phone, Home, DollarSign, MessageSquare, Search, Filter, Ban, UserCheck, Eye } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 interface UserData {
   id: string

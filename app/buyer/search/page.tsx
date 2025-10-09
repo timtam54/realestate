@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Search, MapPin, Bed, Bath, Car, Home, Filter, Heart, Shield, CheckCircle, Camera } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 interface Property {
   id: string

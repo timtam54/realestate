@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { DollarSign, CreditCard, RefreshCcw, AlertCircle, Download, Search } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 interface StripeTransaction {
   id: string

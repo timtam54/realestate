@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { MessageSquare, Send, Lock, Unlock, AlertCircle, Home } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 interface Message {
   id: string

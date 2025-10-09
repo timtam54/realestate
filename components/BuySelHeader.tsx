@@ -2,11 +2,25 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Home, User, ListPlus, Search, Briefcase, Settings } from 'lucide-react'
+import { Home, User, ListPlus, Search, Briefcase, Settings, LogOut } from 'lucide-react'
+import { signOut } from 'next-auth/react'
+import { useState } from 'react'
+import Login from './Login'
 
-export default function BuySelHeader() {
+interface BuySelHeaderProps {
+  user: {
+    name?: string | null
+    email?: string | null
+    image?: string | null
+  } | null
+  isAuthenticated: boolean
+}
+
+export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProps) {
+  const [showLogin, setShowLogin] = useState(false)
   return (
-    <header className="bg-gradient-to-r from-orange-50 via-white to-orange-50 shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
+    <>
+      <header className="bg-gradient-to-r from-orange-50 via-white to-orange-50 shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center group">
@@ -39,13 +53,35 @@ export default function BuySelHeader() {
             </Link>
           </nav>
           <div className="flex items-center space-x-3">
-            <Link 
-              href="/auth/signin" 
-              className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-4 py-2.5 rounded-lg transition-all font-medium border border-gray-300 hover:border-[#FF6600] hover:bg-orange-50"
-            >
-              <User className="w-4 h-4" />
-              <span>Sign In</span>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center gap-2 text-[#333333] px-3">
+                  {user?.image && (
+                    <img 
+                      src={user.image} 
+                      alt={user.name || 'User'} 
+                      className="w-8 h-8 rounded-full"
+                    />
+                  )}
+                  <span className="font-medium">{user?.name || user?.email}</span>
+                </div>
+                <button
+                  onClick={() => signOut()}
+                  className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-4 py-2.5 rounded-lg transition-all font-medium border border-gray-300 hover:border-[#FF6600] hover:bg-orange-50"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setShowLogin(true)}
+                className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-4 py-2.5 rounded-lg transition-all font-medium border border-gray-300 hover:border-[#FF6600] hover:bg-orange-50"
+              >
+                <User className="w-4 h-4" />
+                <span>Sign In</span>
+              </button>
+            )}
             <Link 
               href="/seller/list-property" 
               className="flex items-center gap-2 bg-gradient-to-r from-[#FF6600] to-[#FF5500] text-white px-5 py-2.5 rounded-lg hover:from-[#FF5500] hover:to-[#FF4400] transition-all font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
@@ -74,5 +110,7 @@ export default function BuySelHeader() {
         </div>
       </div>
     </header>
+      {showLogin && <Login onClose={() => setShowLogin(false)} />}
+    </>
   )
 }

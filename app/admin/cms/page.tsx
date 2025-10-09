@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { FileText, Save, Plus, Trash2, GripVertical } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 interface CMSContent {
   homepage: {

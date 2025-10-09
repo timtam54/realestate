@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { MapPin, Bed, Bath, Car, Home, Shield, CheckCircle, Camera, Heart, Share2, MessageSquare, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 // Mock property data
 const propertyData = {

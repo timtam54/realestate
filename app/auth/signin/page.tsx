@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Home, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 export default function SignInPage() {
   const router = useRouter()
@@ -37,14 +36,14 @@ export default function SignInPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link href="/" className="flex justify-center">
-          <Home className="h-12 w-12 text-blue-600" />
+          <Home className="h-12 w-12 text-[#FF6600]" />
         </Link>
         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
           Sign in to your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
           Or{' '}
-          <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/auth/signup" className="font-medium text-[#FF6600] hover:text-orange-700">
             create a new account
           </Link>
         </p>
@@ -112,7 +111,7 @@ export default function SignInPage() {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   placeholder="you@example.com"
                 />
               </div>
@@ -135,7 +134,7 @@ export default function SignInPage() {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="appearance-none block w-full pl-10 pr-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="appearance-none block w-full pl-10 pr-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500"
                   placeholder="••••••••"
                 />
                 <button
@@ -175,13 +174,13 @@ export default function SignInPage() {
 
             {/* Submit Button */}
             <div>
-              <Button
+              <button
                 type="submit"
-                className="w-full"
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#FF6600] hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 disabled={isLoading}
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
-              </Button>
+              </button>
             </div>
           </form>
 
@@ -238,7 +237,7 @@ export default function SignInPage() {
           <div className="mt-6">
             <div className="text-center text-sm">
               <span className="text-gray-600">Don&apos;t have an account?</span>{' '}
-              <Link href="/auth/signup" className="font-medium text-blue-600 hover:text-blue-500">
+              <Link href="/auth/signup" className="font-medium text-[#FF6600] hover:text-orange-700">
                 Sign up now
               </Link>
             </div>

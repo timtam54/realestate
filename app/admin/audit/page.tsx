@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Activity, User, Home, DollarSign, Shield, FileText, Search, Download, Eye } from 'lucide-react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
 
 interface AuditLog {
   id: string

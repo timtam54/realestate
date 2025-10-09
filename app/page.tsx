@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { Search, Home, Shield, CheckCircle, MapPin, Bed, Bath, Car, Camera } from 'lucide-react'
 import Link from 'next/link'
 import BuySelHeader from '@/components/BuySelHeader'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [beds, setBeds] = useState('')
   const [baths, setBaths] = useState('')
+  const { user, isAuthenticated } = useAuth()
 
   const featuredListings = [
     {
@@ -63,10 +65,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <BuySelHeader />
+      <BuySelHeader user={user} isAuthenticated={isAuthenticated} />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-[#FF6600] to-orange-800 text-white py-20">
+      <section className="bg-gradient-to-r from-[#FF6600] to-orange-600 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Sell your house. Keep your price.
