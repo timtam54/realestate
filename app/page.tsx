@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Home, Shield, CheckCircle, Building2, MapPin, Bed, Bath, Car, Camera } from 'lucide-react'
+import { Search, Home, Shield, CheckCircle, MapPin, Bed, Bath, Car, Camera } from 'lucide-react'
 import Link from 'next/link'
+import BuySelHeader from '@/components/BuySelHeader'
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -62,46 +63,10 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Building2 className="h-8 w-8 text-blue-600 mr-2" />
-              <span className="font-bold text-xl">Real Estate Matchmaker</span>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <Link href="/buyer/search" className="text-gray-700 hover:text-blue-600">Buy</Link>
-              <Link href="/seller/dashboard" className="text-gray-700 hover:text-blue-600">Sell</Link>
-              <Link href="#how-it-works" className="text-gray-700 hover:text-blue-600">How it Works</Link>
-              <Link href="#contact" className="text-gray-700 hover:text-blue-600">Contact</Link>
-            </nav>
-            <div className="flex items-center space-x-4">
-              <Link href="/auth/signin" className="text-gray-700 hover:text-blue-600 px-4 py-2">Sign In</Link>
-              <Link href="/seller/list-property" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 inline-flex items-center">
-                List Property
-              </Link>
-              <select 
-                onChange={(e) => {
-                  if (e.target.value === 'conveyancer') {
-                    window.location.href = '/conveyancer/queue'
-                  } else if (e.target.value === 'admin') {
-                    window.location.href = '/admin/dashboard'
-                  }
-                }}
-                className="px-3 py-2 bg-red-300 text-red-800 border border-red-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
-              >
-                <option value="buyer-seller">Buyer/Seller</option>
-                <option value="conveyancer">Conveyancer</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div> 
-          </div>
-        </div>
-      </header>
+      <BuySelHeader />
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20">
+      <section className="bg-gradient-to-r from-[#FF6600] to-orange-800 text-white py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Sell your house. Keep your price.
@@ -119,13 +84,13 @@ export default function HomePage() {
                   placeholder="Suburb or postcode"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                 />
               </div>
               <select
                 value={beds}
                 onChange={(e) => setBeds(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
               >
                 <option value="">Beds</option>
                 <option value="1">1+</option>
@@ -137,7 +102,7 @@ export default function HomePage() {
               <select
                 value={baths}
                 onChange={(e) => setBaths(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
               >
                 <option value="">Baths</option>
                 <option value="1">1+</option>
@@ -146,7 +111,7 @@ export default function HomePage() {
               </select>
               <Link 
                 href={`/buyer/search?q=${searchQuery}&beds=${beds}&baths=${baths}`}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center justify-center"
+                className="bg-[#FF6600] text-white px-6 py-2 rounded-lg hover:bg-orange-700 flex items-center justify-center"
               >
                 <Search className="h-5 w-5 mr-2" />
                 Search
@@ -170,7 +135,7 @@ export default function HomePage() {
                 <div className="bg-green-100 rounded-full p-4 w-16 h-16 mx-auto mb-2 flex items-center justify-center">
                   <Icon className="h-8 w-8 text-green-600" />
                 </div>
-                <p className="text-sm text-gray-700">{label}</p>
+                <p className="text-sm text-[#333333]">{label}</p>
               </div>
             ))}
           </div>
@@ -182,7 +147,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold">Featured Properties</h2>
-            <Link href="/buyer/search" className="text-blue-600 hover:text-blue-700">
+            <Link href="/buyer/search" className="text-[#FF6600] hover:text-orange-700">
               View all properties →
             </Link>
           </div>
@@ -197,7 +162,7 @@ export default function HomePage() {
                       className="w-full h-full object-cover"
                     />
                     {listing.featured && (
-                      <span className="absolute top-4 left-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm">
+                      <span className="absolute top-4 left-4 bg-[#FF6600] text-white px-3 py-1 rounded-full text-sm">
                         Featured
                       </span>
                     )}
@@ -211,7 +176,7 @@ export default function HomePage() {
                       <MapPin className="h-4 w-4 mr-1" />
                       {listing.address}
                     </p>
-                    <div className="flex items-center space-x-4 text-gray-700 text-sm mb-3">
+                    <div className="flex items-center space-x-4 text-[#333333] text-sm mb-3">
                       <span className="flex items-center">
                         <Bed className="h-4 w-4 mr-1" />
                         {listing.beds}
@@ -255,8 +220,8 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="bg-blue-100 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl font-bold text-blue-600">1</span>
+              <div className="bg-orange-100 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <span className="text-2xl font-bold text-[#FF6600]">1</span>
               </div>
               <h3 className="font-semibold text-lg mb-2">List Your Property</h3>
               <p className="text-gray-600">
@@ -264,8 +229,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="bg-blue-100 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl font-bold text-blue-600">2</span>
+              <div className="bg-orange-100 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <span className="text-2xl font-bold text-[#FF6600]">2</span>
               </div>
               <h3 className="font-semibold text-lg mb-2">Get Verified</h3>
               <p className="text-gray-600">
@@ -273,8 +238,8 @@ export default function HomePage() {
               </p>
             </div>
             <div className="text-center">
-              <div className="bg-blue-100 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                <span className="text-2xl font-bold text-blue-600">3</span>
+              <div className="bg-orange-100 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <span className="text-2xl font-bold text-[#FF6600]">3</span>
               </div>
               <h3 className="font-semibold text-lg mb-2">Connect with Buyers</h3>
               <p className="text-gray-600">
@@ -286,13 +251,13 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-blue-600 text-white">
+      <section className="py-16 bg-[#FF6600] text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to sell without commission?</h2>
           <p className="text-xl mb-8">
             List your property for a flat $500 fee. No hidden costs, no percentage commissions.
           </p>
-          <Link href="/seller/list-property" className="inline-block bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+          <Link href="/seller/list-property" className="inline-block bg-white text-[#FF6600] px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
             Start Listing Now
           </Link>
         </div>
@@ -303,7 +268,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="font-semibold mb-4">Real Estate Matchmaker</h3>
+              <h3 className="font-semibold mb-4">BuySel</h3>
               <p className="text-gray-400 text-sm">
                 Verified property. No commission. Serving North Queensland.
               </p>
@@ -334,7 +299,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-400">
-            © 2024 Real Estate Matchmaker. All rights reserved.
+            © 2024 BuySel. All rights reserved.
           </div>
         </div>
       </footer>

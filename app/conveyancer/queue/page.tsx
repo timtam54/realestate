@@ -114,7 +114,7 @@ export default function ConveyancerQueuePage() {
             <Link href="/" className="flex items-center">
               <FileText className="h-8 w-8 text-blue-600 mr-2" />
               <div>
-                <span className="font-bold text-xl">Real Estate Matchmaker</span>
+                <span className="font-bold text-xl">BuySel</span>
                 <span className="text-sm text-gray-600 block">Conveyancer Portal</span>
               </div>
             </Link>

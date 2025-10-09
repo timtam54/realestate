@@ -100,10 +100,10 @@ const mockCMSContent: CMSContent = {
     content: `# Terms and Conditions
 
 ## 1. Acceptance of Terms
-By accessing and using Real Estate Matchmaker, you accept and agree to be bound by these Terms and Conditions.
+By accessing and using BuySel, you accept and agree to be bound by these Terms and Conditions.
 
 ## 2. Service Description
-Real Estate Matchmaker provides a platform for property sellers to list properties without traditional real estate agent commissions.
+BuySel provides a platform for property sellers to list properties without traditional real estate agent commissions.
 
 ## 3. Fees and Payments
 - Listing fee: $500 (non-refundable except as outlined in our refund policy)

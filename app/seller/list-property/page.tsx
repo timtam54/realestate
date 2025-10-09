@@ -79,7 +79,7 @@ export default function ListPropertyPage() {
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center">
               <Home className="h-6 w-6 text-blue-600 mr-2" />
-              <span className="font-semibold">Real Estate Matchmaker</span>
+              <span className="font-semibold">BuySel</span>
             </Link>
             <Button variant="outline" asChild>
               <Link href="/seller/dashboard">Back to Dashboard</Link>

@@ -48,7 +48,7 @@ export default function HowToSellPage() {
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center">
               <Home className="h-8 w-8 text-blue-600 mr-2" />
-              <span className="font-bold text-xl">Real Estate Matchmaker</span>
+              <span className="font-bold text-xl">BuySel</span>
             </Link>
             <nav className="flex items-center space-x-4">
               <Link href="/seller/dashboard" className="text-gray-700 hover:text-blue-600">
@@ -91,7 +91,7 @@ export default function HowToSellPage() {
       {/* Why Choose Us */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Why Sell with Real Estate Matchmaker?</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Why Sell with BuySel?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="bg-blue-100 rounded-full p-6 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
@@ -279,7 +279,7 @@ export default function HowToSellPage() {
                 </div>
               </div>
               <div>
-                <h3 className="font-semibold text-lg mb-4">Real Estate Matchmaker</h3>
+                <h3 className="font-semibold text-lg mb-4">BuySel</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Sale Price:</span>
@@ -404,7 +404,7 @@ export default function HowToSellPage() {
       <footer className="bg-gray-800 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-400">
-            © 2024 Real Estate Matchmaker. Helping Queensland homeowners sell smarter.
+            © 2024 BuySel. Helping Queensland homeowners sell smarter.
           </p>
         </div>
       </footer>

@@ -56,7 +56,7 @@ export default function AdminDashboardPage() {
               <Shield className="h-8 w-8 text-red-500 mr-2" />
               <div>
                 <span className="font-bold text-xl">Admin Console</span>
-                <span className="text-sm text-gray-400 block">Real Estate Matchmaker</span>
+                <span className="text-sm text-gray-400 block">BuySel</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
