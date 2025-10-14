@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Plus, MapPin, List, Map } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
@@ -19,10 +19,41 @@ interface Property {
 
 declare global {
   interface Window {
-    google: any
+    google?: {
+      maps?: {
+        Map: new (element: HTMLElement, options?: unknown) => GoogleMap
+        LatLngBounds: new () => LatLngBounds
+        Marker: new (options?: unknown) => GoogleMarker
+        InfoWindow: new (options?: unknown) => GoogleInfoWindow
+        Size: new (width: number, height: number) => GoogleSize
+        Point: new (x: number, y: number) => GooglePoint
+        event?: {
+          clearInstanceListeners: (instance: unknown) => void
+        }
+      }
+    }
     initMap: () => void
   }
 }
+
+interface GoogleMap {
+  fitBounds: (bounds: LatLngBounds) => void
+}
+
+interface LatLngBounds {
+  extend: (point: { lat: number; lng: number }) => void
+}
+
+interface GoogleMarker {
+  addListener: (event: string, handler: () => void) => void
+}
+
+interface GoogleInfoWindow {
+  open: (map: GoogleMap, marker: GoogleMarker) => void
+}
+
+interface GoogleSize {}
+interface GooglePoint {}
 
 export default function SellerPage() {
   const { user, isAuthenticated } = useAuth()
@@ -41,30 +72,13 @@ export default function SellerPage() {
     lon: 0,
   })
   const mapRef = useRef<HTMLDivElement>(null)
-  const googleMapRef = useRef<any>(null)
+  const googleMapRef = useRef<GoogleMap | null>(null)
 
   useEffect(() => {
     fetchProperties()
   }, [])
 
-  useEffect(() => {
-    if (activeTab === 'map' && !window.google) {
-      const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}`
-      script.async = true
-      script.defer = true
-      script.onload = () => {
-        if (properties.length > 0) {
-          initializeMap()
-        }
-      }
-      document.head.appendChild(script)
-    } else if (activeTab === 'map' && window.google && properties.length > 0) {
-      initializeMap()
-    }
-  }, [activeTab, properties])
-
-  const initializeMap = () => {
+  const initializeMap = React.useCallback(() => {
     if (!mapRef.current || !window.google || properties.length === 0) return
 
     const bounds = new window.google.maps.LatLngBounds()
@@ -122,7 +136,24 @@ export default function SellerPage() {
     if (properties.some(p => p.lat && p.lon)) {
       map.fitBounds(bounds)
     }
-  }
+  }, [properties])
+
+  useEffect(() => {
+    if (activeTab === 'map' && !window.google) {
+      const script = document.createElement('script')
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}`
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        if (properties.length > 0) {
+          initializeMap()
+        }
+      }
+      document.head.appendChild(script)
+    } else if (activeTab === 'map' && window.google && properties.length > 0) {
+      initializeMap()
+    }
+  }, [activeTab, properties, initializeMap])
 
   const fetchProperties = async () => {
     try {

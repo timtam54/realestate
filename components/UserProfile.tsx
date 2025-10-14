@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { X, Save, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -28,62 +28,9 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const addressInputRef = useRef<HTMLInputElement>(null)
-  const autocompleteRef = useRef<any>(null)
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
 
-  useEffect(() => {
-    if (isOpen && email) {
-      fetchUser()
-    }
-  }, [isOpen, email])
-
-  useEffect(() => {
-    if (isOpen && addressInputRef.current && !autocompleteRef.current) {
-      const loadGoogleMapsScript = () => {
-        if (window.google?.maps?.places) {
-          initAutocomplete()
-          return
-        }
-
-        const script = document.createElement('script')
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}&libraries=places`
-        script.async = true
-        script.defer = true
-        script.onload = () => {
-          initAutocomplete()
-        }
-        document.head.appendChild(script)
-      }
-
-      const initAutocomplete = () => {
-        if (!addressInputRef.current || !window.google) return
-
-        autocompleteRef.current = new window.google.maps.places.Autocomplete(
-          addressInputRef.current,
-          {
-            types: ['address'],
-            componentRestrictions: { country: ['au'] },
-          }
-        )
-
-        autocompleteRef.current.addListener('place_changed', () => {
-          const place = autocompleteRef.current.getPlace()
-          if (place.formatted_address && user) {
-            setUser({ ...user, address: place.formatted_address })
-          }
-        })
-      }
-
-      loadGoogleMapsScript()
-    }
-
-    return () => {
-      if (autocompleteRef.current) {
-        window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current)
-      }
-    }
-  }, [isOpen, user])
-
-  const fetchUser = async () => {
+  const fetchUser = React.useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -135,7 +82,60 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     } finally {
       setLoading(false)
     }
-  }
+  }, [email])
+
+  useEffect(() => {
+    if (isOpen && email) {
+      fetchUser()
+    }
+  }, [isOpen, email, fetchUser])
+
+  useEffect(() => {
+    if (isOpen && addressInputRef.current && !autocompleteRef.current) {
+      const loadGoogleMapsScript = () => {
+        if (window.google?.maps?.places) {
+          initAutocomplete()
+          return
+        }
+
+        const script = document.createElement('script')
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}&libraries=places`
+        script.async = true
+        script.defer = true
+        script.onload = () => {
+          initAutocomplete()
+        }
+        document.head.appendChild(script)
+      }
+
+      const initAutocomplete = () => {
+        if (!addressInputRef.current || !window.google) return
+
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(
+          addressInputRef.current,
+          {
+            types: ['address'],
+            componentRestrictions: { country: ['au'] },
+          }
+        )
+
+        autocompleteRef.current.addListener('place_changed', () => {
+          const place = autocompleteRef.current.getPlace()
+          if (place.formatted_address && user) {
+            setUser({ ...user, address: place.formatted_address })
+          }
+        })
+      }
+
+      loadGoogleMapsScript()
+    }
+
+    return () => {
+      if (autocompleteRef.current) {
+        window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current)
+      }
+    }
+  }, [isOpen, user])
 
   const handleSave = async () => {
     if (!user) return
