@@ -16,13 +16,12 @@ interface Property {
 }
 
 interface AddPropertyDialogProps {
-  isOpen: boolean
   onClose: () => void
   onSave: (property: Property) => Promise<void>
   property: Property
 }
 
-export default function AddPropertyDialog({ isOpen, onClose, onSave, property: initialProperty }: AddPropertyDialogProps) {
+export default function AddPropertyDialog({  onClose, onSave, property: initialProperty }: AddPropertyDialogProps) {
   const [property, setProperty] = useState<Property>(initialProperty)
   const [activeTab, setActiveTab] = useState<'details' | 'photos'>('details')
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
@@ -144,7 +143,7 @@ export default function AddPropertyDialog({ isOpen, onClose, onSave, property: i
     onClose()
   }
 
-  if (!isOpen) return null
+
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

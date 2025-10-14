@@ -61,17 +61,8 @@ export default function SellerPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
-  const [showAddDialog, setShowAddDialog] = useState(false)
-  const [newProperty, setNewProperty] = useState<Property>({
-    id: 0,
-    title: '',
-    address: '',
-    dte: new Date(),
-    sellerid: 1,
-    price: 0,
-    lat: 0,
-    lon: 0,
-  })
+  
+  const [newProperty, setNewProperty] = useState<Property|null>(null)
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<GoogleMap | null>(null)
 
@@ -182,7 +173,7 @@ export default function SellerPage() {
       })
       if (response.ok) {
         toast.success('Property saved successfully!')
-        setShowAddDialog(false)
+        setNewProperty(null)
         fetchProperties()
       }
     } catch (error) {
@@ -199,7 +190,18 @@ export default function SellerPage() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
           <button
-            onClick={() => setShowAddDialog(true)}
+            onClick={() => setNewProperty(
+              {
+                id: 0,
+                title: '',
+                address: '',
+                dte: new Date(),
+                sellerid: 1,
+                price: 0,
+                lat: 0,
+                lon: 0,
+              })
+            }
             className="flex items-center gap-2 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -242,11 +244,11 @@ export default function SellerPage() {
               <div key={property.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                 <button
                   onClick={() => {
-                    setShowAddDialog(false)
-                    setTimeout(() => {
+                  
+                    
                       setNewProperty(property)
-                      setShowAddDialog(true)
-                    }, 0)
+                     
+                    
                   }}
                   className="w-full text-left bg-gradient-to-r from-gray-800 to-black text-white px-4 py-2 rounded-lg hover:from-gray-900 hover:to-gray-800 transition-all mb-2"
                 >
@@ -283,24 +285,14 @@ export default function SellerPage() {
         )}
       </div>
 
-      <AddPropertyDialog
-        isOpen={showAddDialog}
+    {newProperty &&  <AddPropertyDialog
         onClose={() => {
-          setShowAddDialog(false)
-          setNewProperty({
-            id: 0,
-            title: '',
-            address: '',
-            dte: new Date(),
-            sellerid: 1,
-            price: 0,
-            lat: 0,
-            lon: 0,
-          })
+         
+          setNewProperty(null)
         }}
         onSave={handleAddProperty}
         property={newProperty}
-      />
+      />}
     </div>
   )
 }
