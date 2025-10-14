@@ -7,18 +7,7 @@ import AddPropertyDialog from '@/components/AddPropertyDialog'
 import PropertyCard from '@/components/PropertyCard'
 import { useAuth } from '@/hooks/useAuth'
 import toast, { Toaster } from 'react-hot-toast'
-
-interface Property {
-  id: number
-  title: string
-  address: string
-  dte: Date
-  sellerid: number
-  price: number
-  lat: number
-  lon: number
-  photobloburl:string|null
-}
+import { Property } from '@/types/property'
 
 declare global {
   interface Window {

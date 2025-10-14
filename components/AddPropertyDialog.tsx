@@ -13,6 +13,7 @@ interface Property {
   price: number
   lat: number
   lon: number
+  photobloburl: string | null
 }
 
 interface Photo {

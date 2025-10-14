@@ -1,58 +1,38 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Home, Shield, CheckCircle, MapPin, Bed, Bath, Car, Camera } from 'lucide-react'
 import Link from 'next/link'
 import BuySelHeader from '@/components/BuySelHeader'
+import PropertyCard from '@/components/PropertyCard'
 import { useAuth } from '@/hooks/useAuth'
+import { Property } from '@/types/property'
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [beds, setBeds] = useState('')
   const [baths, setBaths] = useState('')
+  const [properties, setProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
   const { user, isAuthenticated } = useAuth()
 
-  const featuredListings = [
-    {
-      id: 1,
-      title: "Modern Family Home in Edge Hill",
-      address: "42 Sunset Drive, Edge Hill",
-      price: 750000,
-      beds: 4,
-      baths: 2,
-      cars: 2,
-      landSize: 800,
-      image: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=300&fit=crop",
-      badges: ['contract', 'smoke_alarm', 'building_pest', 'pro_photos'],
-      featured: true
-    },
-    {
-      id: 2,
-      title: "Beachfront Apartment",
-      address: "15 Ocean View, North Ward",
-      price: 450000,
-      beds: 2,
-      baths: 1,
-      cars: 1,
-      landSize: null,
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop",
-      badges: ['contract', 'smoke_alarm', 'title_search'],
-      featured: false
-    },
-    {
-      id: 3,
-      title: "Rural Retreat with Acreage",
-      address: "200 Country Lane, Charters Towers",
-      price: 550000,
-      beds: 3,
-      baths: 2,
-      cars: 3,
-      landSize: 4000,
-      image: "https://images.unsplash.com/photo-1523217582562-09d0def993a6?w=400&h=300&fit=crop",
-      badges: ['contract', 'smoke_alarm', 'pool_safety', 'pro_photos'],
-      featured: false
+  useEffect(() => {
+    fetchProperties()
+  }, [])
+
+  const fetchProperties = async () => {
+    try {
+      const response = await fetch('https://buysel.azurewebsites.net/api/property')
+      if (response.ok) {
+        const data = await response.json()
+        setProperties(data)
+      }
+    } catch (error) {
+      console.error('Error fetching properties:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   const badgeIcons = {
     contract: { icon: Shield, label: 'Contract Ready' },
@@ -153,66 +133,21 @@ export default function HomePage() {
               View all properties →
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredListings.map((listing) => (
-              <Link href={`/property/${listing.id}`} key={listing.id}>
-                <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer">
-                  <div className="relative h-48">
-                    <img
-                      src={listing.image}
-                      alt={listing.title}
-                      className="w-full h-full object-cover"
-                    />
-                    {listing.featured && (
-                      <span className="absolute top-4 left-4 bg-[#FF6600] text-white px-3 py-1 rounded-full text-sm">
-                        Featured
-                      </span>
-                    )}
-                    <div className="absolute bottom-4 right-4 bg-white px-3 py-1 rounded-lg font-semibold">
-                      ${listing.price.toLocaleString()}
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-1">{listing.title}</h3>
-                    <p className="text-gray-600 text-sm mb-3 flex items-center">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      {listing.address}
-                    </p>
-                    <div className="flex items-center space-x-4 text-[#333333] text-sm mb-3">
-                      <span className="flex items-center">
-                        <Bed className="h-4 w-4 mr-1" />
-                        {listing.beds}
-                      </span>
-                      <span className="flex items-center">
-                        <Bath className="h-4 w-4 mr-1" />
-                        {listing.baths}
-                      </span>
-                      <span className="flex items-center">
-                        <Car className="h-4 w-4 mr-1" />
-                        {listing.cars}
-                      </span>
-                      {listing.landSize && (
-                        <span className="flex items-center">
-                          <Home className="h-4 w-4 mr-1" />
-                          {listing.landSize}m²
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {listing.badges.slice(0, 4).map((badge) => (
-                        <span
-                          key={badge}
-                          className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full"
-                        >
-                          ✓ {badgeIcons[badge as keyof typeof badgeIcons].label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Loading properties...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {properties.map((property) => (
+                <PropertyCard 
+                  key={property.id} 
+                  property={property} 
+                  onClick={() => {}} 
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
