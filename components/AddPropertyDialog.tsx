@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft } from 'lucide-react'
 import { BlobServiceClient } from '@azure/storage-blob'
+import type { GoogleAutocomplete } from '@/types/google-maps'
 
 interface Property {
   id: number
@@ -45,6 +46,8 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const addressInputRef = useRef<HTMLInputElement>(null)
+  const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
 
   const fetchPhotos = async () => {
     try {
@@ -63,6 +66,53 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
       fetchPhotos()
     }
   }, [property.id, currentStep, fetchPhotos])
+
+  useEffect(() => {
+    if (currentStep === 'property-details' && addressInputRef.current && !autocompleteRef.current) {
+      const loadGoogleMapsScript = () => {
+        if (window.google?.maps?.places) {
+          initAutocomplete()
+          return
+        }
+
+        const script = document.createElement('script')
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}&libraries=places`
+        script.async = true
+        script.defer = true
+        script.onload = () => {
+          initAutocomplete()
+        }
+        document.head.appendChild(script)
+      }
+
+      const initAutocomplete = () => {
+        if (!addressInputRef.current || !window.google?.maps?.places) return
+
+        autocompleteRef.current = new window.google.maps.places.Autocomplete(
+          addressInputRef.current,
+          {
+            types: ['address'],
+            componentRestrictions: { country: ['au'] },
+          }
+        )
+
+        autocompleteRef.current.addListener('place_changed', () => {
+          const place = autocompleteRef.current?.getPlace()
+          if (place?.formatted_address) {
+            setProperty({ ...property, address: place.formatted_address })
+          }
+        })
+      }
+
+      loadGoogleMapsScript()
+    }
+
+    return () => {
+      if (autocompleteRef.current) {
+        window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current)
+      }
+    }
+  }, [currentStep, property])
 
   const getPhotoUrl = (photobloburl: string) => {
     const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
@@ -293,11 +343,12 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
                 <input
+                  ref={addressInputRef}
                   type="text"
                   value={property.address}
                   onChange={(e) => setProperty({ ...property, address: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
-                  placeholder="Enter property address"
+                  placeholder="Start typing address..."
                 />
               </div>
             </div>
