@@ -60,9 +60,9 @@ export default function AdminDashboardPage() {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-gray-300">Admin User</span>
-              <button variant="outline" className="text-white border-white hover:bg-gray-800" asChild>
-                <Link href="/">Exit Admin</Link>
-              </button>
+              <Link href="/" className="px-4 py-2 text-white border border-white rounded hover:bg-gray-800 inline-flex items-center">
+                Exit Admin
+              </Link>
             </div>
           </div>
         </div>
@@ -280,9 +280,9 @@ export default function AdminDashboardPage() {
                   </div>
                 ))}
               </div>
-              <button variant="outline" className="w-full mt-4" asChild>
-                <Link href="/admin/audit">View Full Audit Log</Link>
-              </button>
+              <Link href="/admin/audit" className="w-full mt-4 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center justify-center">
+                View Full Audit Log
+              </Link>
             </div>
           </div>
 
@@ -292,36 +292,26 @@ export default function AdminDashboardPage() {
               <h3 className="text-lg font-semibold">Quick Actions</h3>
             </div>
             <div className="p-6 space-y-3">
-              <button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/admin/listings">
-                  <Home className="h-4 w-4 mr-2" />
-                  Manage Listings
-                </Link>
-              </button>
-              <button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/admin/partners">
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Approve Partners
-                </Link>
-              </button>
-              <button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/admin/payments">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Process Refunds
-                </Link>
-              </button>
-              <button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/admin/cms">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Update CMS Content
-                </Link>
-              </button>
-              <button className="w-full justify-start" variant="outline" asChild>
-                <Link href="/admin/users">
-                  <Users className="h-4 w-4 mr-2" />
-                  Manage Users
-                </Link>
-              </button>
+              <Link href="/admin/listings" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
+                <Home className="h-4 w-4 mr-2" />
+                Manage Listings
+              </Link>
+              <Link href="/admin/partners" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
+                <UserCheck className="h-4 w-4 mr-2" />
+                Approve Partners
+              </Link>
+              <Link href="/admin/payments" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Process Refunds
+              </Link>
+              <Link href="/admin/cms" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
+                <FileText className="h-4 w-4 mr-2" />
+                Update CMS Content
+              </Link>
+              <Link href="/admin/users" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
+                <Users className="h-4 w-4 mr-2" />
+                Manage Users
+              </Link>
             </div>
           </div>
         </div>
