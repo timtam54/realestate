@@ -5,6 +5,7 @@ import { Plus, MapPin, List, Map } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
 import { useAuth } from '@/hooks/useAuth'
+import toast, { Toaster } from 'react-hot-toast'
 
 interface Property {
   id: number
@@ -170,14 +171,17 @@ export default function SellerPage() {
 
   const handleAddProperty = async (property: Property) => {
     try {
+      const jsn=JSON.stringify(property)
+      //alert(jsn);
       const response = await fetch('https://buysel.azurewebsites.net/api/property', {
         method: (property.id==0)?'POST':'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(property),
+        body: jsn,
       })
       if (response.ok) {
+        toast.success('Property saved successfully!')
         setShowAddDialog(false)
         fetchProperties()
       }
@@ -188,7 +192,7 @@ export default function SellerPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
+<Toaster position="top-right" />
 <BuySelHeader user={user} isAuthenticated={isAuthenticated} />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
