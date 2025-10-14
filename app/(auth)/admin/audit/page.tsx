@@ -300,7 +300,7 @@ export default function AdminAuditLogPage() {
                 <option value="month">Last 30 Days</option>
               </select>
             </div>
-            <button variant="outline">
+            <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
               <Download className="h-4 w-4 mr-2" />
               Export Logs
             </button>
