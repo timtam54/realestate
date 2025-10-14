@@ -2,7 +2,6 @@ import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import LinkedInProvider from 'next-auth/providers/linkedin'
 import FacebookProvider from 'next-auth/providers/facebook'
-//import MicrosoftProvider from 'next-auth/providers/microsoft'
 
 const handler = NextAuth({
   providers: [
@@ -18,21 +17,16 @@ const handler = NextAuth({
       clientId: process.env.FACEBOOK_CLIENT_ID ?? '',
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET ?? '',
     }),
-    /*MicrosoftProvider({
-      clientId: process.env.MICROSOFT_CLIENT_ID ?? '',
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET ?? '',
-      tenantId: process.env.MICROSOFT_TENANT_ID,
-    }),*/
   ],
   callbacks: {
     async jwt({ token, account }) {
       if (account) {
-        token.accessToken = account.access_token
+        token.accessToken = account.access_token as string
       }
       return token
     },
     async session({ session, token }) {
-      session.accessToken = token.accessToken
+      (session as any).accessToken = token.accessToken
       return session
     },
   },
