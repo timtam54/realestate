@@ -93,7 +93,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     const AZURE_BLOB_SAS_URL =
       process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE! + "?" + process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
     const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER
-
+alert(containerName)
     const blobServiceClient = new BlobServiceClient(AZURE_BLOB_SAS_URL)
     const containerClient = blobServiceClient.getContainerClient(containerName!)
 
