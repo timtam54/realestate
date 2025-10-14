@@ -383,18 +383,15 @@ export default function AdminPartnersPage() {
                   {partner.status === 'pending' ? (
                     <>
                       <button
-                        size="sm"
-                        variant="outline"
                         onClick={() => handleStatusChange(partner.id, 'rejected')}
-                        className="text-red-600 hover:bg-red-50"
+                        className="px-3 py-1 text-sm border border-gray-300 rounded text-red-600 hover:bg-red-50 inline-flex items-center"
                       >
                         <XCircle className="h-4 w-4 mr-1" />
                         Reject
                       </button>
                       <button
-                        size="sm"
                         onClick={() => handleStatusChange(partner.id, 'active')}
-                        className="bg-green-600 hover:bg-green-700"
+                        className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 inline-flex items-center"
                       >
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Approve
@@ -403,9 +400,8 @@ export default function AdminPartnersPage() {
                   ) : (
                     <>
                       <button
-                        size="sm"
-                        variant="outline"
                         onClick={() => setEditingPartner(partner)}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center"
                       >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit Commission

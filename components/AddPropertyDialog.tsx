@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Camera, X } from 'lucide-react'
+import { Camera, X, Upload } from 'lucide-react'
 import { BlobServiceClient } from '@azure/storage-blob'
 
 interface Property {
@@ -30,6 +30,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const startCamera = async () => {
     try {
@@ -71,6 +72,18 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const retakePhoto = () => {
     setCapturedPhoto(null)
     startCamera()
+  }
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setCapturedPhoto(reader.result as string)
+        stopCamera()
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const uploadPhotoToAzure = async (dataUrl: string): Promise<string> => {
@@ -243,13 +256,29 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                   playsInline
                   className="w-full rounded-lg bg-black"
                 />
-                <button
-                  onClick={capturePhoto}
-                  className="w-full flex items-center justify-center gap-2 bg-[#FF6600] text-white px-4 py-3 rounded-lg hover:bg-[#FF5500] transition-colors"
-                >
-                  <Camera className="w-5 h-5" />
-                  Capture Photo
-                </button>
+                <div className="flex gap-3">
+                  <button
+                    onClick={capturePhoto}
+                    className="flex-1 flex items-center justify-center gap-2 bg-[#FF6600] text-white px-4 py-3 rounded-lg hover:bg-[#FF5500] transition-colors"
+                  >
+                    <Camera className="w-5 h-5" />
+                    Capture Photo
+                  </button>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Upload className="w-5 h-5" />
+                    Upload Image
+                  </button>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
               </div>
             ) : (
               <div className="space-y-4">
