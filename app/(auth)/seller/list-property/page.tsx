@@ -80,9 +80,9 @@ export default function ListPropertyPage() {
               <Home className="h-6 w-6 text-blue-600 mr-2" />
               <span className="font-semibold">BuySel</span>
             </Link>
-            <button variant="outline" asChild>
-              <Link href="/seller/dashboard">Back to Dashboard</Link>
-            </button>
+            <Link href="/seller/dashboard" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+              Back to Dashboard
+            </Link>
           </div>
         </div>
       </header>
@@ -270,11 +270,11 @@ export default function ListPropertyPage() {
               </div>
 
               <div className="flex justify-between mt-8">
-                <button type="button" variant="outline" disabled>
+                <button type="button" disabled className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center opacity-50 cursor-not-allowed">
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   Previous
                 </button>
-                <button type="button" onClick={nextStep}>
+                <button type="button" onClick={nextStep} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
                   Next
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </button>
