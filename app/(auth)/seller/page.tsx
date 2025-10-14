@@ -52,8 +52,8 @@ interface GoogleInfoWindow {
   open: (map: GoogleMap, marker: GoogleMarker) => void
 }
 
-interface GoogleSize {}
-interface GooglePoint {}
+type GoogleSize = object
+type GooglePoint = object
 
 export default function SellerPage() {
   const { user, isAuthenticated } = useAuth()
@@ -79,7 +79,7 @@ export default function SellerPage() {
   }, [])
 
   const initializeMap = React.useCallback(() => {
-    if (!mapRef.current || !window.google || properties.length === 0) return
+    if (!mapRef.current || !window.google?.maps || properties.length === 0) return
 
     const bounds = new window.google.maps.LatLngBounds()
     const center = properties[0].lat && properties[0].lon 
@@ -94,7 +94,7 @@ export default function SellerPage() {
     googleMapRef.current = map
 
     properties.forEach((property) => {
-      if (property.lat && property.lon) {
+      if (property.lat && property.lon && window.google?.maps) {
         const labelContent = `${property.title}\n${property.address}\n$${property.price.toLocaleString()}`
         
         const marker = new window.google.maps.Marker({
@@ -139,7 +139,7 @@ export default function SellerPage() {
   }, [properties])
 
   useEffect(() => {
-    if (activeTab === 'map' && !window.google) {
+    if (activeTab === 'map' && !window.google?.maps) {
       const script = document.createElement('script')
       script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}`
       script.async = true
@@ -150,7 +150,7 @@ export default function SellerPage() {
         }
       }
       document.head.appendChild(script)
-    } else if (activeTab === 'map' && window.google && properties.length > 0) {
+    } else if (activeTab === 'map' && window.google?.maps && properties.length > 0) {
       initializeMap()
     }
   }, [activeTab, properties, initializeMap])
