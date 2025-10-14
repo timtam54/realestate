@@ -13,7 +13,8 @@ const handler = NextAuth({
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
-    }),
+    })
+    /*,
     LinkedInProvider({
       clientId: process.env.LINKEDIN_CLIENT_ID ?? '',
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET ?? '',
@@ -21,7 +22,7 @@ const handler = NextAuth({
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID ?? '',
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET ?? '',
-    }),
+    }),*/
   ],
   callbacks: {
     async jwt({ token, account }) {

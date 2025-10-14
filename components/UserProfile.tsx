@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { X, Save, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import type { GoogleAutocomplete } from '@/types/google-maps'
 
 interface User {
   id: number
@@ -20,26 +21,6 @@ interface UserProfileProps {
   email: string
   isOpen: boolean
   onClose: () => void
-}
-
-declare global {
-  interface Window {
-    google?: {
-      maps?: {
-        places?: {
-          Autocomplete: new (input: HTMLInputElement, options?: unknown) => GoogleAutocomplete
-        }
-        event?: {
-          clearInstanceListeners: (instance: unknown) => void
-        }
-      }
-    }
-  }
-}
-
-type GoogleAutocomplete = {
-  addListener: (event: string, handler: () => void) => void
-  getPlace: () => { formatted_address?: string }
 }
 
 export default function UserProfile({ email, isOpen, onClose }: UserProfileProps) {

@@ -35,7 +35,7 @@ export default function Login({ onClose }: LoginProps) {
       ),
       bgColor: 'bg-white hover:bg-gray-50 border border-gray-300',
       textColor: 'text-gray-700'
-    },
+    }/*,
     {
       id: 'linkedin',
       name: 'LinkedIn',
@@ -71,7 +71,7 @@ export default function Login({ onClose }: LoginProps) {
       ),
       bgColor: 'bg-gray-800 hover:bg-gray-900',
       textColor: 'text-white'
-    }
+    }*/
   ]
 
   return (
