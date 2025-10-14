@@ -22,13 +22,33 @@ interface UserProfileProps {
   onClose: () => void
 }
 
+declare global {
+  interface Window {
+    google?: {
+      maps?: {
+        places?: {
+          Autocomplete: new (input: HTMLInputElement, options?: unknown) => GoogleAutocomplete
+        }
+        event?: {
+          clearInstanceListeners: (instance: unknown) => void
+        }
+      }
+    }
+  }
+}
+
+type GoogleAutocomplete = {
+  addListener: (event: string, handler: () => void) => void
+  getPlace: () => { formatted_address?: string }
+}
+
 export default function UserProfile({ email, isOpen, onClose }: UserProfileProps) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const addressInputRef = useRef<HTMLInputElement>(null)
-  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null)
+  const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
 
   const fetchUser = React.useCallback(async () => {
     try {
