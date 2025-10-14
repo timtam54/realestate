@@ -403,10 +403,10 @@ export default function AdminListingsPage() {
                 Are you sure you want to unlist &ldquo;{showConfirmDialog.listing.title}&rdquo;? This action will be logged in the audit trail.
               </p>
               <div className="flex justify-end space-x-3">
-                <button variant="outline" onClick={() => setShowConfirmDialog(null)}>
+                <button className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50" onClick={() => setShowConfirmDialog(null)}>
                   Cancel
                 </button>
-                <button className="bg-red-600 hover:bg-red-700" onClick={confirmUnlist}>
+                <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" onClick={confirmUnlist}>
                   Unlist Property
                 </button>
               </div>
