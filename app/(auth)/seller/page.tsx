@@ -57,14 +57,6 @@ export default function SellerPage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<GoogleMap | null>(null)
 
-  const getPhotoUrl = (photobloburl: string | null) => {
-    if (!photobloburl) return null
-    const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
-    const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
-    const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
-    return `${baseUrl}/${containerName}/${photobloburl}?${sasToken}`
-  }
-
   useEffect(() => {
     fetchProperties()
   }, [])
