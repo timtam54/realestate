@@ -75,6 +75,12 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
           return
         }
 
+        const existingScript = document.querySelector('script[src*="maps.googleapis.com"]')
+        if (existingScript) {
+          existingScript.addEventListener('load', initAutocomplete)
+          return
+        }
+
         const script = document.createElement('script')
         script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}&libraries=places`
         script.async = true
