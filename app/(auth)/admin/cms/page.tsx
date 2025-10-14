@@ -220,9 +220,9 @@ export default function AdminCMSPage() {
                 <Save className="h-4 w-4 mr-2" />
                 Save Changes
               </button>
-              <button variant="outline" className="text-white border-white hover:bg-gray-800" asChild>
-                <Link href="/admin/dashboard">Back to Overview</Link>
-              </button>
+              <Link href="/admin/dashboard" className="px-4 py-2 text-white border border-white rounded hover:bg-gray-800 inline-flex items-center">
+                Back to Overview
+              </Link>
             </div>
           </div>
         </div>
