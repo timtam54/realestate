@@ -5,11 +5,10 @@ import FacebookProvider from 'next-auth/providers/facebook'
 //import MicrosoftProvider from 'next-auth/providers/microsoft'
 
 const handler = NextAuth({
-  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID ?? '155334538327-i07ipbgfbg95nhb0h5cfe8vu27lcek9f.apps.googleusercontent.com',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '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',
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
     }),
     LinkedInProvider({
       clientId: process.env.LINKEDIN_CLIENT_ID ?? '',
