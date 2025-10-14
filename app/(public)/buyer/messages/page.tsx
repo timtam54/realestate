@@ -218,7 +218,7 @@ export default function BuyerMessagesPage() {
               <span className="font-bold text-xl">BuySel</span>
             </Link>
             <nav className="flex items-center space-x-4">
-              <Link href="/buyer/search" className="text-gray-700 hover:text-blue-600">
+              <Link href="/" className="text-gray-700 hover:text-blue-600">
                 Search Properties
               </Link>
               <Link href="/buyer/saved" className="text-gray-700 hover:text-blue-600">

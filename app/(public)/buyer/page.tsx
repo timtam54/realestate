@@ -92,7 +92,7 @@ export default function HomePage() {
                 <option value="3">3+</option>
               </select>
               <Link 
-                href={`/buyer/search?q=${searchQuery}&beds=${beds}&baths=${baths}`}
+                href={`/?q=${searchQuery}&beds=${beds}&baths=${baths}`}
                 className="bg-[#FF6600] text-white px-6 py-2 rounded-lg hover:bg-orange-700 flex items-center justify-center"
               >
                 <Search className="h-5 w-5 mr-2" />
@@ -129,7 +129,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold">Featured Properties</h2>
-            <Link href="/buyer/search" className="text-[#FF6600] hover:text-orange-700">
+            <Link href="/" className="text-[#FF6600] hover:text-orange-700">
               View all properties →
             </Link>
           </div>
@@ -221,9 +221,8 @@ export default function HomePage() {
             <div>
               <h4 className="font-semibold mb-4">For Buyers</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/buyer/search" className="hover:text-white">Search Properties</Link></li>
-                <li><Link href="/buyer/saved-searches" className="hover:text-white">Saved Searches</Link></li>
-                <li><Link href="/buyer/guide" className="hover:text-white">Buyer Guide</Link></li>
+                <li><Link href="/" className="hover:text-white">Search Properties</Link></li>
+               
               </ul>
             </div>
             <div>

@@ -19,6 +19,9 @@ declare global {
         InfoWindow: new (options?: unknown) => GoogleInfoWindow
         Size: new (width: number, height: number) => GoogleSize
         Point: new (x: number, y: number) => GooglePoint
+        places?: {
+          Autocomplete: new (input: HTMLInputElement, options?: unknown) => GoogleAutocomplete
+        }
         event?: {
           clearInstanceListeners: (instance: unknown) => void
         }
@@ -26,6 +29,11 @@ declare global {
     }
     initMap: () => void
   }
+}
+
+type GoogleAutocomplete = {
+  addListener: (event: string, handler: () => void) => void
+  getPlace: () => { formatted_address?: string }
 }
 
 interface GoogleMap {

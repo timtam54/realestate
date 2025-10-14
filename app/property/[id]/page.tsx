@@ -84,7 +84,7 @@ export default function PropertyDetailPage() {
               <span className="font-bold text-xl">BuySel</span>
             </Link>
             <nav className="flex items-center space-x-4">
-              <Link href="/buyer/search" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+              <Link href="/" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
                 Back to Search
               </Link>
             </nav>

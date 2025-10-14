@@ -26,7 +26,7 @@ export default function SignInPage() {
     if (formData.userType === 'seller') {
       router.push('/seller/dashboard')
     } else if (formData.userType === 'buyer') {
-      router.push('/buyer/search')
+      router.push('/')
     } else if (formData.userType === 'conveyancer') {
       router.push('/conveyancer/queue')
     }

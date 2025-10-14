@@ -38,7 +38,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
            
           </Link>
           <nav className="hidden md:flex items-center space-x-2">
-            <Link href="/buyer/search" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
+            <Link href="/" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
               <Search className="w-4 h-4" />
               <span><u>Buy</u></span>
             </Link>
@@ -108,8 +108,8 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 }}
                 className="pl-10 pr-4 py-2.5 bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 font-medium cursor-pointer hover:from-red-200 hover:to-red-300 transition-all appearance-none"
               >
-                <option value="buyer-seller">Buyer</option>
-                <option value="seller">Seller</option>
+                <option value="buyer-seller">Buyer/Seller</option>
+                
                 
                 <option value="conveyancer">Conveyancer</option>
                 <option value="admin">Admin</option>
