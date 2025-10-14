@@ -351,11 +351,11 @@ export default function ListPropertyPage() {
               </div>
 
               <div className="flex justify-between mt-8">
-                <button type="button" variant="outline" onClick={prevStep}>
+                <button type="button" onClick={prevStep} className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center">
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   Previous
                 </button>
-                <button type="button" onClick={nextStep}>
+                <button type="button" onClick={nextStep} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
                   Next
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </button>
@@ -392,7 +392,7 @@ export default function ListPropertyPage() {
                         setPhotos(files)
                       }}
                     />
-                    <button type="button" variant="outline" size="sm">
+                    <button type="button" className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
                       Select Photos
                     </button>
                   </div>
@@ -414,11 +414,11 @@ export default function ListPropertyPage() {
               </div>
 
               <div className="flex justify-between mt-8">
-                <button type="button" variant="outline" onClick={prevStep}>
+                <button type="button" onClick={prevStep} className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center">
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   Previous
                 </button>
-                <button type="button" onClick={nextStep}>
+                <button type="button" onClick={nextStep} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
                   Next
                   <ChevronRight className="h-4 w-4 ml-2" />
                 </button>
@@ -452,8 +452,8 @@ export default function ListPropertyPage() {
                     ) : (
                       <button
                         type="button"
-                        size="sm"
                         onClick={() => setContractStatus('in_progress')}
+                        className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
                       >
                         Get Contract
                       </button>
@@ -479,7 +479,7 @@ export default function ListPropertyPage() {
                           Add ${item.price} - Increases buyer trust
                         </p>
                       </div>
-                      <button type="button" variant="outline" size="sm">
+                      <button type="button" className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
                         Add
                       </button>
                     </div>
@@ -488,7 +488,7 @@ export default function ListPropertyPage() {
               </div>
 
               <div className="flex justify-between mt-8">
-                <button type="button" variant="outline" onClick={prevStep}>
+                <button type="button" onClick={prevStep} className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center">
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   Previous
                 </button>
@@ -496,6 +496,7 @@ export default function ListPropertyPage() {
                   type="button" 
                   onClick={nextStep}
                   disabled={contractStatus !== 'completed'}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                   <ChevronRight className="h-4 w-4 ml-2" />
@@ -538,7 +539,7 @@ export default function ListPropertyPage() {
                   <p className="text-sm text-gray-600 mb-4">
                     Secure payment via Stripe
                   </p>
-                  <button type="button" className="w-full">
+                  <button type="button" className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Proceed to Payment
                   </button>
                 </div>
@@ -556,11 +557,11 @@ export default function ListPropertyPage() {
               </div>
 
               <div className="flex justify-between mt-8">
-                <button type="button" variant="outline" onClick={prevStep}>
+                <button type="button" onClick={prevStep} className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center">
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   Previous
                 </button>
-                <button type="submit">
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
                   Complete Listing
                   <CheckCircle className="h-4 w-4 ml-2" />
                 </button>
