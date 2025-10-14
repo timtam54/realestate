@@ -300,7 +300,11 @@ export default function ConveyancerQueuePage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-sm text-gray-900">
                         <Calendar className="h-4 w-4 mr-1 text-gray-400" />
-                        {new Date(caseItem.dueDate).toLocaleDateString()}
+                        {new Date(caseItem.dueDate).toLocaleDateString('en-AU', { 
+                          day: '2-digit', 
+                          month: '2-digit', 
+                          year: 'numeric' 
+                        })}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

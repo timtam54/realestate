@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Plus, MapPin, List, Map } from 'lucide-react'
+import { Plus, MapPin, List, Map, ListPlus } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
 import PropertyCard from '@/components/PropertyCard'
@@ -159,8 +159,8 @@ export default function SellerPage() {
             }
             className="flex items-center gap-2 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"
           >
-            <Plus className="w-5 h-5" />
-            Add Property
+            <ListPlus className="w-4 h-4" />
+            <span>List Property</span>
           </button>
         </div>
 

@@ -46,13 +46,11 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
               <Home className="w-4 h-4" />
               <span><u>Sell</u></span>
             </Link>
-            <Link href="#how-it-works" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
+            <Link href="/how-it-works" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
               <Briefcase className="w-4 h-4" />
               <span><u>How it Works</u></span>
             </Link>
-            <Link href="#contact" className="text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
-              <u>Contact</u>
-            </Link>
+           
           </nav>
           <div className="flex items-center space-x-3">
             {isAuthenticated ? (
@@ -87,13 +85,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <span>Sign In</span>
               </button>
             )}
-            <Link 
-              href="/seller/list-property" 
-              className="flex items-center gap-2 bg-gradient-to-r from-[#FF6600] to-[#FF5500] text-white px-5 py-2.5 rounded-lg hover:from-[#FF5500] hover:to-[#FF4400] transition-all font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-            >
-              <ListPlus className="w-4 h-4" />
-              <span>List Property</span>
-            </Link>
+            
             <div className="relative">
               <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-700 pointer-events-none" />
               <select 
