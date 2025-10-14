@@ -242,8 +242,11 @@ export default function SellerPage() {
               <div key={property.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
                 <button
                   onClick={() => {
-                    setNewProperty(property)
-                    setShowAddDialog(true)
+                    setShowAddDialog(false)
+                    setTimeout(() => {
+                      setNewProperty(property)
+                      setShowAddDialog(true)
+                    }, 0)
                   }}
                   className="w-full text-left bg-gradient-to-r from-gray-800 to-black text-white px-4 py-2 rounded-lg hover:from-gray-900 hover:to-gray-800 transition-all mb-2"
                 >
