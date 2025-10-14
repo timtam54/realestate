@@ -25,7 +25,7 @@ export default function HomePage() {
       const response = await fetch('https://buysel.azurewebsites.net/api/property')
       if (response.ok) {
         const data = await response.json()
-        setProperties(data)
+        setProperties(data) 
       }
     } catch (error) {
       console.error('Error fetching properties:', error)
