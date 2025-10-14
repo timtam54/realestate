@@ -1,7 +1,12 @@
 import NextAuth from 'next-auth'
+import type { Session } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 import LinkedInProvider from 'next-auth/providers/linkedin'
 import FacebookProvider from 'next-auth/providers/facebook'
+
+interface ExtendedSession extends Session {
+  accessToken?: string
+}
 
 const handler = NextAuth({
   providers: [
@@ -26,8 +31,9 @@ const handler = NextAuth({
       return token
     },
     async session({ session, token }) {
-      (session as any).accessToken = token.accessToken
-      return session
+      const extendedSession = session as ExtendedSession
+      extendedSession.accessToken = token.accessToken as string
+      return extendedSession
     },
   },
   pages: {

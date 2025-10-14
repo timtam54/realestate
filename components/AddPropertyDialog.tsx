@@ -44,12 +44,6 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const streamRef = useRef<MediaStream | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    if (property.id > 0 && activeTab === 'photos') {
-      fetchPhotos()
-    }
-  }, [property.id, activeTab])
-
   const fetchPhotos = async () => {
     try {
       const response = await fetch(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
@@ -61,6 +55,12 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
       console.error('Error fetching photos:', error)
     }
   }
+
+  useEffect(() => {
+    if (property.id > 0 && activeTab === 'photos') {
+      fetchPhotos()
+    }
+  }, [property.id, activeTab, fetchPhotos])
 
   const getPhotoUrl = (photobloburl: string) => {
     const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
@@ -133,8 +133,6 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
       const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
 
       const blobName = `property-${property.id}-${Date.now()}-${file.name.replace(/\s+/g, "-")}`
-      
-      const blobUrl = `${baseUrl}/${containerName}/${blobName}?${sasToken}`
       
       const blockBlobClient = new BlobServiceClient(`${baseUrl}?${sasToken}`)
         .getContainerClient(containerName)

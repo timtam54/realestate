@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Search, Home, Shield, CheckCircle, MapPin, Bed, Bath, Car, Camera } from 'lucide-react'
+import { Search, Shield, CheckCircle, Camera } from 'lucide-react'
 import Link from 'next/link'
 import BuySelHeader from '@/components/BuySelHeader'
 import PropertyCard from '@/components/PropertyCard'
