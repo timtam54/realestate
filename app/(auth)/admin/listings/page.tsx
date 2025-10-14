@@ -221,7 +221,7 @@ export default function AdminListingsPage() {
                 <option value="archived">Archived</option>
                 <option value="sold">Sold</option>
               </select>
-              <button variant="outline">
+              <button className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
                 <Filter className="h-4 w-4 mr-2" />
                 More Filters
               </button>
