@@ -32,6 +32,14 @@ jobs:
           api_location: "" # Api source code path - optional
           output_location: "" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
+    env:
+        NEXT_PUBLIC_GOOGLE_MAP_API: AIzaSyANThwic7Udj0r5ulBoPN9Dp2lSwJKOAK4
+        SKIP_DEPLOY_ON_MISSING_SECRETS: true
+        NEXT_PUBLIC_AZUREBLOB_CONTAINER: rssimage 
+        NEXT_PUBLIC_AZUREBLOB_SASTOKEN: sv=2022-11-02&ss=bfqt&srt=sco&sp=rwdlacupiytfx&se=2028-11-01T18:14:43Z&st=2024-11-01T10:14:43Z&spr=https&sig=uaT02oUcPTjW6JzxX6TN5m4%2BB%2BKF8fEiVvaGnl9ZKCk%3D
+        NEXT_PUBLIC_AZUREBLOB_SASURL_BASE: https://rssblob.blob.core.windows.net/
+        GOOGLE_CLIENT_ID: 155334538327-i07ipbgfbg95nhb0h5cfe8vu27lcek9f.apps.googleusercontent.com
+        GOOGLE_CLIENT_SECRET: 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
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
