@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Plus, MapPin, List, Map } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
+import PropertyCard from '@/components/PropertyCard'
 import { useAuth } from '@/hooks/useAuth'
 import toast, { Toaster } from 'react-hot-toast'
 
@@ -209,6 +210,7 @@ export default function SellerPage() {
                 price: 0,
                 lat: 0,
                 lon: 0,
+                photobloburl: null
               })
             }
             className="flex items-center gap-2 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"
@@ -250,39 +252,11 @@ export default function SellerPage() {
         ) : activeTab === 'list' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {properties.map((property) => (
-              <div key={property.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-                {property.photobloburl ? (
-                  <img 
-                    src={getPhotoUrl(property.photobloburl)!} 
-                    alt={property.title}
-                    className="w-full h-48 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <MapPin className="w-16 h-16 text-gray-400" />
-                  </div>
-                )}
-                <div className="p-6">
-                  <button
-                    onClick={() => {
-                      setNewProperty(property)
-                    }}
-                    className="w-full text-left bg-gradient-to-r from-gray-800 to-black text-white px-4 py-2 rounded-lg hover:from-gray-900 hover:to-gray-800 transition-all mb-3"
-                  >
-                    <h3 className="text-xl font-semibold">{property.title}</h3>
-                  </button>
-                  <div className="flex items-start gap-2 text-gray-600 mb-3">
-                    <MapPin className="w-4 h-4 mt-1 flex-shrink-0" />
-                    <p className="text-sm">{property.address}</p>
-                  </div>
-                  <div className="text-2xl font-bold text-[#FF6600] mb-2">
-                    ${property.price.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    Listed: {new Date(property.dte).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
+              <PropertyCard 
+                key={property.id} 
+                property={property} 
+                onClick={setNewProperty}
+              />
             ))}
           </div>
         ) : (
