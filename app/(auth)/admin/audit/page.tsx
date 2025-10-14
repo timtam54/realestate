@@ -384,9 +384,8 @@ export default function AdminAuditLogPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
-                        size="sm"
-                        variant="outline"
                         onClick={() => setSelectedLog(log)}
+                        className="flex items-center px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                       >
                         <Eye className="h-4 w-4 mr-1" />
                         View
