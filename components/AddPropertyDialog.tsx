@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft } from 'lucide-react'
 import { BlobServiceClient } from '@azure/storage-blob'
 
@@ -30,9 +30,11 @@ interface AddPropertyDialogProps {
   property: Property
 }
 
+type WizardStep = 'property-details' | 'price-terms' | 'photos-video' | 'compliance' | 'review'
+
 export default function AddPropertyDialog({  onClose, onSave, property: initialProperty }: AddPropertyDialogProps) {
   const [property, setProperty] = useState<Property>(initialProperty)
-  const [activeTab, setActiveTab] = useState<'details' | 'photos'>('details')
+  const [currentStep, setCurrentStep] = useState<WizardStep>('property-details')
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
   const [photoTitle, setPhotoTitle] = useState('')
   const [isUploading, setIsUploading] = useState(false)
@@ -57,10 +59,10 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   }
 
   useEffect(() => {
-    if (property.id > 0 && activeTab === 'photos') {
+    if (property.id > 0 && currentStep === 'photos-video') {
       fetchPhotos()
     }
-  }, [property.id, activeTab, fetchPhotos])
+  }, [property.id, currentStep, fetchPhotos])
 
   const getPhotoUrl = (photobloburl: string) => {
     const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
@@ -191,7 +193,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const handleSave = async () => {
     await onSave(property)
     setProperty(initialProperty)
-    setActiveTab('details')
+    setCurrentStep('property-details')
   }
 
   const handleClose = () => {
@@ -199,50 +201,84 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     stopCamera()
     setCapturedPhoto(null)
     setPhotoTitle('')
-    setActiveTab('details')
+    setCurrentStep('property-details')
     onClose()
+  }
+
+  const handleNext = () => {
+    const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
+    const currentIndex = steps.indexOf(currentStep)
+    if (currentIndex < steps.length - 1) {
+      setCurrentStep(steps[currentIndex + 1])
+    }
+  }
+
+  const handlePrevious = () => {
+    const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
+    const currentIndex = steps.indexOf(currentStep)
+    if (currentIndex > 0) {
+      setCurrentStep(steps[currentIndex - 1])
+    }
   }
 
 
 
+  const steps = [
+    { id: 'property-details' as WizardStep, label: 'Property Details', number: 1 },
+    { id: 'price-terms' as WizardStep, label: 'Price & Terms', number: 2 },
+    { id: 'photos-video' as WizardStep, label: 'Photos & Video', number: 3 },
+    { id: 'compliance' as WizardStep, label: 'Compliance & Documents', number: 4 },
+    { id: 'review' as WizardStep, label: 'Review & Payment', number: 5 },
+  ]
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">{property.id === 0 ? 'Add New Property' : 'Edit Property'}</h2>
-          <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
-            <X className="w-6 h-6" />
-          </button>
+    <div className="fixed inset-0 bg-gray-50 z-50 overflow-y-auto">
+      <div className="min-h-screen">
+        <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+          <div className="max-w-5xl mx-auto px-6 py-4">
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold">{property.id === 0 ? 'List New Property' : 'Edit Property'}</h1>
+              <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              {steps.map((step, index) => (
+                <React.Fragment key={step.id}>
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={() => setCurrentStep(step.id)}
+                      disabled={property.id === 0 && step.id === 'photos-video'}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
+                        currentStep === step.id
+                          ? 'bg-[#FF6600] text-white'
+                          : property.id === 0 && step.id === 'photos-video'
+                          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                      }`}
+                    >
+                      {step.number}
+                    </button>
+                    <span className={`text-xs mt-2 text-center max-w-[100px] ${
+                      currentStep === step.id ? 'text-[#FF6600] font-medium' : 'text-gray-600'
+                    }`}>
+                      {step.label}
+                    </span>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className="flex-1 h-0.5 bg-gray-300 mx-2 mb-6" />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
         </div>
 
-        <div className="flex gap-2 mb-6 border-b">
-          <button
-            onClick={() => setActiveTab('details')}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === 'details'
-                ? 'text-[#FF6600] border-b-2 border-[#FF6600]'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Details
-          </button>
-          <button
-            onClick={() => setActiveTab('photos')}
-            disabled={property.id === 0}
-            className={`px-4 py-2 font-medium transition-colors ${
-              property.id === 0
-                ? 'text-gray-300 cursor-not-allowed'
-                : activeTab === 'photos'
-                ? 'text-[#FF6600] border-b-2 border-[#FF6600]'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Photos
-          </button>
-        </div>
-
-        {activeTab === 'details' ? (
-          <>
+        <div className="max-w-5xl mx-auto px-6 py-8">
+          {currentStep === 'property-details' ? (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-6">Property Details</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -264,34 +300,110 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                   placeholder="Enter property address"
                 />
               </div>
+            </div>
+            <div className="flex justify-between gap-3 mt-8">
+              <button
+                onClick={handleClose}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleNext}
+                className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
+              >
+                Next: Price & Terms
+              </button>
+            </div>
+          </div>
+        ) : currentStep === 'price-terms' ? (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-6">Price & Terms</h2>
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Asking Price</label>
                 <input
                   type="number"
                   value={property.price}
                   onChange={(e) => setProperty({ ...property, price: Number(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
-                  placeholder="Enter price"
+                  placeholder="Enter asking price"
                 />
               </div>
             </div>
-            <div className="flex gap-3 mt-6">
+            <div className="flex justify-between gap-3 mt-8">
               <button
-                onClick={handleSave}
-                className="flex-1 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"
+                onClick={handlePrevious}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
               >
-                Save
+                Previous
+              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Save & Exit
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
+                >
+                  Next: Photos & Video
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : currentStep === 'compliance' ? (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-6">Compliance & Documents</h2>
+            <p className="text-gray-600 mb-4">Add verification badges and compliance documents to build trust with buyers.</p>
+            <div className="flex justify-between gap-3 mt-8">
+              <button
+                onClick={handlePrevious}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Previous
               </button>
               <button
-                onClick={handleClose}
-                className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors"
+                onClick={handleNext}
+                className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
               >
-                Cancel
+                Next: Review & Payment
               </button>
             </div>
-          </>
+          </div>
+        ) : currentStep === 'review' ? (
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-6">Review & Payment</h2>
+            <div className="space-y-4 mb-6">
+              <div className="border-b pb-4">
+                <h3 className="font-medium text-gray-700">Property Details</h3>
+                <p className="text-gray-600">{property.title}</p>
+                <p className="text-gray-600">{property.address}</p>
+              </div>
+              <div className="border-b pb-4">
+                <h3 className="font-medium text-gray-700">Price</h3>
+                <p className="text-gray-600">${property.price.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="flex justify-between gap-3 mt-8">
+              <button
+                onClick={handlePrevious}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Complete & Publish
+              </button>
+            </div>
+          </div>
         ) : showAddPhoto ? (
-          <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-md p-6">
             <button
               onClick={() => {
                 setShowAddPhoto(false)
@@ -369,7 +481,8 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             <canvas ref={canvasRef} className="hidden" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-semibold mb-6">Photos & Video</h2>
             {photos.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500 mb-4">No photos yet</p>
@@ -386,7 +499,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
               </div>
             ) : (
               <>
-                <div className="relative bg-gray-100 rounded-lg overflow-hidden">
+                <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-4">
                   <img
                     src={getPhotoUrl(photos[currentPhotoIndex].photobloburl)}
                     alt={photos[currentPhotoIndex].title}
@@ -427,9 +540,24 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                 </button>
               </>
             )}
+            <div className="flex justify-between gap-3 mt-8">
+              <button
+                onClick={handlePrevious}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={handleNext}
+                className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
+              >
+                Next: Compliance & Documents
+              </button>
+            </div>
             <canvas ref={canvasRef} className="hidden" />
           </div>
         )}
+        </div>
       </div>
     </div>
   )
