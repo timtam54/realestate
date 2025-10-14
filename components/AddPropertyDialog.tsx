@@ -87,23 +87,33 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   }
 
   const uploadPhotoToAzure = async (dataUrl: string): Promise<string> => {
-    const blob = await (await fetch(dataUrl)).blob()
-    const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' })
+    try {
+      const blob = await (await fetch(dataUrl)).blob()
+      const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' })
 
-    const AZURE_BLOB_SAS_URL =
-      process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE! + "?" + process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
-    const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER
-alert(containerName)
-    const blobServiceClient = new BlobServiceClient(AZURE_BLOB_SAS_URL)
-    const containerClient = blobServiceClient.getContainerClient(containerName!)
+      const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
+      const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
+      const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
 
-    await containerClient.createIfNotExists()
+      const blobName = `property-${property.id}-${Date.now()}-${file.name.replace(/\s+/g, "-")}`
+      
+      const blobUrl = `${baseUrl}/${containerName}/${blobName}?${sasToken}`
+      
+      const blockBlobClient = new BlobServiceClient(`${baseUrl}?${sasToken}`)
+        .getContainerClient(containerName)
+        .getBlockBlobClient(blobName)
 
-    const blobName = `property-${property.id}-${Date.now()}-${file.name.replace(/\s+/g, "-")}`
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName)
-
-    await blockBlobClient.uploadData(file)
-    return blobName
+      await blockBlobClient.uploadData(file, {
+        blobHTTPHeaders: {
+          blobContentType: 'image/jpeg'
+        }
+      })
+      
+      return blobName
+    } catch (error) {
+      alert(`Upload error: ${error}`)
+      throw error
+    }
   }
 
   const keepPhoto = async () => {

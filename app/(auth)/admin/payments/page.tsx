@@ -171,11 +171,12 @@ function RefundModal({ transaction, onClose, onRefund }: RefundModalProps) {
         </div>
         
         <div className="flex justify-end space-x-3 mt-6">
-          <button variant="outline" onClick={onClose}>
+          <button type="button" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50" onClick={onClose}>
             Cancel
           </button>
           <button 
-            className="bg-red-600 hover:bg-red-700"
+            type="button"
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:bg-gray-400"
             onClick={handleRefund}
             disabled={!amount || !reason || amount > maxRefund}
           >
@@ -248,9 +249,9 @@ export default function AdminPaymentsPage() {
                 <span className="text-sm text-gray-400 block">Payment Management</span>
               </div>
             </div>
-            <button variant="outline" className="text-white border-white hover:bg-gray-800" asChild>
-              <Link href="/admin/dashboard">Back to Overview</Link>
-            </button>
+            <Link href="/admin/dashboard" className="px-4 py-2 text-white border border-white rounded hover:bg-gray-800">
+              Back to Overview
+            </Link>
           </div>
         </div>
       </header>
@@ -342,7 +343,7 @@ export default function AdminPaymentsPage() {
                 <option value="year">This Year</option>
               </select>
             </div>
-            <button variant="outline">
+            <button type="button" className="flex items-center px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
               <Download className="h-4 w-4 mr-2" />
               Export CSV
             </button>
@@ -428,8 +429,8 @@ export default function AdminPaymentsPage() {
                     <div className="flex space-x-2">
                       {(transaction.status === 'succeeded' || transaction.status === 'partially_refunded') && (
                         <button
-                          size="sm"
-                          variant="outline"
+                          type="button"
+                          className="flex items-center px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                           onClick={() => setShowRefundModal(transaction)}
                           disabled={transaction.amount === transaction.refunds.reduce((sum, r) => sum + r.amount, 0)}
                         >
@@ -437,12 +438,10 @@ export default function AdminPaymentsPage() {
                           Refund
                         </button>
                       )}
-                      <button size="sm" variant="outline" asChild>
-                        <Link href={`https://dashboard.stripe.com/payments/${transaction.stripePaymentIntentId}`} target="_blank">
-                          <CreditCard className="h-4 w-4 mr-1" />
-                          View in Stripe
-                        </Link>
-                      </button>
+                      <Link href={`https://dashboard.stripe.com/payments/${transaction.stripePaymentIntentId}`} target="_blank" className="flex items-center px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
+                        <CreditCard className="h-4 w-4 mr-1" />
+                        View in Stripe
+                      </Link>
                     </div>
                   </td>
                 </tr>
