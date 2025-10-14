@@ -110,7 +110,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
       }
 
       const initAutocomplete = () => {
-        if (!addressInputRef.current || !window.google) return
+        if (!addressInputRef.current || !window.google?.maps?.places) return
 
         autocompleteRef.current = new window.google.maps.places.Autocomplete(
           addressInputRef.current,
@@ -121,8 +121,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
         )
 
         autocompleteRef.current.addListener('place_changed', () => {
-          const place = autocompleteRef.current.getPlace()
-          if (place.formatted_address && user) {
+          const place = autocompleteRef.current?.getPlace()
+          if (place?.formatted_address && user) {
             setUser({ ...user, address: place.formatted_address })
           }
         })
