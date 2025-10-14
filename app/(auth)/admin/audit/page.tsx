@@ -213,9 +213,12 @@ export default function AdminAuditLogPage() {
                 <span className="text-sm text-gray-400 block">Audit Log</span>
               </div>
             </div>
-            <button variant="outline" className="text-white border-white hover:bg-gray-800" asChild>
-              <Link href="/admin/dashboard">Back to Overview</Link>
-            </button>
+            <Link 
+              href="/admin/dashboard"
+              className="px-4 py-2 text-white border border-white rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Back to Overview
+            </Link>
           </div>
         </div>
       </header>
