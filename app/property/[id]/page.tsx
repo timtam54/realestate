@@ -84,9 +84,9 @@ export default function PropertyDetailPage() {
               <span className="font-bold text-xl">BuySel</span>
             </Link>
             <nav className="flex items-center space-x-4">
-              <Button variant="outline" asChild>
+              <button variant="outline" asChild>
                 <Link href="/buyer/search">Back to Search</Link>
-              </Button>
+              </button>
             </nav>
           </div>
         </div>
@@ -230,9 +230,9 @@ export default function PropertyDetailPage() {
                           <p className="text-xs text-gray-500 mt-2">
                             Verified by {badge.issuer} on {new Date(badge.date).toLocaleDateString()}
                           </p>
-                          <Button variant="outline" size="sm" className="mt-2">
+                          <button variant="outline" size="sm" className="mt-2">
                             View Document
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -295,13 +295,13 @@ export default function PropertyDetailPage() {
               </div>
               
               {!showContactForm ? (
-                <Button 
+                <button 
                   onClick={() => setShowContactForm(true)}
                   className="w-full"
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Send Message
-                </Button>
+                </button>
               ) : (
                 <form className="space-y-4">
                   <div>
@@ -335,24 +335,24 @@ export default function PropertyDetailPage() {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full">
+                  <button type="submit" className="w-full">
                     Send Message
-                  </Button>
-                  <Button
+                  </button>
+                  <button
                     type="button"
                     variant="outline"
                     onClick={() => setShowContactForm(false)}
                     className="w-full"
                   >
                     Cancel
-                  </Button>
+                  </button>
                 </form>
               )}
               
-              <Button variant="outline" className="w-full mt-4">
+              <button variant="outline" className="w-full mt-4">
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule Inspection
-              </Button>
+              </button>
             </div>
           </div>
         </div>

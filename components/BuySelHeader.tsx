@@ -6,6 +6,7 @@ import { Home, User, ListPlus, Search, Briefcase, Settings, LogOut } from 'lucid
 import { signOut } from 'next-auth/react'
 import { useState } from 'react'
 import Login from './Login'
+import UserProfile from './UserProfile'
 
 interface BuySelHeaderProps {
   user: {
@@ -18,6 +19,7 @@ interface BuySelHeaderProps {
 
 export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProps) {
   const [showLogin, setShowLogin] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   return (
     <>
       <header className="bg-gradient-to-r from-orange-50 via-white to-orange-50 shadow-lg sticky top-0 z-50 backdrop-blur-sm bg-opacity-95">
@@ -40,7 +42,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
               <Search className="w-4 h-4" />
               <span><u>Buy</u></span>
             </Link>
-            <Link href="/seller/dashboard" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
+            <Link href="/seller" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
               <Home className="w-4 h-4" />
               <span><u>Sell</u></span>
             </Link>
@@ -55,7 +57,10 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
           <div className="flex items-center space-x-3">
             {isAuthenticated ? (
               <>
-                <div className="flex items-center gap-2 text-[#333333] px-3">
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-3 py-2 rounded-lg transition-all hover:bg-orange-50"
+                >
                   {user?.image && (
                     <img 
                       src={user.image} 
@@ -64,7 +69,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                     />
                   )}
                   <span className="font-medium">{user?.name || user?.email}</span>
-                </div>
+                </button>
                 <button
                   onClick={() => signOut()}
                   className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-4 py-2.5 rounded-lg transition-all font-medium border border-gray-300 hover:border-[#FF6600] hover:bg-orange-50"
@@ -93,7 +98,9 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
               <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-700 pointer-events-none" />
               <select 
                 onChange={(e) => {
-                  if (e.target.value === 'conveyancer') {
+                  if (e.target.value === 'seller') {
+                    window.location.href = '/seller'
+                  } else if (e.target.value === 'conveyancer') {
                     window.location.href = '/conveyancer/queue'
                   } else if (e.target.value === 'admin') {
                     window.location.href = '/admin/dashboard'
@@ -101,7 +108,9 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 }}
                 className="pl-10 pr-4 py-2.5 bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 font-medium cursor-pointer hover:from-red-200 hover:to-red-300 transition-all appearance-none"
               >
-                <option value="buyer-seller">Buyer/Seller</option>
+                <option value="buyer-seller">Buyer</option>
+                <option value="seller">Seller</option>
+                
                 <option value="conveyancer">Conveyancer</option>
                 <option value="admin">Admin</option>
               </select>
@@ -111,6 +120,13 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
       </div>
     </header>
       {showLogin && <Login onClose={() => setShowLogin(false)} />}
+      {showProfile && user?.email && (
+        <UserProfile
+          email={user.email}
+          isOpen={showProfile}
+          onClose={() => setShowProfile(false)}
+        />
+      )}
     </>
   )
 }
