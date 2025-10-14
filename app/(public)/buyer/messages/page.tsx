@@ -224,9 +224,9 @@ export default function BuyerMessagesPage() {
               <Link href="/buyer/saved" className="text-gray-700 hover:text-blue-600">
                 Saved
               </Link>
-              <button asChild>
-                <Link href="/auth/signin">Sign In</Link>
-              </button>
+              <Link href="/auth/signin" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Sign In
+              </Link>
             </nav>
           </div>
         </div>
@@ -310,18 +310,16 @@ export default function BuyerMessagesPage() {
                         </span>
                       ) : (
                         <button
-                          variant="outline"
-                          size="sm"
+                          type="button"
                           onClick={() => setShowContactModal(true)}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 flex items-center"
                         >
                           <Lock className="h-4 w-4 mr-1" />
                           Share Contact
                         </button>
                       )}
-                      <Link href={`/property/${selectedThread.propertyId}`}>
-                        <button variant="outline" size="sm">
-                          View Property
-                        </button>
+                      <Link href={`/property/${selectedThread.propertyId}`} className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
+                        View Property
                       </Link>
                     </div>
                   </div>
@@ -379,7 +377,7 @@ export default function BuyerMessagesPage() {
                       placeholder="Type a message..."
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <button onClick={sendMessage}>
+                    <button type="button" onClick={sendMessage} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
                       <Send className="h-4 w-4" />
                     </button>
                   </div>
@@ -434,10 +432,10 @@ export default function BuyerMessagesPage() {
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
-                <button variant="outline" onClick={() => setShowContactModal(false)}>
+                <button type="button" onClick={() => setShowContactModal(false)} className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
                   Cancel
                 </button>
-                <button onClick={toggleContactSharing}>
+                <button type="button" onClick={toggleContactSharing} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                   {selectedThread.buyerConsent ? 'Revoke Consent' : 'Share My Contact'}
                 </button>
               </div>

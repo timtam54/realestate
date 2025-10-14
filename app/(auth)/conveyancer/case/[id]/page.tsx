@@ -134,12 +134,10 @@ export default function ConveyancerCaseDetailPage() {
                 <span className="text-sm text-gray-600 block">Conveyancer Portal</span>
               </div>
             </Link>
-            <button variant="outline" asChild>
-              <Link href="/conveyancer/queue">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Queue
-              </Link>
-            </button>
+            <Link href="/conveyancer/queue" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Queue
+            </Link>
           </div>
         </div>
       </header>
@@ -242,7 +240,7 @@ export default function ConveyancerCaseDetailPage() {
                   <p className="text-gray-600 mb-4">
                     Generate a Contract of Sale template based on the property details
                   </p>
-                  <button onClick={handleGenerateContract}>
+                  <button onClick={handleGenerateContract} type="button" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Generate Contract Template
                   </button>
                 </div>
@@ -257,7 +255,7 @@ export default function ConveyancerCaseDetailPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    <button variant="outline" className="w-full">
+                    <button type="button" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center justify-center">
                       <Download className="h-4 w-4 mr-2" />
                       Download Contract Template
                     </button>
@@ -274,10 +272,8 @@ export default function ConveyancerCaseDetailPage() {
                         className="hidden"
                         id="contract-upload"
                       />
-                      <label htmlFor="contract-upload">
-                        <button variant="outline" size="sm" asChild>
-                          <span>Select File</span>
-                        </button>
+                      <label htmlFor="contract-upload" className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 cursor-pointer inline-block">
+                        Select File
                       </label>
                       {contractFile && (
                         <p className="text-sm text-gray-600 mt-2">
@@ -288,9 +284,10 @@ export default function ConveyancerCaseDetailPage() {
                     
                     {contractFile && (
                       <button 
+                        type="button"
                         onClick={handleUploadContract}
                         disabled={isUploading}
-                        className="w-full"
+                        className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isUploading ? 'Uploading...' : 'Upload Contract'}
                       </button>
@@ -308,7 +305,7 @@ export default function ConveyancerCaseDetailPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    <button variant="outline" className="w-full">
+                    <button type="button" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center justify-center">
                       <Download className="h-4 w-4 mr-2" />
                       Download Contract
                     </button>
@@ -329,8 +326,9 @@ export default function ConveyancerCaseDetailPage() {
                         </div>
                         
                         <button 
+                          type="button"
                           onClick={handleMarkVerified}
-                          className="w-full"
+                          className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center justify-center"
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Mark as Prepared & Verified
@@ -379,7 +377,7 @@ export default function ConveyancerCaseDetailPage() {
                 </div>
               </div>
               
-              <button variant="outline" className="w-full mt-4">
+              <button type="button" className="w-full mt-4 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 flex items-center justify-center">
                 <Mail className="h-4 w-4 mr-2" />
                 Contact Seller
               </button>

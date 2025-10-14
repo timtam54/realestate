@@ -196,12 +196,10 @@ export default function SellerDashboardPage() {
                 <MessageSquare className="h-5 w-5 mr-1" />
                 Messages
               </Link>
-              <button asChild>
-                <Link href="/seller/list-property">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Listing
-                </Link>
-              </button>
+              <Link href="/seller/list-property" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
+                <Plus className="h-4 w-4 mr-2" />
+                New Listing
+              </Link>
             </nav>
           </div>
         </div>
@@ -411,12 +409,10 @@ export default function SellerDashboardPage() {
             <div className="text-center py-12">
               <Home className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 mb-4">You don&apos;t have any listings yet</p>
-              <button asChild>
-                <Link href="/seller/list-property">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Listing
-                </Link>
-              </button>
+              <Link href="/seller/list-property" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Your First Listing
+              </Link>
             </div>
           )}
         </div>
@@ -671,10 +667,10 @@ export default function SellerDashboardPage() {
 
                 {/* Action Buttons */}
                 <div className="flex justify-end space-x-3 pt-6 border-t">
-                  <button variant="outline" onClick={closeEditDialog}>
+                  <button type="button" onClick={closeEditDialog} className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
                     Cancel
                   </button>
-                  <button onClick={handleSave}>
+                  <button type="button" onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                     Save Changes
                   </button>
                 </div>

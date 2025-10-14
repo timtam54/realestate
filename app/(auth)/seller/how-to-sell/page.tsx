@@ -53,9 +53,9 @@ export default function HowToSellPage() {
               <Link href="/seller/dashboard" className="text-gray-700 hover:text-blue-600">
                 My Dashboard
               </Link>
-              <button asChild>
-                <Link href="/seller/list-property">List Property</Link>
-              </button>
+              <Link href="/seller/list-property" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                List Property
+              </Link>
             </nav>
           </div>
         </div>
@@ -71,18 +71,14 @@ export default function HowToSellPage() {
             Keep 100% of your sale price. Pay only a flat $500 listing fee.
           </p>
           <div className="flex justify-center space-x-4">
-            <button size="lg" className="bg-white text-blue-600 hover:bg-gray-100" asChild>
-              <Link href="/seller/list-property">
-                Start Listing Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </button>
-            <button size="lg" variant="outline" className="text-white border-white hover:bg-blue-700" asChild>
-              <Link href="#calculator">
-                Calculate Savings
-                <Calculator className="ml-2 h-5 w-5" />
-              </Link>
-            </button>
+            <Link href="/seller/list-property" className="px-6 py-3 text-lg bg-white text-blue-600 hover:bg-gray-100 rounded flex items-center">
+              Start Listing Now
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+            <Link href="#calculator" className="px-6 py-3 text-lg text-white border-2 border-white hover:bg-blue-700 rounded flex items-center">
+              Calculate Savings
+              <Calculator className="ml-2 h-5 w-5" />
+            </Link>
           </div>
         </div>
       </section>
@@ -380,18 +376,14 @@ export default function HowToSellPage() {
             Join hundreds of Queensland homeowners who&apos;ve sold without agent commission.
           </p>
           <div className="flex justify-center space-x-4">
-            <button size="lg" className="bg-white text-blue-600 hover:bg-gray-100" asChild>
-              <Link href="/seller/list-property">
-                List Your Property Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </button>
-            <button size="lg" variant="outline" className="text-white border-white hover:bg-blue-700" asChild>
-              <Link href="/contact">
-                Talk to Us First
-                <MessageSquare className="ml-2 h-5 w-5" />
-              </Link>
-            </button>
+            <Link href="/seller/list-property" className="px-6 py-3 text-lg bg-white text-blue-600 hover:bg-gray-100 rounded flex items-center">
+              List Your Property Now
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+            <Link href="/contact" className="px-6 py-3 text-lg text-white border-2 border-white hover:bg-blue-700 rounded flex items-center">
+              Talk to Us First
+              <MessageSquare className="ml-2 h-5 w-5" />
+            </Link>
           </div>
           <p className="mt-6 text-blue-100">
             No obligation. No hidden fees. Just $500 to list.

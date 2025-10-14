@@ -246,38 +246,39 @@ function UserDetailsModal({ user, onClose, onStatusChange }: UserDetailsModalPro
             <div className="flex space-x-3">
               {user.status === 'active' ? (
                 <button
+                  type="button"
                   onClick={() => onStatusChange(user.id, 'suspended')}
-                  className="bg-red-600 hover:bg-red-700"
+                  className="flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                 >
                   <Ban className="h-4 w-4 mr-2" />
                   Suspend User
                 </button>
               ) : user.status === 'suspended' ? (
                 <button
+                  type="button"
                   onClick={() => onStatusChange(user.id, 'active')}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
                   Reactivate User
                 </button>
               ) : (
                 <button
+                  type="button"
                   onClick={() => onStatusChange(user.id, 'active')}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
                   Approve User
                 </button>
               )}
-              <button variant="outline">
+              <button type="button" className="flex items-center px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
                 <Mail className="h-4 w-4 mr-2" />
                 Send Email
               </button>
-              <button variant="outline" asChild>
-                <Link href={`/admin/audit?user=${user.id}`}>
-                  View Audit Log
-                </Link>
-              </button>
+              <Link href={`/admin/audit?user=${user.id}`} className="flex items-center px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                View Audit Log
+              </Link>
             </div>
           </div>
         </div>
@@ -331,9 +332,9 @@ export default function AdminUsersPage() {
                 <span className="text-sm text-gray-400 block">User Management</span>
               </div>
             </div>
-            <button variant="outline" className="text-white border-white hover:bg-gray-800" asChild>
-              <Link href="/admin/dashboard">Back to Overview</Link>
-            </button>
+            <Link href="/admin/dashboard" className="px-4 py-2 text-white border border-white rounded hover:bg-gray-800">
+              Back to Overview
+            </Link>
           </div>
         </div>
       </header>
@@ -426,7 +427,7 @@ export default function AdminUsersPage() {
               <option value="suspended">Suspended</option>
               <option value="pending">Pending</option>
             </select>
-            <button variant="outline">
+            <button type="button" className="flex items-center px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
               <Filter className="h-4 w-4 mr-2" />
               Advanced Filters
             </button>

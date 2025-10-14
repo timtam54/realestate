@@ -119,9 +119,9 @@ export default function ConveyancerQueuePage() {
             </Link>
             <div className="flex items-center space-x-4">
               <span className="text-gray-700">Smith & Co Conveyancers</span>
-              <button variant="outline" asChild>
-                <Link href="/">Exit Portal</Link>
-              </button>
+              <Link href="/" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+                Exit Portal
+              </Link>
             </div>
           </div>
         </div>
@@ -216,10 +216,10 @@ export default function ConveyancerQueuePage() {
               <option value="low">Low Priority</option>
             </select>
 
-            <button variant="outline" size="sm" onClick={() => {
+            <button type="button" onClick={() => {
               setFilterStatus('all')
               setFilterPriority('all')
-            }}>
+            }} className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50">
               Clear Filters
             </button>
           </div>
@@ -305,18 +305,14 @@ export default function ConveyancerQueuePage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {caseItem.status === 'completed' ? (
-                        <button variant="outline" size="sm" asChild>
-                          <Link href={`/conveyancer/case/${caseItem.id}`}>
-                            <Download className="h-4 w-4 mr-1" />
-                            View
-                          </Link>
-                        </button>
+                        <Link href={`/conveyancer/case/${caseItem.id}`} className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 flex items-center">
+                          <Download className="h-4 w-4 mr-1" />
+                          View
+                        </Link>
                       ) : (
-                        <button size="sm" asChild>
-                          <Link href={`/conveyancer/case/${caseItem.id}`}>
-                            {caseItem.status === 'new' ? 'Start' : 'Continue'}
-                          </Link>
-                        </button>
+                        <Link href={`/conveyancer/case/${caseItem.id}`} className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
+                          {caseItem.status === 'new' ? 'Start' : 'Continue'}
+                        </Link>
                       )}
                     </td>
                   </tr>

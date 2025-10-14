@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Camera, X, Upload } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft } from 'lucide-react'
 import { BlobServiceClient } from '@azure/storage-blob'
 
 interface Property {
@@ -13,6 +13,14 @@ interface Property {
   price: number
   lat: number
   lon: number
+}
+
+interface Photo {
+  id: number
+  propertyid: number
+  photobloburl: string
+  title: string
+  dte: string
 }
 
 interface AddPropertyDialogProps {
@@ -27,10 +35,38 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
   const [photoTitle, setPhotoTitle] = useState('')
   const [isUploading, setIsUploading] = useState(false)
+  const [photos, setPhotos] = useState<Photo[]>([])
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
+  const [showAddPhoto, setShowAddPhoto] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (property.id > 0 && activeTab === 'photos') {
+      fetchPhotos()
+    }
+  }, [property.id, activeTab])
+
+  const fetchPhotos = async () => {
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setPhotos(data)
+      }
+    } catch (error) {
+      console.error('Error fetching photos:', error)
+    }
+  }
+
+  const getPhotoUrl = (photobloburl: string) => {
+    const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
+    const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
+    const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
+    return `${baseUrl}/${containerName}/${photobloburl}?${sasToken}`
+  }
 
   const startCamera = async () => {
     try {
@@ -142,6 +178,8 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
 
       setCapturedPhoto(null)
       setPhotoTitle('')
+      setShowAddPhoto(false)
+      await fetchPhotos()
       alert('Photo uploaded successfully!')
     } catch (error) {
       console.error('Error uploading photo:', error)
@@ -190,10 +228,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             Details
           </button>
           <button
-            onClick={() => {
-              setActiveTab('photos')
-              if (property.id !== 0) startCamera()
-            }}
+            onClick={() => setActiveTab('photos')}
             disabled={property.id === 0}
             className={`px-4 py-2 font-medium transition-colors ${
               property.id === 0
@@ -256,8 +291,19 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
               </button>
             </div>
           </>
-        ) : (
+        ) : showAddPhoto ? (
           <div className="space-y-4">
+            <button
+              onClick={() => {
+                setShowAddPhoto(false)
+                setCapturedPhoto(null)
+                stopCamera()
+              }}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Photos
+            </button>
             {!capturedPhoto ? (
               <div className="space-y-4">
                 <video
@@ -320,6 +366,67 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                   </button>
                 </div>
               </div>
+            )}
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {photos.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 mb-4">No photos yet</p>
+                <button
+                  onClick={() => {
+                    setShowAddPhoto(true)
+                    startCamera()
+                  }}
+                  className="inline-flex items-center gap-2 bg-[#FF6600] text-white px-6 py-3 rounded-lg hover:bg-[#FF5500] transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add First Photo
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="relative bg-gray-100 rounded-lg overflow-hidden">
+                  <img
+                    src={getPhotoUrl(photos[currentPhotoIndex].photobloburl)}
+                    alt={photos[currentPhotoIndex].title}
+                    className="w-full h-96 object-cover"
+                  />
+                  {photos.length > 1 && (
+                    <>
+                      <button
+                        onClick={() => setCurrentPhotoIndex((currentPhotoIndex - 1 + photos.length) % photos.length)}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                      <button
+                        onClick={() => setCurrentPhotoIndex((currentPhotoIndex + 1) % photos.length)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-all"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
+                    </>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
+                    <h3 className="text-white font-semibold text-lg">{photos[currentPhotoIndex].title}</h3>
+                    <p className="text-white text-sm opacity-90">
+                      Photo {currentPhotoIndex + 1} of {photos.length}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowAddPhoto(true)
+                    startCamera()
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-[#FF6600] text-white px-4 py-3 rounded-lg hover:bg-[#FF5500] transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  Add Another Photo
+                </button>
+              </>
             )}
             <canvas ref={canvasRef} className="hidden" />
           </div>
