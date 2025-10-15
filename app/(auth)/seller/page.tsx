@@ -41,32 +41,40 @@ export default function SellerPage() {
 
     properties.forEach((property) => {
       if (property.lat && property.lon && window.google?.maps) {
-        const labelContent = `${property.title}\n${property.address}\n$${property.price.toLocaleString()}`
+        const priceLabel = `$${(property.price / 1000).toFixed(0)}k`
         
         const marker = new window.google.maps.Marker({
           position: { lat: property.lat, lng: property.lon },
           map,
-          title: labelContent,
+          title: property.title,
           icon: {
             url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-              <svg xmlns="http://www.w3.org/2000/svg" width="240" height="90" viewBox="0 0 240 90">
-                <rect x="5" y="5" width="230" height="80" rx="8" fill="#fb923c" stroke="black" stroke-width="2"/>
-                <text x="120" y="28" font-size="16" font-weight="bold" text-anchor="middle" fill="black">${property.title}</text>
-                <text x="120" y="50" font-size="13" text-anchor="middle" fill="black">${property.address}</text>
-                <text x="120" y="72" font-size="15" font-weight="bold" text-anchor="middle" fill="black">$${property.price.toLocaleString()}</text>
+              <svg xmlns="http://www.w3.org/2000/svg" width="120" height="50" viewBox="0 0 120 50">
+                <defs>
+                  <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+                  </filter>
+                </defs>
+                <g filter="url(#shadow)">
+                  <rect x="5" y="5" width="110" height="36" rx="18" fill="white" stroke="#FF6600" stroke-width="2"/>
+                  <text x="60" y="28" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#FF6600">${priceLabel}</text>
+                </g>
+                <polygon points="60,41 55,46 65,46" fill="white" stroke="#FF6600" stroke-width="2"/>
               </svg>
             `),
-            scaledSize: new window.google.maps.Size(240, 90),
-            anchor: new window.google.maps.Point(120, 45),
+            scaledSize: new window.google.maps.Size(120, 50),
+            anchor: new window.google.maps.Point(60, 46),
           },
         })
 
         const infoWindow = new window.google.maps.InfoWindow({
           content: `
-            <div style="padding: 8px; background: #fb923c; color: black; border-radius: 8px;">
-              <h3 style="font-weight: bold; margin-bottom: 4px; font-size: 16px;">${property.title}</h3>
-              <p style="font-size: 13px; margin-bottom: 4px;">${property.address}</p>
-              <p style="font-weight: bold; font-size: 15px;">$${property.price.toLocaleString()}</p>
+            <div style="padding: 12px; min-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
+              <h3 style="font-weight: 600; margin: 0 0 8px 0; font-size: 16px; color: #1f2937;">${property.title}</h3>
+              <p style="font-size: 14px; margin: 0 0 8px 0; color: #6b7280;">${property.address}</p>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 700; font-size: 18px; color: #FF6600;">$${property.price.toLocaleString()}</span>
+              </div>
             </div>
           `,
         })
@@ -233,8 +241,8 @@ export default function SellerPage() {
 
     {newProperty &&  <AddPropertyDialog
         onClose={() => {
-         
           setNewProperty(null)
+          fetchProperties()
         }}
         onSave={handleAddProperty}
         property={newProperty}

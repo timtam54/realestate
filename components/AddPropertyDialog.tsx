@@ -798,7 +798,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
               <>
                 <div className="relative bg-gray-100 rounded-lg overflow-hidden mb-4">
                   <img
-                    src={getPhotoUrl(photos[currentPhotoIndex].photobloburl)}
+                    src={getPhotoUrl(photos[currentPhotoIndex].photobloburl) || ''}
                     alt={photos[currentPhotoIndex].title}
                     className="w-full h-96 object-cover"
                   />
