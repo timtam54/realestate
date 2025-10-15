@@ -8,4 +8,14 @@ export interface Property {
   lat: number
   lon: number
   photobloburl: string | null
+  typeofprop: "House"|"Apartment"|"Townhouse"|"Land"|"Rural"|"Commercial" | null
+  suburb: string | null
+  postcode: string | null
+  state: string|null
+  country:string|null
+  beds: number | null
+  baths: number | null
+  carspaces: number | null
+  landsize: number | null
+  buildyear: number | null
 }

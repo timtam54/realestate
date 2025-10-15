@@ -154,7 +154,17 @@ export default function SellerPage() {
                 price: 0,
                 lat: 0,
                 lon: 0,
-                photobloburl: null
+                photobloburl: null,
+                typeofprop: null,
+                suburb: null,
+                postcode: null,
+                beds: null,
+                baths: null,
+                carspaces: null,
+                landsize: null,
+                buildyear: null,
+                state:null,
+                country:null
               })
             }
             className="flex items-center gap-2 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"

@@ -1,21 +1,12 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft } from 'lucide-react'
+import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft, Home, Building2, Building, MapPin, Hash, Bed, Bath, Car, Maximize, Calendar, Flag } from 'lucide-react'
 import { BlobServiceClient } from '@azure/storage-blob'
 import type { GoogleAutocomplete } from '@/types/google-maps'
+import { Property } from '@/types/property'
 
-interface Property {
-  id: number
-  title: string
-  address: string
-  dte: Date
-  sellerid: number
-  price: number
-  lat: number
-  lon: number
-  photobloburl: string | null
-}
+
 
 interface Photo {
   id: number
@@ -105,7 +96,43 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
         autocompleteRef.current.addListener('place_changed', () => {
           const place = autocompleteRef.current?.getPlace()
           if (place?.formatted_address) {
-            setProperty({ ...property, address: place.formatted_address })
+            let suburb = ''
+            let postcode = ''
+            let state = ''
+            let country = ''
+            let lat = 0
+            let lon = 0
+            
+            place.address_components?.forEach((component) => {
+              if (component.types.includes('locality')) {
+                suburb = component.long_name
+              }
+              if (component.types.includes('postal_code')) {
+                postcode = component.long_name
+              }
+              if (component.types.includes('administrative_area_level_1')) {
+                state = component.short_name
+              }
+              if (component.types.includes('country')) {
+                country = component.long_name
+              }
+            })
+            
+            if (place.geometry?.location) {
+              lat = place.geometry.location.lat()
+              lon = place.geometry.location.lng()
+            }
+            
+            setProperty((prev) => ({ 
+              ...prev, 
+              address: place.formatted_address,
+              suburb: suburb || prev.suburb,
+              postcode: postcode || prev.postcode,
+              state: state || prev.state,
+              country: country || prev.country,
+              lat,
+              lon
+            }))
           }
         })
       }
@@ -118,7 +145,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
         window.google?.maps?.event?.clearInstanceListeners(autocompleteRef.current)
       }
     }
-  }, [currentStep, property])
+  }, [currentStep])
 
   const getPhotoUrl = (photobloburl: string) => {
     const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
@@ -333,28 +360,193 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
 
         <div className="max-w-5xl mx-auto px-6 py-8">
           {currentStep === 'property-details' ? (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-6">Property Details</h2>
-            <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <h2 className="text-2xl font-semibold mb-8 text-gray-800">Property Details</h2>
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Home className="w-4 h-4 text-[#FF6600]" />
+                  Property Type
+                </label>
+                <select
+                  value={property.typeofprop || ''}
+                  onChange={(e) => setProperty({ ...property, typeofprop: e.target.value as Property['typeofprop'] })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent bg-white"
+                >
+                  <option value="">Select property type</option>
+                  <option value="House">House</option>
+                  <option value="Apartment">Apartment</option>
+                  <option value="Townhouse">Townhouse</option>
+                  <option value="Land">Land</option>
+                  <option value="Rural">Rural</option>
+                  <option value="Commercial">Commercial</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Property Title</label>
                 <input
                   type="text"
                   value={property.title}
                   onChange={(e) => setProperty({ ...property, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
-                  placeholder="Enter property title"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                  placeholder="e.g., Stunning Family Home in Prime Location"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-[#FF6600]" />
+                  Full Address
+                </label>
                 <input
                   ref={addressInputRef}
                   type="text"
                   value={property.address}
-                  onChange={(e) => setProperty({ ...property, address: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
+                  onChange={(e) => setProperty({ ...property, address: e.target.value, lat: 0, lon: 0 })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
                   placeholder="Start typing address..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <Building className="w-4 h-4 text-[#FF6600]" />
+                    Suburb
+                  </label>
+                  <input
+                    type="text"
+                    value={property.suburb || ''}
+                    onChange={(e) => setProperty({ ...property, suburb: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                    placeholder="Auto-filled from address"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-[#FF6600]" />
+                    Postcode
+                  </label>
+                  <input
+                    type="text"
+                    value={property.postcode || ''}
+                    onChange={(e) => setProperty({ ...property, postcode: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                    placeholder="Auto-filled from address"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[#FF6600]" />
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    value={property.state || ''}
+                    onChange={(e) => setProperty({ ...property, state: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                    placeholder="Auto-filled from address"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                    <Flag className="w-4 h-4 text-[#FF6600]" />
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    value={property.country || ''}
+                    onChange={(e) => setProperty({ ...property, country: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                    placeholder="Auto-filled from address"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Property Features</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Bed className="w-4 h-4 text-[#FF6600]" />
+                      Bedrooms
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={property.beds || ''}
+                      onChange={(e) => setProperty({ ...property, beds: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Bath className="w-4 h-4 text-[#FF6600]" />
+                      Bathrooms
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={property.baths || ''}
+                      onChange={(e) => setProperty({ ...property, baths: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Car className="w-4 h-4 text-[#FF6600]" />
+                      Car Spaces
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={property.carspaces || ''}
+                      onChange={(e) => setProperty({ ...property, carspaces: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[#FF6600]" />
+                      Build Year
+                    </label>
+                    <input
+                      type="number"
+                      min="1800"
+                      max="2100"
+                      value={property.buildyear || ''}
+                      onChange={(e) => setProperty({ ...property, buildyear: e.target.value ? Number(e.target.value) : null })}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                      placeholder="YYYY"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <Maximize className="w-4 h-4 text-[#FF6600]" />
+                  Land Size (sqm)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={property.landsize || ''}
+                  onChange={(e) => setProperty({ ...property, landsize: e.target.value ? Number(e.target.value) : null })}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                  placeholder="Enter land size in square meters"
                 />
               </div>
             </div>
