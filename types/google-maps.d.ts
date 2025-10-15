@@ -41,7 +41,20 @@ export type GooglePoint = object
 
 export type GoogleAutocomplete = {
   addListener: (event: string, handler: () => void) => void
-  getPlace: () => { formatted_address?: string }
+  getPlace: () => {
+    formatted_address?: string
+    address_components?: Array<{
+      long_name: string
+      short_name: string
+      types: string[]
+    }>
+    geometry?: {
+      location: {
+        lat: () => number
+        lng: () => number
+      }
+    }
+  }
 }
 
 export {}
