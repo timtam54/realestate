@@ -56,19 +56,19 @@ export default function PropertyCard({ property, onClick }: PropertyCardProps) {
         <div className="flex items-center space-x-4 text-gray-700 text-sm mb-3">
           <span className="flex items-center">
             <Bed className="h-4 w-4 mr-1" />
-            4
+            {property.beds}
           </span>
           <span className="flex items-center">
             <Bath className="h-4 w-4 mr-1" />
-            2
+            {property.baths}
           </span>
           <span className="flex items-center">
             <Car className="h-4 w-4 mr-1" />
-            2
+            {property.carspaces}
           </span>
           <span className="flex items-center">
             <Home className="h-4 w-4 mr-1" />
-            800m²
+            {property.landsize }m²
           </span>
         </div>
         <div className="flex flex-wrap gap-1">

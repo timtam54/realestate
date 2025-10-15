@@ -40,14 +40,33 @@ export default function HomePage() {
     }
   }
 
-  const filteredProperties = properties.filter(property => {
-    const searchLower = searchQuery.toLowerCase()
-    const matchesSearch = searchQuery === '' || 
-      property.title.toLowerCase().includes(searchLower) ||
-      property.address.toLowerCase().includes(searchLower)
-    
-    return matchesSearch
-  })
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const suburborpostcode = searchQuery || '~'
+      const bedsParam = beds || '0'
+      const bathsParam = baths || '0'
+      const url = `https://buysel.azurewebsites.net/api/property/postsubbedbath/${suburborpostcode}/{bed}/{bath}?beds=${bedsParam}&baths=${bathsParam}`
+      //alert(url)
+      const response = await fetch(url)
+      if (response.ok) {
+        const data = await response.json()
+      //  alert(JSON.stringify(data))
+        setProperties(data)
+      }
+      else
+      {
+        alert(response.statusText)
+      }
+    } catch (error) {
+      alert('Error fetching properties:'+ error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredProperties = properties
 
   const initializeMap = useCallback(() => {
     if (!mapRef.current || !window.google?.maps || filteredProperties.length === 0) return
@@ -159,7 +178,7 @@ export default function HomePage() {
           
           {/* Search Bar */}
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
-            <form className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="md:col-span-2">
                 <input
                   type="text"
@@ -174,7 +193,7 @@ export default function HomePage() {
                 onChange={(e) => setBeds(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
               >
-                <option value="">Beds</option>
+                <option value="0">Beds</option>
                 <option value="1">1+</option>
                 <option value="2">2+</option>
                 <option value="3">3+</option>
@@ -186,18 +205,18 @@ export default function HomePage() {
                 onChange={(e) => setBaths(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
               >
-                <option value="">Baths</option>
+                <option value="0">Baths</option>
                 <option value="1">1+</option>
                 <option value="2">2+</option>
                 <option value="3">3+</option>
               </select>
-              <Link 
-                href={`/?q=${searchQuery}&beds=${beds}&baths=${baths}`}
+              <button 
+                type="submit"
                 className="bg-[#FF6600] text-white px-6 py-2 rounded-lg hover:bg-orange-700 flex items-center justify-center"
               >
                 <Search className="h-5 w-5 mr-2" />
                 Search
-              </Link>
+              </button>
             </form>
           </div>
         </div>
