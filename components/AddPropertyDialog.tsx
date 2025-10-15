@@ -6,6 +6,7 @@ import { BlobServiceClient } from '@azure/storage-blob'
 import type { GoogleAutocomplete } from '@/types/google-maps'
 import { Property } from '@/types/property'
 import toast from 'react-hot-toast'
+import { getPhotoUrl } from '@/lib/azure-config'
 
 
 
@@ -149,12 +150,6 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     }
   }, [currentStep])
 
-  const getPhotoUrl = (photobloburl: string) => {
-    const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
-    const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
-    const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
-    return `${baseUrl}/${containerName}/${photobloburl}?${sasToken}`
-  }
 
   const startCamera = async () => {
     try {

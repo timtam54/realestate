@@ -1,5 +1,6 @@
 import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, Camera } from 'lucide-react'
 import { Property } from '@/types/property'
+import { getPhotoUrl } from '@/lib/azure-config'
 
 interface PropertyCardProps {
   property: Property
@@ -11,14 +12,6 @@ const badgeIcons = {
   smoke_alarm: { icon: Shield, label: 'Smoke Alarm', color: 'text-green-600 bg-green-100' },
   building_pest: { icon: CheckCircle, label: 'Building & Pest', color: 'text-blue-600 bg-blue-100' },
   pro_photos: { icon: Camera, label: 'Pro Photos', color: 'text-purple-600 bg-purple-100' }
-}
-
-const getPhotoUrl = (photobloburl: string | null) => {
-  if (!photobloburl) return null
-  const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
-  const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
-  const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
-  return `${baseUrl}/${containerName}/${photobloburl}?${sasToken}`
 }
 
 export default function PropertyCard({ property, onClick }: PropertyCardProps) {
