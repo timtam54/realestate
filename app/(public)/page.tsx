@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Search, Shield, CheckCircle, Camera } from 'lucide-react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Search, Shield, CheckCircle, Camera, List, Map as MapIcon, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import BuySelHeader from '@/components/BuySelHeader'
 import PropertyCard from '@/components/PropertyCard'
 import { useAuth } from '@/hooks/useAuth'
 import { Property } from '@/types/property'
+import type { GoogleMap } from '@/types/google-maps'
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -14,7 +15,10 @@ export default function HomePage() {
   const [baths, setBaths] = useState('')
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
   const { user, isAuthenticated } = useAuth()
+  const mapRef = useRef<HTMLDivElement>(null)
+  const googleMapRef = useRef<GoogleMap | null>(null)
 
   useEffect(() => {
     fetchProperties()
@@ -42,6 +46,91 @@ export default function HomePage() {
     
     return matchesSearch
   })
+
+  const initializeMap = useCallback(() => {
+    if (!mapRef.current || !window.google?.maps || filteredProperties.length === 0) return
+
+    const bounds = new window.google.maps.LatLngBounds()
+    const center = filteredProperties[0].lat && filteredProperties[0].lon 
+      ? { lat: filteredProperties[0].lat, lng: filteredProperties[0].lon }
+      : { lat: -19.2590, lng: 146.8169 }
+
+    const map = new window.google.maps.Map(mapRef.current, {
+      zoom: 12,
+      center,
+    })
+
+    googleMapRef.current = map
+
+    filteredProperties.forEach((property) => {
+      if (property.lat && property.lon && window.google?.maps) {
+        const priceLabel = `$${(property.price / 1000).toFixed(0)}k`
+        
+        const marker = new window.google.maps.Marker({
+          position: { lat: property.lat, lng: property.lon },
+          map,
+          title: property.title,
+          icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+              <svg xmlns="http://www.w3.org/2000/svg" width="120" height="50" viewBox="0 0 120 50">
+                <defs>
+                  <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+                  </filter>
+                </defs>
+                <g filter="url(#shadow)">
+                  <rect x="5" y="5" width="110" height="36" rx="18" fill="white" stroke="#FF6600" stroke-width="2"/>
+                  <text x="60" y="28" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#FF6600">${priceLabel}</text>
+                </g>
+                <polygon points="60,41 55,46 65,46" fill="white" stroke="#FF6600" stroke-width="2"/>
+              </svg>
+            `),
+            scaledSize: new window.google.maps.Size(120, 50),
+            anchor: new window.google.maps.Point(60, 46),
+          },
+        })
+
+        const infoWindow = new window.google.maps.InfoWindow({
+          content: `
+            <div style="padding: 12px; min-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
+              <h3 style="font-weight: 600; margin: 0 0 8px 0; font-size: 16px; color: #1f2937;">${property.title}</h3>
+              <p style="font-size: 14px; margin: 0 0 8px 0; color: #6b7280;">${property.address}</p>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-weight: 700; font-size: 18px; color: #FF6600;">$${property.price.toLocaleString()}</span>
+              </div>
+            </div>
+          `,
+        })
+
+        marker.addListener('click', () => {
+          infoWindow.open(map, marker)
+        })
+
+        bounds.extend({ lat: property.lat, lng: property.lon })
+      }
+    })
+
+    if (filteredProperties.some(p => p.lat && p.lon)) {
+      map.fitBounds(bounds)
+    }
+  }, [filteredProperties])
+
+  useEffect(() => {
+    if (activeTab === 'map' && !window.google?.maps) {
+      const script = document.createElement('script')
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAP_API}`
+      script.async = true
+      script.defer = true
+      script.onload = () => {
+        if (filteredProperties.length > 0) {
+          initializeMap()
+        }
+      }
+      document.head.appendChild(script)
+    } else if (activeTab === 'map' && window.google?.maps && filteredProperties.length > 0) {
+      initializeMap()
+    }
+  }, [activeTab, filteredProperties, initializeMap])
 
   const badgeIcons = {
     contract: { icon: Shield, label: 'Contract Ready' },
@@ -117,9 +206,32 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold">Featured Properties</h2>
-            <Link href="/" className="text-[#FF6600] hover:text-orange-700">
-              View all properties →
-            </Link>
+            <div className="flex items-center gap-4">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setActiveTab('list')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    activeTab === 'list'
+                      ? 'bg-[#FF6600] text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                  List View
+                </button>
+                <button
+                  onClick={() => setActiveTab('map')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                    activeTab === 'map'
+                      ? 'bg-[#FF6600] text-white'
+                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                  }`}
+                >
+                  <MapIcon className="w-4 h-4" />
+                  Map View
+                </button>
+              </div>
+            </div>
           </div>
           {loading ? (
             <div className="text-center py-12">
@@ -129,7 +241,7 @@ export default function HomePage() {
             <div className="text-center py-12">
               <p className="text-gray-600">No properties found matching your search.</p>
             </div>
-          ) : (
+          ) : activeTab === 'list' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProperties.map((property) => (
                 <PropertyCard 
@@ -138,6 +250,10 @@ export default function HomePage() {
                   onClick={() => {}} 
                 />
               ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div ref={mapRef} className="h-[600px] w-full rounded" />
             </div>
           )}
         </div>

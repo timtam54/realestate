@@ -151,60 +151,63 @@ export default function SellerPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
-          <button
-            onClick={() => setNewProperty(
-              {
-                id: 0,
-                title: '',
-                address: '',
-                dte: new Date(),
-                sellerid: 1,
-                price: 0,
-                lat: 0,
-                lon: 0,
-                photobloburl: null,
-                typeofprop: null,
-                suburb: null,
-                postcode: null,
-                beds: null,
-                baths: null,
-                carspaces: null,
-                landsize: null,
-                buildyear: null,
-                state:null,
-                country:null
-              })
-            }
-            className="flex items-center gap-2 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"
-          >
-            <ListPlus className="w-4 h-4" />
-            <span>List Property</span>
-          </button>
-        </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab('list')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'list'
+                    ? 'bg-[#FF6600] text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                <List className="w-4 h-4" />
+                List View
+              </button>
+              <button
+                onClick={() => setActiveTab('map')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'map'
+                    ? 'bg-[#FF6600] text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                <Map className="w-4 h-4" />
+                Map View
+              </button>
+            </div>
 
-        <div className="mb-6 flex gap-2">
-          <button
-            onClick={() => setActiveTab('list')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              activeTab === 'list'
-                ? 'bg-[#FF6600] text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <List className="w-4 h-4" />
-            List View
-          </button>
-          <button
-            onClick={() => setActiveTab('map')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              activeTab === 'map'
-                ? 'bg-[#FF6600] text-white'
-                : 'bg-white text-gray-700 hover:bg-gray-100'
-            }`}
-          >
-            <Map className="w-4 h-4" />
-            Map View
-          </button>
+            <button
+              onClick={() => setNewProperty(
+                {
+                  id: 0,
+                  title: '',
+                  address: '',
+                  dte: new Date(),
+                  sellerid: 1,
+                  price: 0,
+                  lat: 0,
+                  lon: 0,
+                  photobloburl: null,
+                  typeofprop: null,
+                  suburb: null,
+                  postcode: null,
+                  beds: null,
+                  baths: null,
+                  carspaces: null,
+                  landsize: null,
+                  buildyear: null,
+                  state:null,
+                  country:null
+                })
+              }
+              className="flex items-center gap-2 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"
+            >
+              <ListPlus className="w-4 h-4" />
+              <span>List Property</span>
+            </button>
+          </div>
         </div>
 
         {loading ? (
