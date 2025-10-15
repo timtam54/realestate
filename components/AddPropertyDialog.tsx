@@ -127,7 +127,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             
             setProperty((prev) => ({ 
               ...prev, 
-              address: place.formatted_address,
+              address: place.formatted_address || prev.address,
               suburb: suburb || prev.suburb,
               postcode: postcode || prev.postcode,
               state: state || prev.state,
