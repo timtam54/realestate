@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft, Home, Building2, Building, MapPin, Hash, Bed, Bath, Car, Maximize, Calendar, Flag } from 'lucide-react'
+import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft, Home, Building2, Building, MapPin, Hash, Bed, Bath, Car, Maximize, Calendar, Flag, DollarSign } from 'lucide-react'
 import { BlobServiceClient } from '@azure/storage-blob'
 import type { GoogleAutocomplete } from '@/types/google-maps'
 import { Property } from '@/types/property'
+import toast from 'react-hot-toast'
 
 
 
@@ -288,15 +289,48 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     onClose()
   }
 
-  const handleNext = () => {
-    const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
-    const currentIndex = steps.indexOf(currentStep)
-    if (currentIndex < steps.length - 1) {
-      setCurrentStep(steps[currentIndex + 1])
+  const saveProperty = async () => {
+    try {
+      const response = await fetch('https://buysel.azurewebsites.net/api/property', {
+        method: property.id === 0 ? 'POST' : 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(property),
+      })
+      
+      if (response.ok) {
+        if (property.id === 0)
+        {
+        const savedProperty = await response.json()
+        setProperty(savedProperty)
+        }
+        toast.success('Property saved successfully!')
+        return true
+      } else {
+        toast.error('Failed to save property')
+        return false
+      }
+    } catch (error) {
+      console.error('Error saving property:', error)
+      toast.error('Error saving property')
+      return false
     }
   }
 
-  const handlePrevious = () => {
+  const handleNext = async () => {
+    const saved = await saveProperty()
+    if (saved) {
+      const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
+      const currentIndex = steps.indexOf(currentStep)
+      if (currentIndex < steps.length - 1) {
+        setCurrentStep(steps[currentIndex + 1])
+      }
+    }
+  }
+
+  const handlePrevious = async () => {
+    await saveProperty()
     const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex > 0) {
@@ -331,7 +365,10 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                 <React.Fragment key={step.id}>
                   <div className="flex flex-col items-center">
                     <button
-                      onClick={() => setCurrentStep(step.id)}
+                      onClick={async () => {
+                        await saveProperty()
+                        setCurrentStep(step.id)
+                      }}
                       disabled={property.id === 0 && step.id === 'photos-video'}
                       className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-colors ${
                         currentStep === step.id
@@ -566,18 +603,32 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             </div>
           </div>
         ) : currentStep === 'price-terms' ? (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-6">Price & Terms</h2>
-            <div className="space-y-4">
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <h2 className="text-2xl font-semibold mb-8 text-gray-800">Price & Terms</h2>
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Asking Price</label>
-                <input
-                  type="number"
-                  value={property.price}
-                  onChange={(e) => setProperty({ ...property, price: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600]"
-                  placeholder="Enter asking price"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-[#FF6600]" />
+                  Asking Price (AUD)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">$</span>
+                  <input
+                    type="text"
+                    value={property.price ? property.price.toLocaleString() : ''}
+                    onChange={(e) => {
+                      const numericValue = e.target.value.replace(/[^0-9]/g, '')
+                      setProperty({ ...property, price: numericValue ? Number(numericValue) : 0 })
+                    }}
+                    className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent text-lg"
+                    placeholder="0"
+                  />
+                </div>
+                {property.price > 0 && (
+                  <p className="mt-2 text-sm text-gray-600">
+                    Price: ${property.price.toLocaleString('en-AU')}
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex justify-between gap-3 mt-8">
