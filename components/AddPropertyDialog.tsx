@@ -15,6 +15,7 @@ interface Photo {
   photobloburl: string
   title: string
   dte: string
+  doc:boolean|null
 }
 
 interface AddPropertyDialogProps {
@@ -237,7 +238,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     }
   }
 
-  const keepPhoto = async () => {
+  const keepPhoto = async (doc:boolean|null) => {
     if (!capturedPhoto || !photoTitle) {
       alert('Please provide a title for the photo')
       return
@@ -258,6 +259,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
           photobloburl: blobUrl,
           title: photoTitle,
           dte: new Date(),
+          doc:doc
         }),
       })
 
@@ -762,7 +764,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                 </div>
                 <div className="flex gap-3">
                   <button
-                    onClick={keepPhoto}
+                    onClick={()=>keepPhoto(false)}
                     disabled={isUploading}
                     className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
                   >
