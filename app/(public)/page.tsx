@@ -5,6 +5,7 @@ import { Search, Shield, CheckCircle, Camera, List, Map as MapIcon, MapPin } fro
 import Link from 'next/link'
 import BuySelHeader from '@/components/BuySelHeader'
 import PropertyCard from '@/components/PropertyCard'
+import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
 import { useAuth } from '@/hooks/useAuth'
 import { Property } from '@/types/property'
 import type { GoogleMap } from '@/types/google-maps'
@@ -16,6 +17,7 @@ export default function HomePage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
   const { user, isAuthenticated } = useAuth()
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<GoogleMap | null>(null)
@@ -247,7 +249,7 @@ export default function HomePage() {
                 <PropertyCard 
                   key={property.id} 
                   property={property} 
-                  onClick={() => {}} 
+                  onClick={(prop) => setSelectedProperty(prop)} 
                 />
               ))}
             </div>
@@ -368,6 +370,13 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {selectedProperty && (
+        <PropertyDetailsDialog
+          property={selectedProperty}
+          onClose={() => setSelectedProperty(null)}
+        />
+      )}
     </div>
   );
 }
