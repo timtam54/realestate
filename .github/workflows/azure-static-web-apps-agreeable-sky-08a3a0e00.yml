@@ -37,7 +37,7 @@ jobs:
         NEXT_PUBLIC_GOOGLE_MAP_API: AIzaSyANThwic7Udj0r5ulBoPN9Dp2lSwJKOAK4
         NEXT_PUBLIC_AZUREBLOB_CONTAINER: photosdocs 
         NEXT_PUBLIC_AZUREBLOB_SASTOKEN: sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2035-10-14T18:02:51Z&st=2025-10-14T09:47:51Z&spr=https&sig=lFOuI%2FXifw3wGShtjUcjdeQn8DenYY%2FtIrWOQ%2FCZqvo%3D
-        NEXT_PUBLIC_AZUREBLOB_SASURL_BASE: https://buyselstore.blob.core.windows.net/
+        NEXT_PUBLIC_AZUREBLOB_SASURL_BASE: https://buyselstore.blob.core.windows.net
         GOOGLE_CLIENT_ID: 155334538327-i07ipbgfbg95nhb0h5cfe8vu27lcek9f.apps.googleusercontent.com
         GOOGLE_CLIENT_SECRET: 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
         NEXTAUTH_SECRET: Y8jih3rwDE7U0mPwxHms0a72eBapQPNuW8NlDVsCGw8=
