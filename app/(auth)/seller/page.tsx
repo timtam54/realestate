@@ -15,6 +15,7 @@ export default function SellerPage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
+  const [error, setError] = useState<string | null>(null)
   
   const [newProperty, setNewProperty] = useState<Property|null>(null)
   const mapRef = useRef<HTMLDivElement>(null)
@@ -112,11 +113,18 @@ export default function SellerPage() {
   const fetchProperties = async () => {
     try {
       setLoading(true)
+      setError(null)
       const response = await fetch('https://buysel.azurewebsites.net/api/property/seller/1')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
       const data = await response.json()
       setProperties(data)
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       console.error('Error fetching properties:', error)
+      setError(`Failed to load properties: ${errorMessage}`)
+      toast.error(`Failed to load properties: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
@@ -209,6 +217,13 @@ export default function SellerPage() {
             </button>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+            <p className="font-semibold">Error Loading Properties</p>
+            <p className="text-sm mt-1">{error}</p>
+          </div>
+        )}
 
         {loading ? (
           <div className="text-center py-12">
