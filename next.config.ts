@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'export',
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
-  swcMinify: true,
   images: {
     minimumCacheTTL: 60,
     unoptimized: true,
@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
     optimizeCss: false,
     optimizePackageImports: ['lucide-react', 'date-fns'],
   },
+  trailingSlash: true,
 };
 
 export default nextConfig;
