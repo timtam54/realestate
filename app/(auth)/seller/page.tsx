@@ -11,6 +11,26 @@ import { Property } from '@/types/property'
 import type { GoogleMap, LatLngBounds, GoogleMarker, GoogleInfoWindow } from '@/types/google-maps'
 
 export default function SellerPage() {
+  const [componentError, setComponentError] = useState<Error | null>(null)
+
+  if (componentError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Component Error</h2>
+          <p className="text-red-600 mb-4">{componentError.message}</p>
+          <pre className="text-xs bg-gray-100 p-4 rounded overflow-auto">
+            {componentError.stack}
+          </pre>
+        </div>
+      </div>
+    )
+  }
+
+  return <SellerPageContent setComponentError={setComponentError} />
+}
+
+function SellerPageContent({ setComponentError }: { setComponentError: (error: Error) => void }) {
   const { user, isAuthenticated } = useAuth()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
@@ -22,7 +42,11 @@ export default function SellerPage() {
   const googleMapRef = useRef<GoogleMap | null>(null)
 
   useEffect(() => {
-    fetchProperties()
+    try {
+      fetchProperties()
+    } catch (err) {
+      setComponentError(err as Error)
+    }
   }, [])
 
   const initializeMap = React.useCallback(() => {
