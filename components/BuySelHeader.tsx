@@ -53,8 +53,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
            
           </nav>
           <div className="flex items-center space-x-3">
-            {/* Temporarily disabled NextAuth */}
-            {/* {isAuthenticated ? (
+            {isAuthenticated ? (
               <>
                 <button
                   onClick={() => setShowProfile(true)}
@@ -85,7 +84,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <User className="w-4 h-4" />
                 <span>Sign In</span>
               </button>
-            )} */}
+            )}
             
             <div className="relative">
               <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-700 pointer-events-none" />
