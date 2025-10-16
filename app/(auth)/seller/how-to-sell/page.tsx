@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Home, DollarSign, Camera, FileText, Shield, MessageSquare, CheckCircle, ArrowRight, Users, Zap, Calculator } from 'lucide-react'
+import { Home, DollarSign, Camera, FileText, Shield, MessageSquare, ArrowRight, Users, Zap, Calculator } from 'lucide-react'
 import Link from 'next/link'
 
 interface FAQItem {

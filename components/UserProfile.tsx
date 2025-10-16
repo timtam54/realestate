@@ -29,8 +29,8 @@ interface User {
   idtype: 'passport' | 'driver' | 'none'
   idbloburl: string
   idverified: Date|null
-  termsconditions:Boolean|null
-  privacypolicy:Boolean|null
+  termsconditions:boolean|null
+  privacypolicy:boolean|null
   dte: Date
   ratesnotice:string|null
   titlesearch:string|null
@@ -300,20 +300,18 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
 
   const handleSave = async () => {
     if (!user) return
-    alert('handle')
+    
     setSaving(true)
     setError(null)
     try {
       const method = user.id === 0 ? 'POST' : 'PUT'
-      //const userDataToSave = prepareUserForSave(user)
-      const jsn=JSON.stringify(user)
-      alert(jsn)
+      const userDataToSave = prepareUserForSave(user)
       const response = await fetch('https://buysel.azurewebsites.net/api/user', {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: jsn,
+        body: JSON.stringify(userDataToSave),
       })
 
       if (response.ok) {
@@ -338,32 +336,31 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
 
   const getCurrentTabIndex = () => tabs.findIndex(tab => tab.id === activeTab)
   
-  //const prepareUserForSave = (userData: User) => {
-  //  return {
-    //  ...userData,
-     // dateofbirth: userData.dateofbirth ? (userData.dateofbirth instanceof Date ? userData.dateofbirth.toISOString() : userData.dateofbirth) : null,
-     // dte: userData.dte instanceof Date ? userData.dte.toISOString() : userData.dte
-   // }
- // }
+  const prepareUserForSave = (userData: User) => {
+    return {
+      ...userData,
+      dateofbirth: userData.dateofbirth ? (userData.dateofbirth instanceof Date ? userData.dateofbirth.toISOString() : userData.dateofbirth) : null,
+      dte: userData.dte instanceof Date ? userData.dte.toISOString() : userData.dte,
+      idverified: userData.idverified ? (userData.idverified instanceof Date ? userData.idverified.toISOString() : userData.idverified) : null,
+      ratesnoticeverified: userData.ratesnoticeverified ? (userData.ratesnoticeverified instanceof Date ? userData.ratesnoticeverified.toISOString() : userData.ratesnoticeverified) : null,
+      titlesearchverified: userData.titlesearchverified ? (userData.titlesearchverified instanceof Date ? userData.titlesearchverified.toISOString() : userData.titlesearchverified) : null
+    }
+  }
 
   const saveAndSwitchTab = async (newTab: string) => {
     if (!user || saving) return
-    alert('switch')
+    
     // Save current changes
     setSaving(true)
     try {
       const method = user.id === 0 ? 'POST' : 'PUT'
-      alert(method)
-      const jsn= JSON.stringify(user)
-      console.log(jsn)
-      alert(jsn)
-    //  const userDataToSave = prepareUserForSave(user)
+      const userDataToSave = prepareUserForSave(user)
       const response = await fetch('https://buysel.azurewebsites.net/api/user', {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body:jsn,
+        body: JSON.stringify(userDataToSave),
       })
 
       if (response.ok) {
@@ -376,7 +373,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
         setActiveTab(newTab)
       } else {
         const errorText = await response.text()
-        alert('Save failed:'+ response.status+' '+ errorText)
+        console.error('Save failed:', response.status, errorText)
         toast.error('Failed to save changes')
       }
     } catch (error) {
@@ -732,7 +729,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                   >
                     <option value="none">Select ID type</option>
                     <option value="passport">Passport</option>
-                    <option value="driver">Driver's License</option>
+                    <option value="driver">Driver&apos;s License</option>
                   </select>
                 </div>
 

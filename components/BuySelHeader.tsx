@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Home, User, ListPlus, Search, Briefcase, Settings, LogOut } from 'lucide-react'
+import { Home, User, Search, Briefcase, Settings, LogOut } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useState } from 'react'
 import Login from './Login'

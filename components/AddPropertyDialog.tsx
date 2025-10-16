@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft, Home, Building2, Building, MapPin, Hash, Bed, Bath, Car, Maximize, Calendar, Flag, DollarSign } from 'lucide-react'
 import { BlobServiceClient } from '@azure/storage-blob'
 import type { GoogleAutocomplete } from '@/types/google-maps'
@@ -43,7 +43,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const addressInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
 
-  const fetchPhotos = async () => {
+  const fetchPhotos = useCallback(async () => {
     try {
       const response = await fetch(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
       if (response.ok) {
@@ -53,7 +53,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     } catch (error) {
       console.error('Error fetching photos:', error)
     }
-  }
+  }, [property.id])
 
   useEffect(() => {
     if (property.id > 0 && currentStep === 'photos-video') {

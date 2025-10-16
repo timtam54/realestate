@@ -6,15 +6,16 @@ import { X } from 'lucide-react'
 
 interface LoginProps {
   onClose: () => void
+  callbackUrl?: string
 }
 
-export default function Login({ onClose }: LoginProps) {
+export default function Login({ onClose, callbackUrl = '/' }: LoginProps) {
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleSignIn = async (provider: string) => {
     setLoading(provider)
     try {
-      await signIn(provider, { callbackUrl: '/' })
+      await signIn(provider, { callbackUrl })
     } catch (error) {
       console.error('Sign in error:', error)
       setLoading(null)

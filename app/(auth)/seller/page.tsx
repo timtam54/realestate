@@ -1,17 +1,21 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { Plus, MapPin, List, Map, ListPlus } from 'lucide-react'
+import { MapPin, List, Map, ListPlus } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
 import PropertyCard from '@/components/PropertyCard'
 import { useAuth } from '@/hooks/useAuth'
 import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
-import type { GoogleMap, LatLngBounds, GoogleMarker, GoogleInfoWindow } from '@/types/google-maps'
+import type { GoogleMap } from '@/types/google-maps'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 export default function SellerPage() {
   const { user, isAuthenticated } = useAuth()
+  const { status } = useSession()
+  const router = useRouter()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
@@ -22,8 +26,15 @@ export default function SellerPage() {
   const googleMapRef = useRef<GoogleMap | null>(null)
 
   useEffect(() => {
-    fetchProperties()
-  }, [])
+    if (status === 'loading') return // Still loading authentication status
+    
+    if (status === 'unauthenticated') {
+      // Redirect to sign in page with callback to return here after sign in
+      router.push('/api/auth/signin?callbackUrl=/seller')
+    } else if (status === 'authenticated') {
+      fetchProperties()
+    }
+  }, [status, router])
 
   const initializeMap = React.useCallback(() => {
     if (!mapRef.current || !window.google?.maps || properties.length === 0) return
@@ -114,7 +125,7 @@ export default function SellerPage() {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch('https://buysel.azurewebsites.net/api/property/seller/1')
+      const response = await fetch('https://buysel.azurewebsites.net/api/property/sellerusername/'+user?.email)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -149,6 +160,23 @@ export default function SellerPage() {
     } catch (error) {
       console.error('Error adding property:', error)
     }
+  }
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6600] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render the page content if not authenticated (will redirect)
+  if (status === 'unauthenticated') {
+    return null
   }
 
   return (
