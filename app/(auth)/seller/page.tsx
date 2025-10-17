@@ -5,6 +5,7 @@ import { MapPin, List, Map, ListPlus } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
 import PropertyCard from '@/components/PropertyCard'
+import UserProfile from '@/components/UserProfile'
 import { useAuth } from '@/hooks/useAuth'
 import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
@@ -24,6 +25,7 @@ export default function SellerPage() {
   const [newProperty, setNewProperty] = useState<Property|null>(null)
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<GoogleMap | null>(null)
+  const [showProfileDialog, setShowProfileDialog] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return // Still loading authentication status
@@ -31,8 +33,8 @@ export default function SellerPage() {
     if (status === 'unauthenticated') {
       // Redirect to sign in page with callback to return here after sign in
       router.push('/api/auth/signin?callbackUrl=/seller')
-    } else if (status === 'authenticated') {
-      fetchProperties()
+    } else if (status === 'authenticated' && user?.email) {
+      checkUserProfile()
     }
   }, [status, router])
 
@@ -121,11 +123,45 @@ export default function SellerPage() {
     }
   }, [activeTab, properties, initializeMap])
 
+  const checkUserProfile = async () => {
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${user?.email}`)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const userData = await response.json()
+      
+      if (!userData) {
+        // User profile doesn't exist
+        toast.error('Please complete your profile to list properties', { duration: 5000 })
+        setShowProfileDialog(true)
+        setLoading(false)
+      } else {
+        // Check if profile is complete (has required fields)
+        const isProfileComplete = userData.firstname && userData.lastname && userData.idverified
+        if (!isProfileComplete) {
+          toast.error('Please complete your profile to list properties', { duration: 5000 })
+          setShowProfileDialog(true)
+          setLoading(false)
+        } else {
+          // Profile is complete, fetch properties
+          fetchProperties()
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user profile:', error)
+      toast.error('Error checking user profile')
+      setLoading(false)
+    }
+  }
+
   const fetchProperties = async () => {
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch('https://buysel.azurewebsites.net/api/property/sellerusername/'+user?.email)
+      const ep='https://buysel.azurewebsites.net/api/property/sellerusername/'+user?.email
+      //alert(ep)
+      const response = await fetch(ep)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -293,6 +329,16 @@ export default function SellerPage() {
         onSave={handleAddProperty}
         property={newProperty}
       />}
+      {showProfileDialog && user?.email && (
+        <UserProfile
+          email={user.email}
+          isOpen={showProfileDialog}
+          onClose={() => {
+            setShowProfileDialog(false)
+            checkUserProfile() // Check again after closing to see if profile was completed
+          }}
+        />
+      )}
     </div>
   )
 }

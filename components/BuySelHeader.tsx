@@ -69,7 +69,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                   <span className="font-medium">{user?.name || user?.email}</span>
                 </button>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => signOut({ callbackUrl: '/' })}
                   className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-4 py-2.5 rounded-lg transition-all font-medium border border-gray-300 hover:border-[#FF6600] hover:bg-orange-50"
                 >
                   <LogOut className="w-4 h-4" />

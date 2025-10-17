@@ -9,7 +9,6 @@ import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
 import { useAuth } from '@/hooks/useAuth'
 import { Property } from '@/types/property'
 import type { GoogleMap } from '@/types/google-maps'
-
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [beds, setBeds] = useState('')
@@ -24,7 +23,17 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchProperties()
-  }, [])
+    
+    // Check if we have a stored callback URL (workaround for Microsoft auth)
+    if (isAuthenticated) {
+      const storedCallbackUrl = sessionStorage.getItem('auth_callback_url')
+      if (storedCallbackUrl) {
+        sessionStorage.removeItem('auth_callback_url')
+        window.location.href = storedCallbackUrl
+        return
+      }
+    }
+  }, [isAuthenticated])
 
   const fetchProperties = async () => {
     try {

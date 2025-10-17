@@ -2,26 +2,6 @@ import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import AzureADProvider from "next-auth/providers/azure-ad"
 import { NextAuthOptions } from "next-auth"
-import { headers } from 'next/headers'
-
-function getBaseUrl() {
-  // If NEXTAUTH_URL is explicitly set, use it
-  if (process.env.NEXTAUTH_URL) {
-    return process.env.NEXTAUTH_URL
-  }
-  
-  // In production, detect from headers
-  const headersList = headers()
-  const host = headersList.get('host') || headersList.get('x-forwarded-host')
-  const proto = headersList.get('x-forwarded-proto') || 'https'
-  
-  if (host) {
-    return `${proto}://${host}`
-  }
-  
-  // Fallback for development
-  return 'http://localhost:3000'
-}
 
 const authOptions: NextAuthOptions = {
   providers: [
