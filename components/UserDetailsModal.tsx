@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, Dispatch, SetStateAction } from 'react'
-import { X, CheckCircle, XCircle, User, Mail, Phone, MapPin, Calendar, Shield, Activity } from 'lucide-react'
+import { X, CheckCircle, XCircle, User, Mail, Phone, MapPin, Calendar, Shield, Activity, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import type { Seller } from '@/types/seller'
 import { getAzureBlobUrl } from '@/lib/config'
@@ -25,6 +25,10 @@ export default function UserDetailsModal({
   users
 }: UserDetailsModalProps) {
   const [activeModalTab, setActiveModalTab] = useState('info')
+  const [loadingPhoto, setLoadingPhoto] = useState(false)
+  const [loadingId, setLoadingId] = useState(false)
+  const [loadingRates, setLoadingRates] = useState(false)
+  const [loadingTitle, setLoadingTitle] = useState(false)
 
   const updateUserData = (updatedUser: Seller) => {
     if (setSellers && sellers) {
@@ -105,12 +109,15 @@ export default function UserDetailsModal({
                       </div>
                       <div className="flex items-center justify-between pt-4 border-t border-gray-300">
                         <div className="flex items-center space-x-3">
+                          {loadingPhoto && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
                           <input
                             type="checkbox"
                             id="photoVerified"
                             checked={!!selectedSeller.photoverified}
+                            disabled={loadingPhoto}
                             onChange={async (e) => {
                               const newVerified = e.target.checked
+                              setLoadingPhoto(true)
 
                               const updatedData = {
                                 ...selectedSeller,
@@ -145,9 +152,11 @@ export default function UserDetailsModal({
                                 console.error('Failed to update verification:', error)
                                 toast.error('Failed to update verification status: ' + error)
                                 e.target.checked = !newVerified
+                              } finally {
+                                setLoadingPhoto(false)
                               }
                             }}
-                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <label htmlFor="photoVerified" className="text-sm font-medium text-gray-700 cursor-pointer">
                             Photo Verified
@@ -198,13 +207,16 @@ export default function UserDetailsModal({
                       />
                       <div className="flex items-center justify-between pt-4 border-t border-gray-300">
                         <div className="flex items-center space-x-3">
+                          {loadingTitle && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
                           <input
                             type="checkbox"
                             id="titleVerified"
                             checked={!!selectedSeller.titlesearchverified}
+                            disabled={loadingTitle}
                             onChange={async (e) => {
                               const newVerified = e.target.checked
                               const newDate = newVerified ? new Date().toISOString() : null
+                              setLoadingTitle(true)
 
                               const updatedData = {
                                 ...selectedSeller,
@@ -238,9 +250,11 @@ export default function UserDetailsModal({
                                 console.error('Failed to update verification:', error)
                                 toast.error('Failed to update verification status: ' + error)
                                 e.target.checked = !newVerified
+                              } finally {
+                                setLoadingTitle(false)
                               }
                             }}
-                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <label htmlFor="titleVerified" className="text-sm font-medium text-gray-700 cursor-pointer">
                             Title Search Verified
@@ -291,13 +305,16 @@ export default function UserDetailsModal({
                       />
                       <div className="flex items-center justify-between pt-4 border-t border-gray-300">
                         <div className="flex items-center space-x-3">
+                          {loadingRates && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
                           <input
                             type="checkbox"
                             id="ratesVerified"
                             checked={!!selectedSeller.ratesnoticeverified}
+                            disabled={loadingRates}
                             onChange={async (e) => {
                               const newVerified = e.target.checked
                               const newDate = newVerified ? new Date().toISOString() : null
+                              setLoadingRates(true)
 
                               const updatedData = {
                                 ...selectedSeller,
@@ -331,9 +348,11 @@ export default function UserDetailsModal({
                                 console.error('Failed to update verification:', error)
                                 toast.error('Failed to update verification status: ' + error)
                                 e.target.checked = !newVerified
+                              } finally {
+                                setLoadingRates(false)
                               }
                             }}
-                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <label htmlFor="ratesVerified" className="text-sm font-medium text-gray-700 cursor-pointer">
                             Rates Notice Verified
@@ -484,13 +503,16 @@ export default function UserDetailsModal({
                       />
                       <div className="flex items-center justify-between pt-4 border-t border-gray-300">
                         <div className="flex items-center space-x-3">
+                          {loadingId && <Loader2 className="h-5 w-5 animate-spin text-blue-600" />}
                           <input
                             type="checkbox"
                             id="idVerified"
                             checked={!!selectedSeller.idverified}
+                            disabled={loadingId}
                             onChange={async (e) => {
                               const newVerified = e.target.checked
                               const newDate = newVerified ? new Date().toISOString() : null
+                              setLoadingId(true)
 
                               const updatedData = {
                                 ...selectedSeller,
@@ -524,9 +546,11 @@ export default function UserDetailsModal({
                                 console.error('Failed to update verification:', error)
                                 toast.error('Failed to update verification status: ' + error)
                                 e.target.checked = !newVerified
+                              } finally {
+                                setLoadingId(false)
                               }
                             }}
-                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                            className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                           <label htmlFor="idVerified" className="text-sm font-medium text-gray-700 cursor-pointer">
                             ID Verified

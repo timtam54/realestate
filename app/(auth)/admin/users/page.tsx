@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, User, Mail, Phone, Search, Filter, Ban, UserCheck, Eye, Shield } from 'lucide-react'
+import { Users, User, Mail, Search, Filter, Ban, UserCheck, Edit } from 'lucide-react'
 import Link from 'next/link'
 import { getAzureBlobUrl } from '@/lib/config'
 import type { Seller } from '@/types/seller'
@@ -547,9 +547,10 @@ export default function AdminUsersPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button
                         onClick={() => setSelectedApiUser(user)}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg shadow-md hover:from-blue-600 hover:to-purple-700 hover:shadow-lg hover:scale-105 transition-all duration-200"
                       >
-                        <Eye className="h-5 w-5" />
+                        <Edit className="h-4 w-4" />
+                        <span>Edit</span>
                       </button>
                     </td>
                   </tr>
