@@ -1,8 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Home, Eye, Pause, Trash2, Star, AlertCircle, CheckCircle, Clock, Search, Filter, MoreVertical } from 'lucide-react'
 import Link from 'next/link'
+import { getAzureBlobUrl } from '@/lib/config'
+
+interface Property {
+  id: number
+  title: string
+  address: string
+  suburb: string
+  postcode: string
+  state: string
+  country: string
+  price: number
+  photobloburl: string
+  typeofprop: string | null
+  beds: number
+  baths: number
+  carspaces: number
+  landsize: number
+  buildyear: number
+  lat: number
+  lon: number
+  dte: string | null
+  sellerid: number
+}
 
 interface Listing {
   id: string
@@ -77,11 +100,34 @@ const mockListings: Listing[] = [
 ]
 
 export default function AdminListingsPage() {
+  const [properties, setProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
   const [listings, setListings] = useState(mockListings)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState<{type: string, listing: Listing} | null>(null)
+
+  useEffect(() => {
+    fetchProperties()
+  }, [])
+
+  const fetchProperties = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('https://buysel.azurewebsites.net/api/property')
+      if (response.ok) {
+        const data: Property[] = await response.json()
+        setProperties(data)
+      } else {
+        console.error('Failed to fetch properties')
+      }
+    } catch (error) {
+      console.error('Error fetching properties:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredListings = listings.filter(listing => {
     if (filterStatus !== 'all' && listing.status !== filterStatus) return false
@@ -157,15 +203,6 @@ export default function AdminListingsPage() {
             <Link href="/admin/users" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
               Users
             </Link>
-            <Link href="/admin/partners" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              Partners
-            </Link>
-            <Link href="/admin/payments" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              Payments
-            </Link>
-            <Link href="/admin/cms" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              CMS
-            </Link>
             <Link href="/admin/audit" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
               Audit Log
             </Link>
@@ -231,167 +268,91 @@ export default function AdminListingsPage() {
 
         {/* Listings Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Property
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Seller
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Performance
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Badges
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Revenue
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredListings.map((listing) => (
-                <tr key={listing.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <div className="flex items-center">
-                        <p className="text-sm font-medium text-gray-900">{listing.title}</p>
-                        {listing.featured && (
-                          <Star className="h-4 w-4 ml-2 text-yellow-500 fill-current" />
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-500">{listing.address}, {listing.suburb}</p>
-                      <p className="text-sm font-semibold">${listing.price.toLocaleString()}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{listing.seller.name}</p>
-                      <p className="text-sm text-gray-500">{listing.seller.email}</p>
-                      <Link href={`/admin/users/${listing.seller.id}`} className="text-xs text-blue-600 hover:underline">
-                        View Profile
-                      </Link>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      listing.status === 'live' ? 'bg-green-100 text-green-800' :
-                      listing.status === 'review' ? 'bg-yellow-100 text-yellow-800' :
-                      listing.status === 'paused' ? 'bg-orange-100 text-orange-800' :
-                      listing.status === 'draft' ? 'bg-gray-100 text-gray-800' :
-                      listing.status === 'sold' ? 'bg-blue-100 text-blue-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {listing.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center">
-                        <Eye className="h-4 w-4 mr-1 text-gray-400" />
-                        {listing.views}
-                      </div>
-                      <div className="flex items-center">
-                        <AlertCircle className="h-4 w-4 mr-1 text-gray-400" />
-                        {listing.inquiries}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {listing.badges.map((badge) => (
-                        <span key={badge} className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                          {badge}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    ${listing.revenue}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowActionMenu(showActionMenu === listing.id ? null : listing.id)}
-                        className="p-2 hover:bg-gray-100 rounded"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                      {showActionMenu === listing.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                          <Link
-                            href={`/property/${listing.id}`}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Eye className="h-4 w-4 inline mr-2" />
-                            View Listing
-                          </Link>
-                          <Link
-                            href={`/admin/audit?filter=listing:${listing.id}`}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Clock className="h-4 w-4 inline mr-2" />
-                            View Audit Trail
-                          </Link>
-                          <button
-                            onClick={() => handleFeatureToggle(listing.id)}
-                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            <Star className="h-4 w-4 inline mr-2" />
-                            {listing.featured ? 'Unfeature' : 'Feature'} Listing
-                          </button>
-                          {listing.status === 'live' && (
-                            <>
-                              <button
-                                onClick={() => handleStatusChange(listing.id, 'paused')}
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                <Pause className="h-4 w-4 inline mr-2" />
-                                Pause Listing
-                              </button>
-                              <button
-                                onClick={() => handleUnlist(listing)}
-                                className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                              >
-                                <Trash2 className="h-4 w-4 inline mr-2" />
-                                Unlist Property
-                              </button>
-                            </>
-                          )}
-                          {listing.status === 'paused' && (
-                            <button
-                              onClick={() => handleStatusChange(listing.id, 'live')}
-                              className="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
-                            >
-                              <CheckCircle className="h-4 w-4 inline mr-2" />
-                              Activate Listing
-                            </button>
-                          )}
-                          {listing.status === 'review' && (
-                            <button
-                              onClick={() => handleStatusChange(listing.id, 'live')}
-                              className="block w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
-                            >
-                              <CheckCircle className="h-4 w-4 inline mr-2" />
-                              Approve Listing
-                            </button>
-                          )}
+          {loading ? (
+            <div className="p-8 text-center">
+              <div className="inline-flex items-center">
+                <svg className="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="ml-2">Loading properties...</span>
+              </div>
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Photo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Property
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Details
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Seller ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {properties.map((property) => (
+                  <tr key={property.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      {property.photobloburl ? (
+                        <img
+                          src={getAzureBlobUrl(property.photobloburl)}
+                          alt={property.title}
+                          className="w-16 h-16 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                          <Home className="h-8 w-8 text-gray-400" />
                         </div>
                       )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{property.title}</p>
+                        <p className="text-sm text-gray-500">{property.address}</p>
+                        <p className="text-sm font-semibold text-blue-600">${property.price.toLocaleString()}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600">
+                        <p>{property.typeofprop || 'N/A'}</p>
+                        <p>{property.beds} bed · {property.baths} bath · {property.carspaces} car</p>
+                        <p>{property.landsize}m² · Built {property.buildyear}</p>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="text-sm text-gray-900">Seller #{property.sellerid}</p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="text-sm text-gray-900">
+                        {property.dte ? new Date(property.dte).toLocaleDateString() : 'N/A'}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <Link
+                        href={`/property/${property.id}`}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Confirmation Dialog */}

@@ -1,0 +1,5 @@
+version: v1.1.0
+steps:
+  - build: -t {{.Run.Registry}}/buyselapp:{{.Values.IMAGE_TAG}} -f Dockerfile .
+  - push:
+      - {{.Run.Registry}}/buyselapp:{{.Values.IMAGE_TAG}}

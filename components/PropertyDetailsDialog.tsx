@@ -1,9 +1,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X, MapPin, Bed, Bath, Car, Home, Maximize, Calendar, Building, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, MapPin, Bed, Bath, Car, Home, Maximize, Calendar, Building, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react'
 import { Property } from '@/types/property'
 import { getPhotoUrl } from '@/lib/azure-config'
+import ChatModal from './ChatModal'
+import { useAuth } from '@/hooks/useAuth'
 
 interface Photo {
   id: number
@@ -20,9 +22,11 @@ interface PropertyDetailsDialogProps {
 }
 
 export default function PropertyDetailsDialog({ property, onClose }: PropertyDetailsDialogProps) {
+  const { isAuthenticated } = useAuth()
   const [photos, setPhotos] = useState<Photo[]>([])
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [loadingPhotos, setLoadingPhotos] = useState(true)
+  const [showChatModal, setShowChatModal] = useState(false)
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -45,18 +49,20 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
   }, [property.id])
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg max-w-5xl w-full my-8">
-        {/* Close Button - Floating */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-20 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
-        >
-          <X className="w-6 h-6 text-gray-700" />
-        </button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto my-8">
+        {/* Close Button - Sticky */}
+        <div className="sticky top-0 right-0 z-20 flex justify-end p-4">
+          <button
+            onClick={onClose}
+            className="bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition-colors"
+          >
+            <X className="w-6 h-6 text-gray-700" />
+          </button>
+        </div>
 
         {/* Photos Section - Full Width at Top */}
-        <div className="relative">
+        <div className="relative -mt-16">
           {loadingPhotos ? (
             <div className="h-96 bg-gray-200 rounded-t-lg flex items-center justify-center">
               <p className="text-gray-600">Loading photos...</p>
@@ -73,7 +79,7 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
                 <img
                   src={getPhotoUrl(photos[currentPhotoIndex].photobloburl) || ''}
                   alt={photos[currentPhotoIndex].title}
-                  className="w-full h-96 object-cover rounded-t-lg"
+                  className="w-full object-contain rounded-t-lg max-h-[60vh]"
                 />
                 
                 {photos.length > 1 && (
@@ -248,14 +254,30 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
             >
               Close
             </button>
-            <button
-              className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
-            >
-              Contact Seller
-            </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowChatModal(true)}
+                className="flex items-center gap-2 px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Contact Seller
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Chat Modal */}
+      {showChatModal && (
+        <ChatModal
+          isOpen={showChatModal}
+          onClose={() => {
+            setShowChatModal(false)
+          }}
+          property={property}
+          currentUserId={0}
+        />
+      )}
     </div>
   )
 }

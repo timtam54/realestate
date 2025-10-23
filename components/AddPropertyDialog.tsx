@@ -33,13 +33,18 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
   const [photoTitle, setPhotoTitle] = useState('')
   const [isUploading, setIsUploading] = useState(false)
+  const [isBuildingInspUploading, setIsBuildingInspUploading] = useState(false)
+  const [isPestInspUploading, setIsPestInspUploading] = useState(false)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [showAddPhoto, setShowAddPhoto] = useState(false)
+  const [isUploadedFromLocal, setIsUploadedFromLocal] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const buildingInspFileRef = useRef<HTMLInputElement>(null)
+  const pestInspFileRef = useRef<HTMLInputElement>(null)
   const addressInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
 
@@ -153,6 +158,15 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
 
   const startCamera = async () => {
     try {
+      // Check current permission state if available
+      if (navigator.permissions) {
+        const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName })
+        if (permissionStatus.state === 'denied') {
+          toast.error('Camera access is blocked. Please enable camera permissions in your browser settings, then refresh the page.')
+          return
+        }
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' }
       })
@@ -162,6 +176,11 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
       }
     } catch (error) {
       console.error('Error accessing camera:', error)
+      if (error instanceof DOMException && error.name === 'NotAllowedError') {
+        toast.error('Camera access denied. Please enable camera permissions in your browser settings and refresh the page, or use "Upload Image" instead.', { duration: 5000 })
+      } else {
+        toast.error('Unable to access camera. You can still upload an image using the "Upload Image" button.')
+      }
     }
   }
 
@@ -183,6 +202,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
         ctx.drawImage(video, 0, 0)
         const dataUrl = canvas.toDataURL('image/jpeg')
         setCapturedPhoto(dataUrl)
+        setIsUploadedFromLocal(false)
         stopCamera()
       }
     }
@@ -190,7 +210,13 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
 
   const retakePhoto = () => {
     setCapturedPhoto(null)
+    setIsUploadedFromLocal(false)
     startCamera()
+  }
+
+  const clearPhoto = () => {
+    setCapturedPhoto(null)
+    setIsUploadedFromLocal(false)
   }
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -199,6 +225,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
       const reader = new FileReader()
       reader.onloadend = () => {
         setCapturedPhoto(reader.result as string)
+        setIsUploadedFromLocal(true)
         stopCamera()
       }
       reader.readAsDataURL(file)
@@ -228,14 +255,14 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
       
       return blobName
     } catch (error) {
-      alert(`Upload error: ${error}`)
+      toast.error(`Upload error: ${error}`)
       throw error
     }
   }
 
   const keepPhoto = async (doc:boolean|null) => {
     if (!capturedPhoto || !photoTitle) {
-      alert('Please provide a title for the photo')
+      toast.error('Please provide a title for the photo')
       return
     }
 
@@ -262,13 +289,86 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
       setPhotoTitle('')
       setShowAddPhoto(false)
       await fetchPhotos()
-      alert('Photo uploaded successfully!')
+      toast.success('Photo uploaded successfully!')
     } catch (error) {
       console.error('Error uploading photo:', error)
-      alert('Failed to upload photo')
+      toast.error('Failed to upload photo')
     } finally {
       setIsUploading(false)
     }
+  }
+
+  const uploadInspectionReportToAzure = async (file: File, reportType: 'building' | 'pest'): Promise<string> => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
+      const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
+      const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
+
+      const blobName = `property-${property.id}-${reportType}-inspection-${Date.now()}-${file.name.replace(/\s+/g, "-")}`
+      
+      const blockBlobClient = new BlobServiceClient(`${baseUrl}?${sasToken}`)
+        .getContainerClient(containerName)
+        .getBlockBlobClient(blobName)
+
+      await blockBlobClient.uploadData(file, {
+        blobHTTPHeaders: {
+          blobContentType: file.type
+        }
+      })
+      
+      return blobName
+    } catch (error) {
+      toast.error(`Upload error: ${error}`)
+      throw error
+    }
+  }
+
+  const handleBuildingInspUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setIsBuildingInspUploading(true)
+      try {
+        const blobName = await uploadInspectionReportToAzure(file, 'building')
+        setProperty({ ...property, buildinginspazureblob: blobName })
+        await saveProperty()
+        toast.success('Building inspection report uploaded successfully!')
+      } catch (error) {
+        console.error('Error uploading building inspection:', error)
+        toast.error('Failed to upload building inspection report')
+      } finally {
+        setIsBuildingInspUploading(false)
+      }
+    }
+  }
+
+  const handlePestInspUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setIsPestInspUploading(true)
+      try {
+        const blobName = await uploadInspectionReportToAzure(file, 'pest')
+        setProperty({ ...property, pestinspazureblob: blobName })
+        await saveProperty()
+        toast.success('Pest inspection report uploaded successfully!')
+      } catch (error) {
+        console.error('Error uploading pest inspection:', error)
+        toast.error('Failed to upload pest inspection report')
+      } finally {
+        setIsPestInspUploading(false)
+      }
+    }
+  }
+
+  const handleRemoveBuildingInsp = async () => {
+    setProperty({ ...property, buildinginspazureblob: null })
+    await saveProperty()
+    toast.success('Building inspection report removed')
+  }
+
+  const handleRemovePestInsp = async () => {
+    setProperty({ ...property, pestinspazureblob: null })
+    await saveProperty()
+    toast.success('Pest inspection report removed')
   }
 
   const handleSave = async () => {
@@ -652,9 +752,122 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             </div>
           </div>
         ) : currentStep === 'compliance' ? (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-6">Compliance & Documents</h2>
-            <p className="text-gray-600 mb-4">Add verification badges and compliance documents to build trust with buyers.</p>
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Compliance & Documents</h2>
+            <p className="text-gray-600 mb-8">Add inspection reports to build trust with buyers.</p>
+            
+            <div className="space-y-8">
+              <div className="border rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Building Inspection Report</h3>
+                {property.buildinginspazureblob ? (
+                  <div className="space-y-4">
+                    <div className="bg-gray-100 rounded-lg p-4">
+                      <iframe 
+                        src={getPhotoUrl(property.buildinginspazureblob) || ''} 
+                        title="Building Inspection Report" 
+                        className="w-full h-96 rounded"
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => window.open(getPhotoUrl(property.buildinginspazureblob) || '', '_blank')}
+                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Open in New Tab
+                      </button>
+                      <button
+                        onClick={() => buildingInspFileRef.current?.click()}
+                        disabled={isBuildingInspUploading}
+                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                      >
+                        Replace Report
+                      </button>
+                      <button
+                        onClick={handleRemoveBuildingInsp}
+                        disabled={isBuildingInspUploading}
+                        className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400"
+                      >
+                        Remove Report
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                    <p className="text-gray-500 mb-4">No building inspection report uploaded</p>
+                    <button
+                      onClick={() => buildingInspFileRef.current?.click()}
+                      disabled={isBuildingInspUploading}
+                      className="bg-[#FF6600] text-white px-6 py-3 rounded-lg hover:bg-[#FF5500] transition-colors disabled:bg-gray-400"
+                    >
+                      {isBuildingInspUploading ? 'Uploading...' : 'Upload Building Inspection'}
+                    </button>
+                  </div>
+                )}
+                <input
+                  ref={buildingInspFileRef}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleBuildingInspUpload}
+                  className="hidden"
+                />
+              </div>
+
+              <div className="border rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Pest Inspection Report</h3>
+                {property.pestinspazureblob ? (
+                  <div className="space-y-4">
+                    <div className="bg-gray-100 rounded-lg p-4">
+                      <iframe 
+                        src={getPhotoUrl(property.pestinspazureblob) || ''} 
+                        title="Pest Inspection Report" 
+                        className="w-full h-96 rounded"
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => window.open(getPhotoUrl(property.pestinspazureblob) || '', '_blank')}
+                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Open in New Tab
+                      </button>
+                      <button
+                        onClick={() => pestInspFileRef.current?.click()}
+                        disabled={isPestInspUploading}
+                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                      >
+                        Replace Report
+                      </button>
+                      <button
+                        onClick={handleRemovePestInsp}
+                        disabled={isPestInspUploading}
+                        className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400"
+                      >
+                        Remove Report
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                    <p className="text-gray-500 mb-4">No pest inspection report uploaded</p>
+                    <button
+                      onClick={() => pestInspFileRef.current?.click()}
+                      disabled={isPestInspUploading}
+                      className="bg-[#FF6600] text-white px-6 py-3 rounded-lg hover:bg-[#FF5500] transition-colors disabled:bg-gray-400"
+                    >
+                      {isPestInspUploading ? 'Uploading...' : 'Upload Pest Inspection'}
+                    </button>
+                  </div>
+                )}
+                <input
+                  ref={pestInspFileRef}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handlePestInspUpload}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
             <div className="flex justify-between gap-3 mt-8">
               <button
                 onClick={handlePrevious}
@@ -714,19 +927,27 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             </button>
             {!capturedPhoto ? (
               <div className="space-y-4">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full rounded-lg bg-black"
-                />
+                {streamRef.current && (
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full rounded-lg bg-black"
+                  />
+                )}
                 <div className="flex gap-3">
                   <button
-                    onClick={capturePhoto}
+                    onClick={() => {
+                      if (!streamRef.current) {
+                        startCamera()
+                      } else {
+                        capturePhoto()
+                      }
+                    }}
                     className="flex-1 flex items-center justify-center gap-2 bg-[#FF6600] text-white px-4 py-3 rounded-lg hover:bg-[#FF5500] transition-colors"
                   >
                     <Camera className="w-5 h-5" />
-                    Capture Photo
+                    {streamRef.current ? 'Capture Photo' : 'Start Camera'}
                   </button>
                   <button
                     onClick={() => fileInputRef.current?.click()}
@@ -763,14 +984,14 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                     disabled={isUploading}
                     className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
                   >
-                    {isUploading ? 'Uploading...' : 'Keep Photo'}
+                    {isUploading ? 'Uploading...' : (isUploadedFromLocal ? 'Upload' : 'Keep Photo')}
                   </button>
                   <button
-                    onClick={retakePhoto}
+                    onClick={isUploadedFromLocal ? clearPhoto : retakePhoto}
                     disabled={isUploading}
                     className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors disabled:bg-gray-400"
                   >
-                    Retake
+                    {isUploadedFromLocal ? 'Clear' : 'Retake'}
                   </button>
                 </div>
               </div>
@@ -784,10 +1005,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
               <div className="text-center py-12">
                 <p className="text-gray-500 mb-4">No photos yet</p>
                 <button
-                  onClick={() => {
-                    setShowAddPhoto(true)
-                    startCamera()
-                  }}
+                  onClick={() => setShowAddPhoto(true)}
                   className="inline-flex items-center gap-2 bg-[#FF6600] text-white px-6 py-3 rounded-lg hover:bg-[#FF5500] transition-colors"
                 >
                   <Plus className="w-5 h-5" />
@@ -826,10 +1044,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                   </div>
                 </div>
                 <button
-                  onClick={() => {
-                    setShowAddPhoto(true)
-                    startCamera()
-                  }}
+                  onClick={() => setShowAddPhoto(true)}
                   className="w-full flex items-center justify-center gap-2 bg-[#FF6600] text-white px-4 py-3 rounded-lg hover:bg-[#FF5500] transition-colors"
                 >
                   <Plus className="w-5 h-5" />

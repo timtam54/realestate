@@ -3,14 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Activity, Search, Download } from 'lucide-react'
 import Link from 'next/link'
-
-interface ApiAuditLog {
-  id: number
-  action: string
-  page: string
-  username: string
-  dte: string
-}
+import type { ApiAuditLog } from '@/types/audit'
 
 
 export default function AdminAuditLogPage() {
@@ -84,15 +77,6 @@ export default function AdminAuditLogPage() {
             <Link href="/admin/users" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
               Users
             </Link>
-            <Link href="/admin/partners" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              Partners
-            </Link>
-            <Link href="/admin/payments" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              Payments
-            </Link>
-            <Link href="/admin/cms" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              CMS
-            </Link>
             <Link href="/admin/audit" className="px-3 py-2 text-sm font-medium bg-gray-900 border-b-2 border-red-500">
               Audit Log
             </Link>
@@ -158,6 +142,9 @@ export default function AdminAuditLogPage() {
                     Username
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    IP Address
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Action
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -168,7 +155,7 @@ export default function AdminAuditLogPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredLogs.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                       No audit logs found
                     </td>
                   </tr>
@@ -186,6 +173,9 @@ export default function AdminAuditLogPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <p className="text-sm font-medium text-gray-900">{log.username}</p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <p className="text-sm text-gray-600">{log.ipaddress || 'N/A'}</p>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <p className="text-sm font-medium text-gray-900">{log.action}</p>

@@ -8,11 +8,12 @@ RUN npm ci --legacy-peer-deps
 
 FROM base AS builder
 WORKDIR /app
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# The .env files are already copied with COPY . .
-# They will be used during build
+# The .env.production file contains NEXT_PUBLIC_* variables that will be embedded during build
+# Build the application with the environment variables from .env.production
 RUN npm run build
 
 FROM base AS runner

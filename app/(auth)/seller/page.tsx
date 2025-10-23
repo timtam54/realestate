@@ -5,8 +5,12 @@ import { MapPin, List, Map, ListPlus } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
 import PropertyCard from '@/components/PropertyCard'
+import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
+import ChatModal from '@/components/ChatModal'
+import NotificationHeader from '@/components/NotificationHeader'
 import UserProfile from '@/components/UserProfile'
 import { useAuth } from '@/hooks/useAuth'
+import { useUserData } from '@/hooks/useUserData'
 import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
 import type { GoogleMap } from '@/types/google-maps'
@@ -17,26 +21,38 @@ export default function SellerPage() {
   const { user, isAuthenticated } = useAuth()
   const { status } = useSession()
   const router = useRouter()
+  const { userId, isProfileComplete, isLoading: userDataLoading, refetchUserData, dateofbirth, idbloburl, idverified } = useUserData()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
   const [error, setError] = useState<string | null>(null)
   
   const [newProperty, setNewProperty] = useState<Property|null>(null)
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
+  const [showViewOptionDialog, setShowViewOptionDialog] = useState(false)
+  const [chatProperty, setChatProperty] = useState<Property | null>(null)
+  const [chatConversationId, setChatConversationId] = useState<string | null>(null)
+  const [showChatModal, setShowChatModal] = useState(false)
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<GoogleMap | null>(null)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
 
   useEffect(() => {
-    if (status === 'loading') return // Still loading authentication status
+    if (status === 'loading' || userDataLoading) return // Still loading authentication status or user data
     
     if (status === 'unauthenticated') {
       // Redirect to sign in page with callback to return here after sign in
       router.push('/api/auth/signin?callbackUrl=/seller')
-    } else if (status === 'authenticated' && user?.email) {
-      checkUserProfile()
+    } else if (status === 'authenticated' && !isProfileComplete) {
+      // Profile is incomplete
+      toast.error('Please complete your profile to list properties', { duration: 5000 })
+      setShowProfileDialog(true)
+      setLoading(false)
+    } else if (status === 'authenticated' && isProfileComplete) {
+      // Profile is complete, fetch properties
+      fetchProperties()
     }
-  }, [status, router])
+  }, [status, router, isProfileComplete, userDataLoading])
 
   const initializeMap = React.useCallback(() => {
     if (!mapRef.current || !window.google?.maps || properties.length === 0) return
@@ -123,37 +139,6 @@ export default function SellerPage() {
     }
   }, [activeTab, properties, initializeMap])
 
-  const checkUserProfile = async () => {
-    try {
-      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${user?.email}`)
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      const userData = await response.json()
-      
-      if (!userData) {
-        // User profile doesn't exist
-        toast.error('Please complete your profile to list properties', { duration: 5000 })
-        setShowProfileDialog(true)
-        setLoading(false)
-      } else {
-        // Check if profile is complete (has required fields)
-        const isProfileComplete = userData.firstname && userData.lastname && userData.idverified
-        if (!isProfileComplete) {
-          toast.error('Please complete your profile to list properties', { duration: 5000 })
-          setShowProfileDialog(true)
-          setLoading(false)
-        } else {
-          // Profile is complete, fetch properties
-          fetchProperties()
-        }
-      }
-    } catch (error) {
-      console.error('Error checking user profile:', error)
-      toast.error('Error checking user profile')
-      setLoading(false)
-    }
-  }
 
   const fetchProperties = async () => {
     try {
@@ -220,6 +205,7 @@ export default function SellerPage() {
 <Toaster position="top-right" />
 <BuySelHeader user={user} isAuthenticated={isAuthenticated} />
 
+
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
@@ -251,29 +237,62 @@ export default function SellerPage() {
             </div>
 
             <button
-              onClick={() => setNewProperty(
-                {
-                  id: 0,
-                  title: '',
-                  address: '',
-                  dte: new Date(),
-                  sellerid: 1,
-                  price: 0,
-                  lat: 0,
-                  lon: 0,
-                  photobloburl: null,
-                  typeofprop: null,
-                  suburb: null,
-                  postcode: null,
-                  beds: null,
-                  baths: null,
-                  carspaces: null,
-                  landsize: null,
-                  buildyear: null,
-                  state:null,
-                  country:null
-                })
-              }
+              onClick={() => {
+                if (!dateofbirth) {
+                  toast.error('Please complete your profile with your date of birth')
+                  setShowProfileDialog(true)
+                  return
+                }
+                const today = new Date()
+                const birthDate = new Date(dateofbirth)
+                const age = today.getFullYear() - birthDate.getFullYear()
+                const monthDiff = today.getMonth() - birthDate.getMonth()
+                const isOver18 = age > 18 || (age === 18 && monthDiff >= 0 && today.getDate() >= birthDate.getDate())
+                
+                if (!isOver18) {
+                  toast.error('You must be 18 years or older to list properties')
+                  return
+                }
+                
+                if (!idbloburl) {
+                  toast.error('Please upload your ID document in your profile')
+                  setShowProfileDialog(true)
+                  return
+                }
+                
+                if (!idverified) {
+                  toast.error('Your ID needs to be verified before you can list properties')
+                  return
+                }
+                
+                setNewProperty(
+                  {
+                    id: 0,
+                    title: '',
+                    address: '',
+                    dte: new Date(),
+                    sellerid: userId || 0,
+                    price: 0,
+                    lat: 0,
+                    lon: 0,
+                    photobloburl: null,
+                    typeofprop: null,
+                    suburb: null,
+                    postcode: null,
+                    beds: null,
+                    baths: null,
+                    carspaces: null,
+                    landsize: null,
+                    buildyear: null,
+                    state:null,
+                    country:null,
+                    buildinginspazureblob: null,
+                    buildinginspverified: null,
+                    pestinspazureblob: null,
+                    pestinspverified: null
+                  }
+                )
+              }}
               className="flex items-center gap-2 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"
             >
               <ListPlus className="w-4 h-4" />
@@ -294,15 +313,92 @@ export default function SellerPage() {
             <p className="text-gray-600">Loading properties...</p>
           </div>
         ) : activeTab === 'list' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((property) => (
-              <PropertyCard 
-                key={property.id} 
-                property={property} 
-                onClick={setNewProperty}
-              />
-            ))}
-          </div>
+          properties.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow-md">
+              <p className="text-gray-600 text-lg mb-4">You have no properties listed</p>
+              <button
+                onClick={() => {
+                  if (!dateofbirth) {
+                    toast.error('Please complete your profile with your date of birth')
+                    setShowProfileDialog(true)
+                    return
+                  }
+
+                  const today = new Date()
+                  const birthDate = new Date(dateofbirth)
+                  const age = today.getFullYear() - birthDate.getFullYear()
+                  const monthDiff = today.getMonth() - birthDate.getMonth()
+                  const isOver18 = age > 18 || (age === 18 && monthDiff >= 0 && today.getDate() >= birthDate.getDate())
+                  
+                  if (!isOver18) {
+                    toast.error('You must be 18 years or older to list properties')
+                    return
+                  }
+                  
+                  if (!idbloburl) {
+                    toast.error('Please upload your ID document in your profile')
+                    setShowProfileDialog(true)
+                    return
+                  }
+                  
+                  if (!idverified) {
+                    toast.error('Your ID needs to be verified before you can list properties')
+                    return
+                  }
+                  
+                  setNewProperty(
+                    {
+                      id: 0,
+                      title: '',
+                      address: '',
+                      dte: new Date(),
+                      sellerid: userId || 0,
+                      price: 0,
+                      lat: 0,
+                      lon: 0,
+                      photobloburl: null,
+                      typeofprop: null,
+                      suburb: null,
+                      postcode: null,
+                      beds: null,
+                      baths: null,
+                      carspaces: null,
+                      landsize: null,
+                      buildyear: null,
+                      state:null,
+                      country:null,
+                      buildinginspazureblob: null,
+                      buildinginspverified: null,
+                      pestinspazureblob: null,
+                      pestinspverified: null
+                    }
+                  )
+                }}
+                className="flex items-center gap-2 bg-[#FF6600] text-white px-6 py-3 rounded-lg hover:bg-[#FF5500] transition-colors mx-auto"
+              >
+                <ListPlus className="w-5 h-5" />
+                <span>List a Property</span>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {properties.map((property) => (
+                <PropertyCard 
+                  key={property.id} 
+                  property={property} 
+                  onClick={(prop) => {
+                    setSelectedProperty(prop)
+                    setShowViewOptionDialog(true)
+                  }}
+                  onChatClick={(prop) => {
+                    setChatProperty(prop)
+                    setShowChatModal(true)
+                  }}
+                  userId={userId}
+                />
+              ))}
+            </div>
+          )
         ) : (
           <div className="bg-white rounded-lg shadow-md p-6">
             <div ref={mapRef} className="h-[600px] w-full rounded" />
@@ -335,7 +431,96 @@ export default function SellerPage() {
           isOpen={showProfileDialog}
           onClose={() => {
             setShowProfileDialog(false)
-            checkUserProfile() // Check again after closing to see if profile was completed
+            refetchUserData()
+          }}
+        />
+      )}
+      
+      {showViewOptionDialog && selectedProperty && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">View Property</h2>
+            <p className="text-gray-600 mb-6">How would you like to view this property?</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowViewOptionDialog(false)
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-[#FF6600] text-white px-6 py-3 rounded-lg hover:bg-[#FF5500] transition-colors"
+              >
+                Public View
+              </button>
+              <button
+                onClick={() => {
+                  setShowViewOptionDialog(false)
+                  setNewProperty(selectedProperty)
+                  setSelectedProperty(null)
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Edit View
+              </button>
+              <button
+                onClick={() => {
+                  setShowViewOptionDialog(false)
+                  setSelectedProperty(null)
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {!showViewOptionDialog && selectedProperty && (
+        <PropertyDetailsDialog
+          property={selectedProperty}
+          onClose={() => setSelectedProperty(null)}
+        />
+      )}
+      
+      {showChatModal && chatProperty && (
+        <ChatModal
+          isOpen={showChatModal}
+          onClose={() => {
+            setShowChatModal(false)
+            setChatProperty(null)
+            setChatConversationId(null)
+          }}
+          property={chatProperty}
+          currentUserId={0}
+          initialConversationId={chatConversationId}
+        />
+      )}
+      
+      {isAuthenticated && (
+        <NotificationHeader
+          onOpenChat={async (propertyId, conversationId) => {
+            // First try to find in local properties
+            let property = properties.find(p => p.id === propertyId)
+            
+            // If not found locally, fetch from API (could be another seller's property)
+            if (!property) {
+              try {
+                const response = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                if (response.ok) {
+                  property = await response.json()
+                }
+              } catch (error) {
+                console.error('Failed to fetch property:', error)
+              }
+            }
+            
+            if (property) {
+              console.log('Seller page: Opening chat for property:', property, 'conversation:', conversationId)
+              setChatProperty(property)
+              setChatConversationId(conversationId || null)
+              setShowChatModal(true)
+            } else {
+              console.error('Seller page: Could not find/fetch property:', propertyId)
+            }
           }}
         />
       )}

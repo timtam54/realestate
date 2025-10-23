@@ -1,30 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Users, Home, DollarSign, FileText, TrendingUp, Shield, AlertCircle, Activity, UserCheck } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Phone, MapPin, CheckCircle, XCircle, Shield } from 'lucide-react'
 import Link from 'next/link'
-
-interface DashboardStats {
-  totalListings: number
-  activeListings: number
-  totalUsers: number
-  activeConveyancers: number
-  totalRevenue: number
-  monthlyRevenue: number
-  pendingDisputes: number
-  completedTransactions: number
-}
-
-const mockStats: DashboardStats = {
-  totalListings: 234,
-  activeListings: 156,
-  totalUsers: 1847,
-  activeConveyancers: 12,
-  totalRevenue: 117000,
-  monthlyRevenue: 23400,
-  pendingDisputes: 3,
-  completedTransactions: 234
-}
+import type { Seller } from '@/types/seller'
+import UserDetailsModal from '@/components/UserDetailsModal'
 
 interface RecentActivity {
   id: string
@@ -44,6 +24,50 @@ const recentActivities: RecentActivity[] = [
 
 export default function AdminDashboardPage() {
   const [timeRange, setTimeRange] = useState('week')
+  const [sellers, setSellers] = useState<Seller[]>([])
+  const [loadingSellers, setLoadingSellers] = useState(true)
+  const [users, setUsers] = useState<Seller[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [selectedSeller, setSelectedSeller] = useState<Seller | null>(null)
+
+  useEffect(() => {
+    fetchSellers()
+    fetchUsers()
+  }, [])
+
+  const fetchSellers = async () => {
+    try {
+      setLoadingSellers(true)
+      const response = await fetch('https://buysel.azurewebsites.net/api/user/sellers')
+      if (response.ok) {
+        const data: Seller[] = await response.json()
+        setSellers(data)
+      } else {
+        console.error('Failed to fetch sellers')
+      }
+    } catch (error) {
+      console.error('Error fetching sellers:', error)
+    } finally {
+      setLoadingSellers(false)
+    }
+  }
+
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true)
+      const response = await fetch('https://buysel.azurewebsites.net/api/user')
+      if (response.ok) {
+        const data: Seller[] = await response.json()
+        setUsers(data)
+      } else {
+        console.error('Failed to fetch users')
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -81,15 +105,6 @@ export default function AdminDashboardPage() {
             <Link href="/admin/users" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
               Users
             </Link>
-            <Link href="/admin/partners" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              Partners
-            </Link>
-            <Link href="/admin/payments" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              Payments
-            </Link>
-            <Link href="/admin/cms" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              CMS
-            </Link>
             <Link href="/admin/audit" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
               Audit Log
             </Link>
@@ -113,142 +128,192 @@ export default function AdminDashboardPage() {
           </select>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Listings</p>
-                <p className="text-3xl font-bold text-gray-900">{mockStats.totalListings}</p>
-                <p className="text-sm text-green-600 mt-1">
-                  <TrendingUp className="h-4 w-4 inline mr-1" />
-                  12% from last month
-                </p>
-              </div>
-              <div className="bg-blue-100 rounded-full p-3">
-                <Home className="h-8 w-8 text-blue-600" />
-              </div>
-            </div>
+        {/* Sellers Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Registered Sellers</h2>
+            <span className="text-sm text-gray-600">{sellers.length} total</span>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active Listings</p>
-                <p className="text-3xl font-bold text-gray-900">{mockStats.activeListings}</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  {Math.round((mockStats.activeListings / mockStats.totalListings) * 100)}% of total
-                </p>
-              </div>
-              <div className="bg-green-100 rounded-full p-3">
-                <Activity className="h-8 w-8 text-green-600" />
+          {loadingSellers ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <div className="inline-flex items-center">
+                <svg className="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="ml-2">Loading sellers...</span>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {sellers.map((seller) => (
+                <div
+                  key={seller.id}
+                  onClick={() => setSelectedSeller(seller)}
+                  className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 hover:border-blue-400 relative"
+                >
+                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                    {seller.photoazurebloburl && seller.photoazurebloburl.trim() !== '' && !seller.photoverified && (
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded">
+                        Photo to be verified
+                      </span>
+                    )}
+                    {seller.idbloburl && seller.idbloburl.trim() !== '' && !seller.idverified && (
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded">
+                        ID to be verified
+                      </span>
+                    )}
+                    {seller.ratesnotice && seller.ratesnotice.trim() !== '' && !seller.ratesnoticeverified && (
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded">
+                        Rates to be verified
+                      </span>
+                    )}
+                    {seller.titlesearch && seller.titlesearch.trim() !== '' && !seller.titlesearchverified && (
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded">
+                        Title to be verified
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-blue-100 rounded-full p-3 mr-3">
+                        <User className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          {seller.firstname} {seller.lastname}
+                        </h3>
+                        <p className="text-sm text-gray-500 truncate">{seller.email}</p>
+                      </div>
+                    </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Monthly Revenue</p>
-                <p className="text-3xl font-bold text-gray-900">${mockStats.monthlyRevenue.toLocaleString()}</p>
-                <p className="text-sm text-green-600 mt-1">
-                  <TrendingUp className="h-4 w-4 inline mr-1" />
-                  8% from last month
-                </p>
-              </div>
-              <div className="bg-purple-100 rounded-full p-3">
-                <DollarSign className="h-8 w-8 text-purple-600" />
-              </div>
-            </div>
-          </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{seller.mobile}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{seller.address}</span>
+                      </div>
+                    </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active Conveyancers</p>
-                <p className="text-3xl font-bold text-gray-900">{mockStats.activeConveyancers}</p>
-                <p className="text-sm text-gray-600 mt-1">
-                  <UserCheck className="h-4 w-4 inline mr-1" />
-                  All verified
-                </p>
-              </div>
-              <div className="bg-orange-100 rounded-full p-3">
-                <FileText className="h-8 w-8 text-orange-600" />
-              </div>
+                    <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                      <div className="flex items-center">
+                        {seller.idverified ? (
+                          <span className="flex items-center text-xs text-green-600">
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="flex items-center text-xs text-gray-400">
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Unverified
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">ID: {seller.id}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Additional Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">User Statistics</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total Users</span>
-                <span className="font-semibold">{mockStats.totalUsers}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Sellers</span>
-                <span className="font-semibold">467</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Buyers</span>
-                <span className="font-semibold">1,368</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Conveyancers</span>
-                <span className="font-semibold">{mockStats.activeConveyancers}</span>
-              </div>
-            </div>
+        {/* All Users Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">All Users</h2>
+            <span className="text-sm text-gray-600">{users.length} total</span>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">Revenue Breakdown</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Listing Fees</span>
-                <span className="font-semibold">${(mockStats.monthlyRevenue * 0.7).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Add-on Services</span>
-                <span className="font-semibold">${(mockStats.monthlyRevenue * 0.2).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Partner Commissions</span>
-                <span className="font-semibold text-red-600">-${(mockStats.monthlyRevenue * 0.1).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between border-t pt-2">
-                <span className="text-gray-600 font-semibold">Net Revenue</span>
-                <span className="font-bold text-green-600">${(mockStats.monthlyRevenue * 0.9).toLocaleString()}</span>
+          {loadingUsers ? (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <div className="inline-flex items-center">
+                <svg className="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="ml-2">Loading users...</span>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {users.map((user) => (
+                <div
+                  key={user.id}
+                  onClick={() => setSelectedSeller(user)}
+                  className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 hover:border-blue-400 relative"
+                >
+                  <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                    {user.photoazurebloburl && user.photoazurebloburl.trim() !== '' && !user.photoverified && (
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded">
+                        Photo to be verified
+                      </span>
+                    )}
+                    {user.idbloburl && user.idbloburl.trim() !== '' && !user.idverified && (
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded">
+                        ID to be verified
+                      </span>
+                    )}
+                    {user.ratesnotice && user.ratesnotice.trim() !== '' && !user.ratesnoticeverified && (
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded">
+                        Rates to be verified
+                      </span>
+                    )}
+                    {user.titlesearch && user.titlesearch.trim() !== '' && !user.titlesearchverified && (
+                      <span className="bg-orange-100 text-orange-800 text-xs font-medium px-2 py-1 rounded">
+                        Title to be verified
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-blue-100 rounded-full p-3 mr-3">
+                        <User className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          {user.firstname} {user.lastname}
+                        </h3>
+                        <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                      </div>
+                    </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold mb-4">System Status</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Pending Disputes</span>
-                <span className="font-semibold text-orange-600 flex items-center">
-                  <AlertCircle className="h-4 w-4 mr-1" />
-                  {mockStats.pendingDisputes}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Verification Queue</span>
-                <span className="font-semibold">8</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Support Tickets</span>
-                <span className="font-semibold">12</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">System Health</span>
-                <span className="font-semibold text-green-600">Operational</span>
-              </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Phone className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{user.mobile}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                        <span className="truncate">{user.address}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                      <div className="flex items-center">
+                        {user.idverified ? (
+                          <span className="flex items-center text-xs text-green-600">
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Verified
+                          </span>
+                        ) : (
+                          <span className="flex items-center text-xs text-gray-400">
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Unverified
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">ID: {user.id}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
 
         {/* Recent Activity & Quick Actions */}
@@ -259,27 +324,7 @@ export default function AdminDashboardPage() {
               <h3 className="text-lg font-semibold">Recent Activity</h3>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-start">
-                    <div className={`rounded-full p-2 mr-3 ${
-                      activity.type === 'listing' ? 'bg-blue-100' :
-                      activity.type === 'payment' ? 'bg-green-100' :
-                      activity.type === 'user' ? 'bg-purple-100' :
-                      'bg-orange-100'
-                    }`}>
-                      {activity.type === 'listing' && <Home className="h-4 w-4 text-blue-600" />}
-                      {activity.type === 'payment' && <DollarSign className="h-4 w-4 text-green-600" />}
-                      {activity.type === 'user' && <Users className="h-4 w-4 text-purple-600" />}
-                      {activity.type === 'dispute' && <AlertCircle className="h-4 w-4 text-orange-600" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{activity.description}</p>
-                      <p className="text-xs text-gray-600">{activity.user} • {activity.timestamp}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              
               <Link href="/admin/audit" className="w-full mt-4 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center justify-center">
                 View Full Audit Log
               </Link>
@@ -287,35 +332,20 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b">
-              <h3 className="text-lg font-semibold">Quick Actions</h3>
-            </div>
-            <div className="p-6 space-y-3">
-              <Link href="/admin/listings" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
-                <Home className="h-4 w-4 mr-2" />
-                Manage Listings
-              </Link>
-              <Link href="/admin/partners" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
-                <UserCheck className="h-4 w-4 mr-2" />
-                Approve Partners
-              </Link>
-              <Link href="/admin/payments" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
-                <DollarSign className="h-4 w-4 mr-2" />
-                Process Refunds
-              </Link>
-              <Link href="/admin/cms" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
-                <FileText className="h-4 w-4 mr-2" />
-                Update CMS Content
-              </Link>
-              <Link href="/admin/users" className="w-full px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 inline-flex items-center">
-                <Users className="h-4 w-4 mr-2" />
-                Manage Users
-              </Link>
-            </div>
-          </div>
+         
         </div>
       </div>
+      {/* User Detail Modal */}
+      {selectedSeller && (
+        <UserDetailsModal
+          selectedSeller={selectedSeller}
+          setSelectedSeller={setSelectedSeller}
+          setSellers={setSellers}
+          sellers={sellers}
+          setUsers={setUsers}
+          users={users}
+        />
+      )}
     </div>
   )
 }

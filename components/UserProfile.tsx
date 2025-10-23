@@ -6,6 +6,8 @@ import toast from 'react-hot-toast'
 import type { GoogleAutocomplete } from '@/types/google-maps'
 import { loadGoogleMapsScript } from '@/utils/googleMapsLoader'
 import { BlobServiceClient } from '@azure/storage-blob'
+import { getAzureBlobUrl, config } from '@/lib/config'
+import { invalidateUserDataCache } from '@/hooks/useUserData'
 
 interface User {
   id: number
@@ -36,6 +38,8 @@ interface User {
   titlesearch:string|null
   ratesnoticeverified:Date|null
   titlesearchverified:Date|null
+  photoazurebloburl:string|null
+  photoverified:Date|null
 }
 
 interface UserProfileProps {
@@ -46,6 +50,7 @@ interface UserProfileProps {
 
 const tabs = [
   { id: 'personal', label: 'Personal Details', icon: User },
+  { id: 'photo', label: 'Photo', icon: Camera },
   // { id: 'tax', label: 'Tax Information', icon: FileText },
   { id: 'legal', label: 'Legal Capacity', icon: Scale },
   // { id: 'banking', label: 'Banking Details', icon: CreditCard },
@@ -63,12 +68,14 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
   const [idPreview, setIdPreview] = useState<string | null>(null)
   const [ratesNoticePreview, setRatesNoticePreview] = useState<string | null>(null)
   const [titleSearchPreview, setTitleSearchPreview] = useState<string | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   
   const addressInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const ratesNoticeInputRef = useRef<HTMLInputElement>(null)
   const titleSearchInputRef = useRef<HTMLInputElement>(null)
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   const formatDateForInput = (date: Date | string | null | undefined): string => {
     if (!date) return ''
@@ -88,22 +95,16 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
           setUser(data)
           updateCompletedTabs(data)
           if (data.idbloburl) {
-            const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
-            const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
-            const container = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
-            setIdPreview(`${baseUrl}/${container}/${data.idbloburl}?${sasToken}`)
+            setIdPreview(getAzureBlobUrl(data.idbloburl))
           }
           if (data.ratesnotice) {
-            const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
-            const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
-            const container = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
-            setRatesNoticePreview(`${baseUrl}/${container}/${data.ratesnotice}?${sasToken}`)
+            setRatesNoticePreview(getAzureBlobUrl(data.ratesnotice))
           }
           if (data.titlesearch) {
-            const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
-            const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
-            const container = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
-            setTitleSearchPreview(`${baseUrl}/${container}/${data.titlesearch}?${sasToken}`)
+            setTitleSearchPreview(getAzureBlobUrl(data.titlesearch))
+          }
+          if (data.photoazurebloburl) {
+            setPhotoPreview(getAzureBlobUrl(data.photoazurebloburl))
           }
         } else {
           setUser(createEmptyUser())
@@ -148,6 +149,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     titlesearch: null,
     ratesnoticeverified: null,
     titlesearchverified: null,
+    photoazurebloburl: null,
+    photoverified: null,
     dte: new Date(),
   })
 
@@ -222,17 +225,19 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     }
   }, [isOpen, user, activeTab])
 
-  const uploadDocumentToAzure = async (file: File, docType: 'id' | 'rates' | 'title'): Promise<string> => {
+  const uploadDocumentToAzure = async (file: File, docType: 'id' | 'rates' | 'title' | 'photo'): Promise<string> => {
     try {
       setUploading(true)
-      const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
-      const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
-      const containerName = process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER!
+      const { blobSasUrlBase, blobSasToken, blobContainer } = config.azure
+
+      if (!blobSasUrlBase || !blobSasToken || !blobContainer) {
+        throw new Error('Azure Blob configuration is missing')
+      }
 
       const blobName = `${docType}-${email.replace('@', '-')}-${Date.now()}-${file.name.replace(/\s+/g, "-")}`
       
-      const blockBlobClient = new BlobServiceClient(`${baseUrl}?${sasToken}`)
-        .getContainerClient(containerName)
+      const blockBlobClient = new BlobServiceClient(`${blobSasUrlBase}?${blobSasToken}`)
+        .getContainerClient(blobContainer)
         .getBlockBlobClient(blobName)
 
       await blockBlobClient.uploadData(file, {
@@ -250,7 +255,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     }
   }
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, docType: 'id' | 'rates' | 'title') => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>, docType: 'id' | 'rates' | 'title' | 'photo') => {
     const file = e.target.files?.[0]
     if (!file || !user) return
 
@@ -277,6 +282,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
           setRatesNoticePreview(result)
         } else if (docType === 'title') {
           setTitleSearchPreview(result)
+        } else if (docType === 'photo') {
+          setPhotoPreview(result)
         }
       }
       reader.readAsDataURL(file)
@@ -292,10 +299,20 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
       } else if (docType === 'title') {
         setUser({ ...user, titlesearch: blobUrl })
         toast.success('Title search uploaded successfully')
+      } else if (docType === 'photo') {
+        setUser({ ...user, photoazurebloburl: blobUrl })
+        toast.success('Photo uploaded successfully')
       }
     } catch (error) {
-      toast.error(`Failed to upload ${docType === 'id' ? 'ID' : docType === 'rates' ? 'rates notice' : 'title search'}`)
+      toast.error(`Failed to upload ${docType === 'id' ? 'ID' : docType === 'rates' ? 'rates notice' : docType === 'title' ? 'title search' : 'photo'}`)
     }
+  }
+
+  const handleRemovePhoto = () => {
+    if (!user) return
+    setPhotoPreview(null)
+    setUser({ ...user, photoazurebloburl: null })
+    toast.success('Photo removed')
   }
 
   const handleSave = async () => {
@@ -320,6 +337,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
           setUser(savedUser)
         }
         updateCompletedTabs(user)
+        invalidateUserDataCache() // Invalidate cache for all components
         toast.success('Profile saved successfully!')
       } else {
         toast.error('Failed to save profile')
@@ -343,7 +361,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
       dte: userData.dte instanceof Date ? userData.dte.toISOString() : userData.dte,
       idverified: userData.idverified ? (userData.idverified instanceof Date ? userData.idverified.toISOString() : userData.idverified) : null,
       ratesnoticeverified: userData.ratesnoticeverified ? (userData.ratesnoticeverified instanceof Date ? userData.ratesnoticeverified.toISOString() : userData.ratesnoticeverified) : null,
-      titlesearchverified: userData.titlesearchverified ? (userData.titlesearchverified instanceof Date ? userData.titlesearchverified.toISOString() : userData.titlesearchverified) : null
+      titlesearchverified: userData.titlesearchverified ? (userData.titlesearchverified instanceof Date ? userData.titlesearchverified.toISOString() : userData.titlesearchverified) : null,
+      photoverified: userData.photoverified ? (userData.photoverified instanceof Date ? userData.photoverified.toISOString() : userData.photoverified) : null
     }
   }
 
@@ -369,6 +388,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
           setUser(savedUser)
         }
         updateCompletedTabs(user)
+        invalidateUserDataCache() // Invalidate cache for all components
         toast.success('Changes saved')
         setActiveTab(newTab)
       } else {
@@ -525,6 +545,99 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                 <option value="temporary">Temporary Resident</option>
                 <option value="foreign">Foreign Resident</option>
               </select>
+            </div>
+          </div>
+        )
+
+      case 'photo':
+        return (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Profile Photo:</strong> Upload a clear photo of yourself for your profile.
+              </p>
+            </div>
+
+            {/* Profile Photo Section */}
+            <div className="flex justify-center">
+              <div className="w-full max-w-md">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-8">
+                  {photoPreview ? (
+                    <div className="space-y-6">
+                      {user.photoverified ? (
+                        <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
+                          <div className="flex items-center gap-2 justify-center">
+                            <CheckCircle className="w-6 h-6 text-green-600" />
+                            <span className="font-semibold text-green-800">Approved</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-amber-50 border-2 border-amber-500 rounded-lg p-4 mb-4">
+                          <div className="flex items-center gap-2 justify-center">
+                            <AlertCircle className="w-6 h-6 text-amber-600" />
+                            <span className="font-semibold text-amber-800">To Be Approved</span>
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex justify-center">
+                        <img 
+                          src={photoPreview} 
+                          alt="Profile Photo" 
+                          className="w-48 h-48 rounded-full object-cover shadow-lg"
+                        />
+                      </div>
+                      <div className="flex justify-center gap-3">
+                        <button
+                          onClick={() => photoInputRef.current?.click()}
+                          disabled={uploading}
+                          className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                        >
+                          <Camera className="w-5 h-5" />
+                          Replace Photo
+                        </button>
+                        <button
+                          onClick={handleRemovePhoto}
+                          disabled={uploading}
+                          className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                        >
+                          <X className="w-5 h-5" />
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-2 font-medium">Upload your profile photo</p>
+                      <p className="text-xs text-gray-500 mb-6">PNG or JPG up to 10MB</p>
+                      <div className="flex flex-col gap-3">
+                        <button
+                          onClick={() => photoInputRef.current?.click()}
+                          disabled={uploading}
+                          className="w-full px-6 py-3 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Camera className="w-5 h-5" />
+                          Take Photo or Upload
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="user"
+                    onChange={(e) => handleFileSelect(e, 'photo')}
+                    className="hidden"
+                  />
+                </div>
+                {uploading && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mt-4">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Uploading photo...
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )
@@ -740,6 +853,21 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                     {idPreview ? (
                       <div className="space-y-4">
+                        {user.idverified ? (
+                          <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
+                            <div className="flex items-center gap-2 justify-center">
+                              <CheckCircle className="w-6 h-6 text-green-600" />
+                              <span className="font-semibold text-green-800">Approved</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="bg-amber-50 border-2 border-amber-500 rounded-lg p-4 mb-4">
+                            <div className="flex items-center gap-2 justify-center">
+                              <AlertCircle className="w-6 h-6 text-amber-600" />
+                              <span className="font-semibold text-amber-800">To Be Approved</span>
+                            </div>
+                          </div>
+                        )}
                         {idPreview.startsWith('data:application/pdf') ? (
                           <div className="text-center">
                             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-3" />
@@ -810,6 +938,21 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                 {ratesNoticePreview ? (
                   <div className="space-y-4">
+                    {user.ratesnoticeverified ? (
+                      <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
+                        <div className="flex items-center gap-2 justify-center">
+                          <CheckCircle className="w-6 h-6 text-green-600" />
+                          <span className="font-semibold text-green-800">Approved</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 border-2 border-amber-500 rounded-lg p-4 mb-4">
+                        <div className="flex items-center gap-2 justify-center">
+                          <AlertCircle className="w-6 h-6 text-amber-600" />
+                          <span className="font-semibold text-amber-800">To Be Approved</span>
+                        </div>
+                      </div>
+                    )}
                     {ratesNoticePreview.startsWith('data:application/pdf') ? (
                       <div className="text-center">
                         <FileText className="w-16 h-16 text-gray-400 mx-auto mb-3" />
@@ -878,6 +1021,21 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
                 {titleSearchPreview ? (
                   <div className="space-y-4">
+                    {user.titlesearchverified ? (
+                      <div className="bg-green-50 border-2 border-green-500 rounded-lg p-4 mb-4">
+                        <div className="flex items-center gap-2 justify-center">
+                          <CheckCircle className="w-6 h-6 text-green-600" />
+                          <span className="font-semibold text-green-800">Approved</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 border-2 border-amber-500 rounded-lg p-4 mb-4">
+                        <div className="flex items-center gap-2 justify-center">
+                          <AlertCircle className="w-6 h-6 text-amber-600" />
+                          <span className="font-semibold text-amber-800">To Be Approved</span>
+                        </div>
+                      </div>
+                    )}
                     {titleSearchPreview.startsWith('data:application/pdf') ? (
                       <div className="text-center">
                         <FileText className="w-16 h-16 text-gray-400 mx-auto mb-3" />

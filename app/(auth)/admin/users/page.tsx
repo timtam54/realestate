@@ -1,8 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Users, User, Mail, Phone, Home, DollarSign, MessageSquare, Search, Filter, Ban, UserCheck, Eye } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Users, User, Mail, Phone, Search, Filter, Ban, UserCheck, Eye, Shield } from 'lucide-react'
 import Link from 'next/link'
+import { getAzureBlobUrl } from '@/lib/config'
+import type { Seller } from '@/types/seller'
+import UserDetailsModal from '@/components/UserDetailsModal'
 
 interface UserData {
   id: string
@@ -118,13 +121,13 @@ const mockUsers: UserData[] = [
   }
 ]
 
-interface UserDetailsModalProps {
+interface MockUserDetailsModalProps {
   user: UserData
   onClose: () => void
   onStatusChange: (userId: string, newStatus: UserData['status']) => void
 }
 
-function UserDetailsModal({ user, onClose, onStatusChange }: UserDetailsModalProps) {
+function MockUserDetailsModal({ user, onClose, onStatusChange }: MockUserDetailsModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
@@ -288,11 +291,35 @@ function UserDetailsModal({ user, onClose, onStatusChange }: UserDetailsModalPro
 }
 
 export default function AdminUsersPage() {
+  const [apiUsers, setApiUsers] = useState<Seller[]>([])
+  const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState(mockUsers)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterRole, setFilterRole] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null)
+  const [selectedApiUser, setSelectedApiUser] = useState<Seller | null>(null)
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('https://buysel.azurewebsites.net/api/user')
+      if (response.ok) {
+        const data: Seller[] = await response.json()
+        setApiUsers(data)
+      } else {
+        console.error('Failed to fetch users')
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredUsers = users.filter(user => {
     if (filterRole !== 'all' && user.role !== filterRole) return false
@@ -351,15 +378,6 @@ export default function AdminUsersPage() {
             </Link>
             <Link href="/admin/users" className="px-3 py-2 text-sm font-medium bg-gray-900 border-b-2 border-red-500">
               Users
-            </Link>
-            <Link href="/admin/partners" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              Partners
-            </Link>
-            <Link href="/admin/payments" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              Payments
-            </Link>
-            <Link href="/admin/cms" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
-              CMS
             </Link>
             <Link href="/admin/audit" className="px-3 py-2 text-sm font-medium hover:bg-gray-700">
               Audit Log
@@ -436,127 +454,130 @@ export default function AdminUsersPage() {
 
         {/* Users Table */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  User
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Verification
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Activity
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Joined
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <div className="bg-gray-100 rounded-full p-2 mr-3">
-                        <User className="h-5 w-5 text-gray-600" />
-                      </div>
+          {loading ? (
+            <div className="p-8 text-center">
+              <div className="inline-flex items-center">
+                <svg className="animate-spin h-8 w-8 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="ml-2">Loading users...</span>
+              </div>
+            </div>
+          ) : (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Photo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    User
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Address
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ID Verified
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Photo Verified
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Joined
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {apiUsers.map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      {user.photoazurebloburl && user.photoazurebloburl.trim() !== '' ? (
+                        <img
+                          src={getAzureBlobUrl(user.photoazurebloburl)}
+                          alt={`${user.firstname} ${user.lastname}`}
+                          className="w-12 h-12 object-cover rounded-full"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                          <User className="h-6 w-6 text-gray-400" />
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{user.name}</p>
+                        <p className="text-sm font-medium text-gray-900">{user.firstname} {user.middlename || ''} {user.lastname}</p>
                         <p className="text-sm text-gray-500">{user.email}</p>
-                        {user.phone && (
-                          <p className="text-xs text-gray-400">{user.phone}</p>
+                        {user.mobile && (
+                          <p className="text-xs text-gray-400">{user.mobile}</p>
                         )}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                      user.role === 'conveyancer' ? 'bg-blue-100 text-blue-800' :
-                      user.role === 'seller' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      user.status === 'active' ? 'bg-green-100 text-green-800' :
-                      user.status === 'suspended' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex items-center">
-                        <Mail className={`h-4 w-4 ${user.emailVerified ? 'text-green-600' : 'text-gray-400'}`} />
-                      </div>
-                      <div className="flex items-center">
-                        <Phone className={`h-4 w-4 ${user.phoneVerified ? 'text-green-600' : 'text-gray-400'}`} />
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {user.role === 'seller' && (
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center">
-                          <Home className="h-4 w-4 mr-1 text-gray-400" />
-                          {user.listings || 0}
-                        </div>
-                        <div className="flex items-center">
-                          <DollarSign className="h-4 w-4 mr-1 text-gray-400" />
-                          ${user.revenue || 0}
-                        </div>
-                      </div>
-                    )}
-                    {user.role === 'buyer' && (
-                      <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 mr-1 text-gray-400" />
-                        {user.messages || 0} messages
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div>
-                      <p>{new Date(user.createdAt).toLocaleDateString()}</p>
-                      <p className="text-xs">Last: {new Date(user.lastLoginAt).toLocaleDateString()}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => setSelectedUser(user)}
-                      className="text-blue-600 hover:text-blue-900"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm text-gray-600">{user.address}</p>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {user.idverified ? (
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                          Not Verified
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {user.photoverified ? (
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          Verified
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                          Not Verified
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {user.dte ? new Date(user.dte).toLocaleDateString() : 'N/A'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => setSelectedApiUser(user)}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <Eye className="h-5 w-5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        {/* User Details Modal */}
+        {/* User Details Modal (Mock) */}
         {selectedUser && (
-          <UserDetailsModal
+          <MockUserDetailsModal
             user={selectedUser}
             onClose={() => setSelectedUser(null)}
             onStatusChange={(userId, newStatus) => {
               handleStatusChange(userId, newStatus)
               setSelectedUser(null)
             }}
+          />
+        )}
+
+        {/* API User Details Modal */}
+        {selectedApiUser && (
+          <UserDetailsModal
+            selectedSeller={selectedApiUser}
+            setSelectedSeller={setSelectedApiUser}
+            setUsers={setApiUsers}
+            users={apiUsers}
           />
         )}
       </div>

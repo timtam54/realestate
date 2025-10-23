@@ -18,4 +18,8 @@ export interface Property {
   carspaces: number | null
   landsize: number | null
   buildyear: number | null
+  buildinginspazureblob:string|null,
+  buildinginspverified:boolean|null,
+  pestinspazureblob:string|null,
+  pestinspverified:boolean|null
 }

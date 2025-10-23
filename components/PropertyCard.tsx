@@ -1,20 +1,15 @@
-import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, Camera } from 'lucide-react'
+import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, MessageCircle, Camera } from 'lucide-react'
 import { Property } from '@/types/property'
 import { getPhotoUrl } from '@/lib/azure-config'
 
 interface PropertyCardProps {
   property: Property
   onClick: (property: Property) => void
+  onChatClick?: (property: Property) => void
+  userId?: number | null
 }
 
-const badgeIcons = {
-  contract: { icon: Shield, label: 'Contract Ready', color: 'text-green-600 bg-green-100' },
-  smoke_alarm: { icon: Shield, label: 'Smoke Alarm', color: 'text-green-600 bg-green-100' },
-  building_pest: { icon: CheckCircle, label: 'Building & Pest', color: 'text-blue-600 bg-blue-100' },
-  pro_photos: { icon: Camera, label: 'Pro Photos', color: 'text-purple-600 bg-purple-100' }
-}
-
-export default function PropertyCard({ property, onClick }: PropertyCardProps) {
+export default function PropertyCard({ property, onClick, onChatClick, userId }: PropertyCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       <div className="relative h-48">
@@ -29,12 +24,24 @@ export default function PropertyCard({ property, onClick }: PropertyCardProps) {
             <MapPin className="w-16 h-16 text-gray-400" />
           </div>
         )}
-        <button
-          type="button"
-          className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
-        >
-          <Heart className="h-5 w-5 text-gray-600" />
-        </button>
+        <div className="absolute top-4 right-4 flex gap-2">
+          {onChatClick && userId !== property.sellerid && (
+            <button
+              type="button"
+              onClick={() => onChatClick(property)}
+              className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
+              title="Chat with seller"
+            >
+              <MessageCircle className="h-5 w-5 text-blue-600" />
+            </button>
+          )}
+          <button
+            type="button"
+            className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
+          >
+            <Heart className="h-5 w-5 text-gray-600" />
+          </button>
+        </div>
         <div className="absolute bottom-4 right-4 bg-white px-3 py-1 rounded-lg font-semibold">
           ${property.price.toLocaleString()}
         </div>
@@ -72,18 +79,53 @@ export default function PropertyCard({ property, onClick }: PropertyCardProps) {
           </span>
         </div>
         <div className="flex flex-wrap gap-1">
-          {(['contract', 'smoke_alarm', 'building_pest', 'pro_photos'] as const).map((badge) => {
-            const badgeInfo = badgeIcons[badge]
-            return (
-              <span
-                key={badge}
-                className={`text-xs px-2 py-1 rounded-full flex items-center ${badgeInfo.color}`}
-              >
-                <badgeInfo.icon className="h-3 w-3 mr-1" />
-                {badgeInfo.label}
-              </span>
-            )
-          })}
+          {/* Contract Ready badge - always shown */}
+          <span className="text-xs px-2 py-1 rounded-full flex items-center text-green-600 bg-green-100">
+            <Shield className="h-3 w-3 mr-1" />
+            Contract Ready
+          </span>
+          
+          {/* Smoke Alarm badge - shown if property listed more than 4 days ago */}
+          {(() => {
+            const listingDate = new Date(property.dte)
+            const fourDaysAgo = new Date()
+            fourDaysAgo.setDate(fourDaysAgo.getDate() - 6)
+            return listingDate < fourDaysAgo
+          })() && (
+            <span className="text-xs px-2 py-1 rounded-full flex items-center text-green-600 bg-green-100">
+              <Shield className="h-3 w-3 mr-1" />
+              Smoke Alarm
+            </span>
+          )}
+          
+          {/* Building Inspection badge - shown if report uploaded */}
+          {property.buildinginspazureblob && (
+            <span className="text-xs px-2 py-1 rounded-full flex items-center text-blue-600 bg-blue-100">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Building Inspect
+            </span>
+          )}
+          
+          {/* Pest Inspection badge - shown if report uploaded */}
+          {property.pestinspazureblob && (
+            <span className="text-xs px-2 py-1 rounded-full flex items-center text-blue-600 bg-blue-100">
+              <CheckCircle className="h-3 w-3 mr-1" />
+              Pest Inspect
+            </span>
+          )}
+          
+          {/* Pro Photos badge - shown if property listed more than 7 days ago */}
+          {(() => {
+            const listingDate = new Date(property.dte)
+            const sevenDaysAgo = new Date()
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+            return listingDate < sevenDaysAgo
+          })() && (
+            <span className="text-xs px-2 py-1 rounded-full flex items-center text-purple-600 bg-purple-100">
+              <Camera className="h-3 w-3 mr-1" />
+              Pro Photos
+            </span>
+          )}
         </div>
       </div>
     </div>

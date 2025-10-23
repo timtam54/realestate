@@ -6,7 +6,10 @@ import Link from 'next/link'
 import BuySelHeader from '@/components/BuySelHeader'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
+import ChatModal from '@/components/ChatModal'
+import NotificationHeader from '@/components/NotificationHeader'
 import { useAuth } from '@/hooks/useAuth'
+import { useUserData } from '@/hooks/useUserData'
 import { Property } from '@/types/property'
 import type { GoogleMap } from '@/types/google-maps'
 export default function HomePage() {
@@ -17,7 +20,11 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
+  const [chatProperty, setChatProperty] = useState<Property | null>(null)
+  const [showChatModal, setShowChatModal] = useState(false)
+  const [chatConversationId, setChatConversationId] = useState<string | null>(null)
   const { user, isAuthenticated } = useAuth()
+  const { userId } = useUserData()
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<GoogleMap | null>(null)
 
@@ -277,7 +284,12 @@ export default function HomePage() {
                 <PropertyCard 
                   key={property.id} 
                   property={property} 
-                  onClick={(prop) => setSelectedProperty(prop)} 
+                  onClick={(prop) => setSelectedProperty(prop)}
+                  onChatClick={isAuthenticated ? (prop) => {
+                    setChatProperty(prop)
+                    setShowChatModal(true)
+                  } : undefined}
+                  userId={userId}
                 />
               ))}
             </div>
@@ -403,6 +415,48 @@ export default function HomePage() {
         <PropertyDetailsDialog
           property={selectedProperty}
           onClose={() => setSelectedProperty(null)}
+        />
+      )}
+      
+      {showChatModal && chatProperty && (
+        <ChatModal
+          isOpen={showChatModal}
+          onClose={() => {
+            setShowChatModal(false)
+            setChatProperty(null)
+            setChatConversationId(null)
+          }}
+          property={chatProperty}
+          currentUserId={0}
+          initialConversationId={chatConversationId}
+        />
+      )}
+      
+      {isAuthenticated && (
+        <NotificationHeader
+          onOpenChat={async (propertyId, conversationId) => {
+            // First try to find in local properties
+            let property = properties.find(p => p.id === propertyId)
+            
+            // If not found locally, fetch from API
+            if (!property) {
+              try {
+                const response = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                if (response.ok) {
+                  property = await response.json()
+                }
+              } catch (error) {
+                console.error('Failed to fetch property:', error)
+              }
+            }
+            
+            if (property) {
+              console.log('HomePage: Opening chat with conversationId:', conversationId)
+              setChatProperty(property)
+              setChatConversationId(conversationId || null)
+              setShowChatModal(true)
+            }
+          }}
         />
       )}
     </div>
