@@ -189,7 +189,7 @@ export default function HomePage() {
             Sell your house. Keep your price.
           </h1>
           <p className="text-xl mb-8">
-            Verified property. No commission. Flat $500 listing fee.
+            Verified property. No commission. Free to list during early access.
           </p>
           
           {/* Search Bar */}
@@ -363,7 +363,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to sell without commission?</h2>
           <p className="text-xl mb-8">
-            List your property for a flat $500 fee. No hidden costs, no percentage commissions.
+            Free to list during early access. No hidden costs, no percentage commissions.
           </p>
           <Link href="/seller/list-property" className="inline-block bg-white text-[#FF6600] px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
             Start Listing Now

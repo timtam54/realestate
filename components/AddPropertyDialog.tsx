@@ -35,6 +35,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const [isUploading, setIsUploading] = useState(false)
   const [isBuildingInspUploading, setIsBuildingInspUploading] = useState(false)
   const [isPestInspUploading, setIsPestInspUploading] = useState(false)
+  const [isTitleSrchUploading, setIsTitleSrchUploading] = useState(false)
   const [photos, setPhotos] = useState<Photo[]>([])
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [showAddPhoto, setShowAddPhoto] = useState(false)
@@ -45,6 +46,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const fileInputRef = useRef<HTMLInputElement>(null)
   const buildingInspFileRef = useRef<HTMLInputElement>(null)
   const pestInspFileRef = useRef<HTMLInputElement>(null)
+  const titleSrchFileRef = useRef<HTMLInputElement>(null)
   const addressInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
 
@@ -298,7 +300,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     }
   }
 
-  const uploadInspectionReportToAzure = async (file: File, reportType: 'building' | 'pest'): Promise<string> => {
+  const uploadInspectionReportToAzure = async (file: File, reportType: 'building' | 'pest' | 'titlesrch'): Promise<string> => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE!
       const sasToken = process.env.NEXT_PUBLIC_AZUREBLOB_SASTOKEN!
@@ -369,6 +371,30 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     setProperty({ ...property, pestinspazureblob: null })
     await saveProperty()
     toast.success('Pest inspection report removed')
+  }
+
+  const handleTitleSrchUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setIsTitleSrchUploading(true)
+      try {
+        const blobName = await uploadInspectionReportToAzure(file, 'titlesrch')
+        setProperty({ ...property, titlesrchcouncilrateazureblob: blobName })
+        await saveProperty()
+        toast.success('Title search/council rates document uploaded successfully!')
+      } catch (error) {
+        console.error('Error uploading title search document:', error)
+        toast.error('Failed to upload title search document')
+      } finally {
+        setIsTitleSrchUploading(false)
+      }
+    }
+  }
+
+  const handleRemoveTitleSrch = async () => {
+    setProperty({ ...property, titlesrchcouncilrateazureblob: null })
+    await saveProperty()
+    toast.success('Title search/council rates document removed')
   }
 
   const handleSave = async () => {
@@ -442,7 +468,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     { id: 'price-terms' as WizardStep, label: 'Price & Terms', number: 2 },
     { id: 'photos-video' as WizardStep, label: 'Photos & Video', number: 3 },
     { id: 'compliance' as WizardStep, label: 'Compliance & Documents', number: 4 },
-    { id: 'review' as WizardStep, label: 'Review & Payment', number: 5 },
+    { id: 'review' as WizardStep, label: 'Review & Price', number: 5 },
   ]
 
   return (
@@ -755,8 +781,63 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
           <div className="bg-white rounded-lg shadow-md p-8">
             <h2 className="text-2xl font-semibold mb-4 text-gray-800">Compliance & Documents</h2>
             <p className="text-gray-600 mb-8">Add inspection reports to build trust with buyers.</p>
-            
+
             <div className="space-y-8">
+              <div className="border rounded-lg p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Title Search or Council Rates Notice</h3>
+                {property.titlesrchcouncilrateazureblob ? (
+                  <div className="space-y-4">
+                    <div className="bg-gray-100 rounded-lg p-4">
+                      <iframe
+                        src={getPhotoUrl(property.titlesrchcouncilrateazureblob) || ''}
+                        title="Title Search or Council Rates Notice"
+                        className="w-full h-96 rounded"
+                      />
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => window.open(getPhotoUrl(property.titlesrchcouncilrateazureblob) || '', '_blank')}
+                        className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        Open in New Tab
+                      </button>
+                      <button
+                        onClick={() => titleSrchFileRef.current?.click()}
+                        disabled={isTitleSrchUploading}
+                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400"
+                      >
+                        Replace Document
+                      </button>
+                      <button
+                        onClick={handleRemoveTitleSrch}
+                        disabled={isTitleSrchUploading}
+                        className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400"
+                      >
+                        Remove Document
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg">
+                    <p className="text-gray-500 mb-4">No title search or council rates document uploaded</p>
+                    <button
+                      onClick={() => titleSrchFileRef.current?.click()}
+                      disabled={isTitleSrchUploading}
+                      className="bg-[#FF6600] text-white px-6 py-3 rounded-lg hover:bg-[#FF5500] transition-colors disabled:bg-gray-400"
+                    >
+                      {isTitleSrchUploading ? 'Uploading...' : 'Upload Title Search/Council Rates'}
+                    </button>
+                  </div>
+                )}
+                <input
+                  ref={titleSrchFileRef}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleTitleSrchUpload}
+                  className="hidden"
+                />
+              </div>
+
               <div className="border rounded-lg p-6">
                 <h3 className="text-lg font-semibold mb-4 text-gray-800">Building Inspection Report</h3>
                 {property.buildinginspazureblob ? (
@@ -879,13 +960,13 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                 onClick={handleNext}
                 className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
               >
-                Next: Review & Payment
+                Next: Review & Price
               </button>
             </div>
           </div>
         ) : currentStep === 'review' ? (
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-6">Review & Payment</h2>
+            <h2 className="text-xl font-semibold mb-6">Review & Price</h2>
             <div className="space-y-4 mb-6">
               <div className="border-b pb-4">
                 <h3 className="font-medium text-gray-700">Property Details</h3>

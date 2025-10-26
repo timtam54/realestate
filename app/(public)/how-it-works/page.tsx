@@ -12,6 +12,15 @@ export default function HowItWorksPage() {
     <div className="min-h-screen bg-gray-50">
       <BuySelHeader user={user} isAuthenticated={isAuthenticated} />
 
+      {/* Early Access Banner */}
+      <div className="bg-gradient-to-r from-[#FF6600] to-orange-600 text-white py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-lg font-semibold">
+            🎉 Free to list during early access - No listing fees!
+          </p>
+        </div>
+      </div>
+
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">How to Sell Your Property</h2>
@@ -44,14 +53,14 @@ export default function HowItWorksPage() {
               <div className="ml-4 flex-1">
                 <h3 className="font-semibold text-xl mb-2">Create Your Listing</h3>
                 <p className="text-gray-600 mb-3">
-                  Use our simple 5-step wizard to create your listing:
+                  Use our simple 5-step wizard to create your listing. <strong className="text-[#FF6600]">Free to list during early access.</strong>
                 </p>
                 <ul className="list-disc list-inside text-gray-600 space-y-1">
                   <li><strong>Property Details:</strong> Address, bedrooms, bathrooms, features</li>
                   <li><strong>Pricing:</strong> Set your asking price and negotiation preferences</li>
                   <li><strong>Photos & Media:</strong> Upload high-quality photos (we recommend professional photography)</li>
                   <li><strong>Compliance:</strong> Add verification badges to build trust</li>
-                  <li><strong>Payment:</strong> Pay the $500 listing fee to go live</li>
+                  <li><strong>Payment:</strong> Go live with no listing fees</li>
                 </ul>
               </div>
             </div>

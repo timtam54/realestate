@@ -508,7 +508,7 @@ export default function ListPropertyPage() {
           {/* Step 5: Review & Payment */}
           {currentStep === 5 && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-6">Review & Payment</h2>
+              <h2 className="text-2xl font-bold mb-6">Review</h2>
               
               <div className="space-y-6">
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -516,7 +516,7 @@ export default function ListPropertyPage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Listing Fee (Flat Rate)</span>
-                      <span className="font-medium">$500.00</span>
+                      <span className="font-medium">Free to list during early access</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Contract of Sale (via Conveyancer)</span>
@@ -525,7 +525,7 @@ export default function ListPropertyPage() {
                     <div className="border-t pt-2 mt-2">
                       <div className="flex justify-between font-semibold">
                         <span>Total</span>
-                        <span>$500.00</span>
+                        <span>$0.00</span>
                       </div>
                     </div>
                   </div>

@@ -5,6 +5,7 @@ import FacebookProvider from "next-auth/providers/facebook"
 import { NextAuthOptions } from "next-auth"
 
 export const authOptions: NextAuthOptions = {
+  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,

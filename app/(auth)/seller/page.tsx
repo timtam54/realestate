@@ -289,7 +289,9 @@ export default function SellerPage() {
                     buildinginspazureblob: null,
                     buildinginspverified: null,
                     pestinspazureblob: null,
-                    pestinspverified: null
+                    pestinspverified: null,
+                    titlesrchcouncilrateazureblob: null,
+                    titlesrchcouncilrateverified: null
                   }
                 )
               }}
@@ -370,7 +372,9 @@ export default function SellerPage() {
                       buildinginspazureblob: null,
                       buildinginspverified: null,
                       pestinspazureblob: null,
-                      pestinspverified: null
+                      pestinspverified: null,
+                      titlesrchcouncilrateazureblob: null,
+                      titlesrchcouncilrateverified: null
                     }
                   )
                 }}

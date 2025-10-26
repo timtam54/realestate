@@ -12,7 +12,7 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     question: "How much does it cost to list my property?",
-    answer: "It's a flat fee of $500 to list your property. No hidden costs, no percentage commissions. Additional services like professional photography or building inspections are available as optional add-ons."
+    answer: "No listing fees for your property (during early access). No hidden costs, no percentage commissions. Additional services like professional photography or building inspections are available as optional add-ons."
   },
   {
     question: "Do I need a Contract of Sale before listing?",
@@ -68,7 +68,7 @@ export default function HowToSellPage() {
             Sell Your Property Without Agent Commission
           </h1>
           <p className="text-xl mb-8">
-            Keep 100% of your sale price. Pay only a flat $500 listing fee.
+            Keep 100% of your sale price. No listing fees.
           </p>
           <div className="flex justify-center space-x-4">
             <Link href="/seller/list-property" className="px-6 py-3 text-lg bg-white text-blue-600 hover:bg-gray-100 rounded flex items-center">
@@ -167,7 +167,7 @@ export default function HowToSellPage() {
                   </div>
                   <div className="flex justify-between text-red-600">
                     <span>Listing Fee:</span>
-                    <span className="font-medium">-$500</span>
+                    <span className="font-medium">-$0</span>
                   </div>
                   <div className="flex justify-between text-gray-400">
                     <span>Optional Extras:</span>
@@ -271,7 +271,7 @@ export default function HowToSellPage() {
             </Link>
           </div>
           <p className="mt-6 text-blue-100">
-            No obligation. No hidden fees. Just $500 to list.
+            No obligation. No hidden fees. Free to list.
           </p>
         </div>
       </section>

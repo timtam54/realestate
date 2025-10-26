@@ -21,5 +21,7 @@ export interface Property {
   buildinginspazureblob:string|null,
   buildinginspverified:boolean|null,
   pestinspazureblob:string|null,
-  pestinspverified:boolean|null
+  pestinspverified:boolean|null,
+  titlesrchcouncilrateazureblob:string|null,
+  titlesrchcouncilrateverified:boolean|null
 }

@@ -25,6 +25,12 @@ interface Property {
   lon: number
   dte: string | null
   sellerid: number
+  buildinginspazureblob: string | null
+  buildinginspverified: boolean | null
+  pestinspazureblob: string | null
+  pestinspverified: boolean | null
+  titlesrchcouncilrateazureblob: string | null
+  titlesrchcouncilrateverified: boolean | null
 }
 
 interface Listing {
@@ -107,6 +113,8 @@ export default function AdminListingsPage() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [showActionMenu, setShowActionMenu] = useState<string | null>(null)
   const [showConfirmDialog, setShowConfirmDialog] = useState<{type: string, listing: Listing} | null>(null)
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
+  const [showDocumentsModal, setShowDocumentsModal] = useState(false)
 
   useEffect(() => {
     fetchProperties()
@@ -137,12 +145,7 @@ export default function AdminListingsPage() {
     return true
   })
 
-  const handleFeatureToggle = (listingId: string) => {
-    setListings(listings.map(l => 
-      l.id === listingId ? { ...l, featured: !l.featured } : l
-    ))
-    setShowActionMenu(null)
-  }
+ 
 
   const handleStatusChange = (listingId: string, newStatus: Listing['status']) => {
     setListings(listings.map(l => 
@@ -160,6 +163,32 @@ export default function AdminListingsPage() {
       handleStatusChange(showConfirmDialog.listing.id, 'archived')
       // Log audit action
       console.log(`Audit Log: Admin unlisted property ${showConfirmDialog.listing.id}`)
+    }
+  }
+
+  const handleVerificationToggle = async (propertyId: number, field: 'buildinginspverified' | 'pestinspverified' | 'titlesrchcouncilrateverified') => {
+    if (!selectedProperty) return
+
+    const newValue = !selectedProperty[field]
+
+    try {
+      const updatedProperty = { ...selectedProperty, [field]: newValue }
+
+      const response = await fetch('https://buysel.azurewebsites.net/api/property', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedProperty),
+      })
+
+      if (response.ok) {
+        setSelectedProperty(updatedProperty)
+        setProperties(properties.map(p => p.id === propertyId ? updatedProperty : p))
+        console.log(`Audit Log: Admin ${newValue ? 'verified' : 'unverified'} ${field} for property ${propertyId}`)
+      }
+    } catch (error) {
+      console.error('Error updating verification:', error)
     }
   }
 
@@ -298,6 +327,9 @@ export default function AdminListingsPage() {
                     Date
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Verification Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -340,13 +372,46 @@ export default function AdminListingsPage() {
                         {property.dte ? new Date(property.dte).toLocaleDateString() : 'N/A'}
                       </p>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4">
+                      <div className="space-y-1">
+                        {property.titlesrchcouncilrateazureblob && !property.titlesrchcouncilrateverified && (
+                          <div className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded inline-block">
+                            Title Search/Council Rates to be verified
+                          </div>
+                        )}
+                        {property.buildinginspazureblob && !property.buildinginspverified && (
+                          <div className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded inline-block">
+                            Building Inspection to be verified
+                          </div>
+                        )}
+                        {property.pestinspazureblob && !property.pestinspverified && (
+                          <div className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded inline-block">
+                            Pest Inspection to be verified
+                          </div>
+                        )}
+                        {(!property.titlesrchcouncilrateazureblob || property.titlesrchcouncilrateverified) &&
+                         (!property.buildinginspazureblob || property.buildinginspverified) &&
+                         (!property.pestinspazureblob || property.pestinspverified) && (
+                          <p className="text-sm text-gray-500">All verified</p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                       <Link
                         href={`/property/${property.id}`}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         View
                       </Link>
+                      <button
+                        onClick={() => {
+                          setSelectedProperty(property)
+                          setShowDocumentsModal(true)
+                        }}
+                        className="text-green-600 hover:text-green-900"
+                      >
+                        Verify Docs
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -369,6 +434,141 @@ export default function AdminListingsPage() {
                 </button>
                 <button className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700" onClick={confirmUnlist}>
                   Unlist Property
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Documents Verification Modal */}
+        {showDocumentsModal && selectedProperty && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+                <h3 className="text-xl font-semibold">Verify Documents - {selectedProperty.title}</h3>
+                <button onClick={() => setShowDocumentsModal(false)} className="text-gray-400 hover:text-gray-600">
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Title Search/Council Rates Document */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold">Title Search or Council Rates Notice</h4>
+                    {selectedProperty.titlesrchcouncilrateazureblob && (
+                      <button
+                        onClick={() => handleVerificationToggle(selectedProperty.id, 'titlesrchcouncilrateverified')}
+                        className={`px-4 py-2 rounded-lg font-medium ${
+                          selectedProperty.titlesrchcouncilrateverified
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {selectedProperty.titlesrchcouncilrateverified ? '✓ Verified' : 'Mark as Verified'}
+                      </button>
+                    )}
+                  </div>
+                  {selectedProperty.titlesrchcouncilrateazureblob ? (
+                    <div className="bg-gray-50 rounded p-2">
+                      <iframe
+                        src={getAzureBlobUrl(selectedProperty.titlesrchcouncilrateazureblob) || ''}
+                        className="w-full h-96 rounded"
+                        title="Title Search or Council Rates"
+                      />
+                      <button
+                        onClick={() => window.open(getAzureBlobUrl(selectedProperty.titlesrchcouncilrateazureblob!) || '', '_blank')}
+                        className="mt-2 text-blue-600 hover:text-blue-800"
+                      >
+                        Open in New Tab
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No document uploaded</p>
+                  )}
+                </div>
+
+                {/* Building Inspection Report */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold">Building Inspection Report</h4>
+                    {selectedProperty.buildinginspazureblob && (
+                      <button
+                        onClick={() => handleVerificationToggle(selectedProperty.id, 'buildinginspverified')}
+                        className={`px-4 py-2 rounded-lg font-medium ${
+                          selectedProperty.buildinginspverified
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {selectedProperty.buildinginspverified ? '✓ Verified' : 'Mark as Verified'}
+                      </button>
+                    )}
+                  </div>
+                  {selectedProperty.buildinginspazureblob ? (
+                    <div className="bg-gray-50 rounded p-2">
+                      <iframe
+                        src={getAzureBlobUrl(selectedProperty.buildinginspazureblob) || ''}
+                        className="w-full h-96 rounded"
+                        title="Building Inspection"
+                      />
+                      <button
+                        onClick={() => window.open(getAzureBlobUrl(selectedProperty.buildinginspazureblob!) || '', '_blank')}
+                        className="mt-2 text-blue-600 hover:text-blue-800"
+                      >
+                        Open in New Tab
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No document uploaded</p>
+                  )}
+                </div>
+
+                {/* Pest Inspection Report */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-lg font-semibold">Pest Inspection Report</h4>
+                    {selectedProperty.pestinspazureblob && (
+                      <button
+                        onClick={() => handleVerificationToggle(selectedProperty.id, 'pestinspverified')}
+                        className={`px-4 py-2 rounded-lg font-medium ${
+                          selectedProperty.pestinspverified
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {selectedProperty.pestinspverified ? '✓ Verified' : 'Mark as Verified'}
+                      </button>
+                    )}
+                  </div>
+                  {selectedProperty.pestinspazureblob ? (
+                    <div className="bg-gray-50 rounded p-2">
+                      <iframe
+                        src={getAzureBlobUrl(selectedProperty.pestinspazureblob) || ''}
+                        className="w-full h-96 rounded"
+                        title="Pest Inspection"
+                      />
+                      <button
+                        onClick={() => window.open(getAzureBlobUrl(selectedProperty.pestinspazureblob!) || '', '_blank')}
+                        className="mt-2 text-blue-600 hover:text-blue-800"
+                      >
+                        Open in New Tab
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No document uploaded</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white border-t px-6 py-4">
+                <button
+                  onClick={() => setShowDocumentsModal(false)}
+                  className="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300"
+                >
+                  Close
                 </button>
               </div>
             </div>
