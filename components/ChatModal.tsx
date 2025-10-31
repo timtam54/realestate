@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react'
 import { X, Send, AlertCircle } from 'lucide-react'
 import { Property } from '@/types/property'
 import { requestNotificationPermission, subscribeToPushNotifications } from '@/lib/push-notifications'
-import Pusher from 'pusher-js'
 import { useSession } from 'next-auth/react'
 import { useUserData } from '@/hooks/useUserData'
 import { useUserCache } from '@/hooks/useUserCache'
@@ -40,17 +39,27 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [isBuyer, setIsBuyer] = useState<boolean>(true)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const pusherRef = useRef<Pusher | null>(null)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const notificationSoundRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    console.log('ChatModal useEffect:', { 
-      isOpen, 
-      userDataLoading, 
-      userId, 
+    // Initialize notification sound
+    if (!notificationSoundRef.current) {
+      // Use a simple notification beep sound (data URL for a short beep)
+      notificationSoundRef.current = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGi77+WXTwwNUKzn77BdGwU7k9jyz3cqBR99y/DinkULFFuy6OmgTBIo')
+      notificationSoundRef.current.volume = 0.5 // Set volume to 50%
+    }
+  }, [])
+
+  useEffect(() => {
+    console.log('ChatModal useEffect:', {
+      isOpen,
+      userDataLoading,
+      userId,
       isProfileComplete,
-      property: property?.id 
+      property: property?.id
     })
-    
+
     if (property?.sellerid && isOpen) {
       // If still loading user data, wait
       if (userDataLoading) {
@@ -84,11 +93,12 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
     }
     
     return () => {
-      // Cleanup Pusher subscription
-      if (pusherRef.current && conversationId) {
-        pusherRef.current.unsubscribe(`conversation-${conversationId}`)
+      // Cleanup polling
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+        pollingIntervalRef.current = null
       }
-      
+
       // Clear state when modal closes
       if (!isOpen) {
         setSellerInfo(null)
@@ -104,12 +114,20 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   }, [messages])
   
   useEffect(() => {
-    // Initialize Pusher and notifications when we have the user ID
-    if (userId) {
+    // Set up notifications and polling when we have the user ID and conversation
+    if (userId && conversationId && isOpen) {
       setupNotifications()
-      initializePusher()
+      startPollingMessages()
     }
-  }, [userId, conversationId])
+
+    return () => {
+      // Stop polling when dependencies change or component unmounts
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+        pollingIntervalRef.current = null
+      }
+    }
+  }, [userId, conversationId, isOpen])
   
   useEffect(() => {
     // Mark all messages as read when conversation is loaded/changed
@@ -346,51 +364,65 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   const setupNotifications = async () => {
     const permission = await requestNotificationPermission()
     if (permission) {
-      await subscribeToPushNotifications(userId || 0)
+      await subscribeToPushNotifications()
     }
   }
 
-  const initializePusher = () => {
-    if (!pusherRef.current) {
-      pusherRef.current = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || 'mt1',
-      })
-      console.log('Pusher initialized')
+  const startPollingMessages = () => {
+    // Clear any existing polling interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
     }
-    
-    // Subscribe to conversation channel if we have a conversationId
-    if (conversationId) {
-      console.log('Subscribing to conversation channel:', `conversation-${conversationId}`)
-      const channel = pusherRef.current.subscribe(`conversation-${conversationId}`)
-      channel.bind('new-message', (data: any) => {
-        console.log('Received Pusher message:', data)
-        if (data.senderId !== userId) {
-          const newMessage = {
-            id: data.message.id.toString(), // Convert to string
-            content: data.message.content,
-            senderId: data.message.sender_id,
-            timestamp: new Date(data.message.created_at || Date.now()),
-            read: false
-          }
-          
-          setMessages(prev => [...prev, newMessage])
-          
-          // Mark the new message as read immediately since the chat is open
-          if (conversationId && data.message.sender_id !== userId) {
-            // Only mark as read if it's from the other user
-            markMessagesAsRead([data.message], conversationId)
-          }
+
+    // Poll for new messages every 3 seconds when chat is open
+    console.log('[ChatModal] Starting message polling for conversation:', conversationId)
+    pollingIntervalRef.current = setInterval(async () => {
+      if (!conversationId || !isOpen) return
+
+      try {
+        const response = await fetch(`/api/chat?conversationId=${conversationId}`)
+        if (response.ok) {
+          const fetchedMessages = await response.json()
+
+          // Convert to our Message format
+          const formattedMessages: Message[] = fetchedMessages.map((msg: any) => ({
+            id: msg.id.toString(),
+            content: msg.content,
+            senderId: msg.sender_id,
+            timestamp: new Date(msg.created_at),
+            read: msg.read || false
+          }))
+
+          // Only update if we have new messages
+          setMessages(prev => {
+            if (prev.length !== formattedMessages.length) {
+              console.log('[ChatModal] New messages detected:', formattedMessages.length - prev.length)
+
+              // Mark new messages as read if they're from the other user
+              const newMessages = formattedMessages.filter(
+                newMsg => !prev.some(prevMsg => prevMsg.id === newMsg.id)
+              )
+
+              if (newMessages.length > 0 && conversationId) {
+                const unreadFromOthers = newMessages.filter(msg => msg.senderId !== userId)
+                if (unreadFromOthers.length > 0) {
+                  // Play notification sound for new messages from others
+                  notificationSoundRef.current?.play().catch(err => {
+                    console.log('Could not play notification sound:', err)
+                  })
+                  markMessagesAsRead(unreadFromOthers.map(m => ({ id: parseInt(m.id) })), conversationId)
+                }
+              }
+
+              return formattedMessages
+            }
+            return prev
+          })
         }
-      })
-    }
-    
-    // Subscribe to user channel for notifications
-    if (userId) {
-      const userChannel = pusherRef.current.subscribe(`user-${userId}`)
-      userChannel.bind('new-notification', (data: any) => {
-        // Handle push notification if needed
-      })
-    }
+      } catch (error) {
+        console.error('[ChatModal] Error polling messages:', error)
+      }
+    }, 3000) // Poll every 3 seconds
   }
 
   const sendMessage = async () => {

@@ -1,15 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../auth/[...nextauth]/route'
-import Pusher from 'pusher'
-
-const pusher = new Pusher({
-  appId: process.env.PUSHER_APP_ID!,
-  key: process.env.PUSHER_API_KEY!,
-  secret: process.env.PUSHER_SECRET!,
-  cluster: process.env.PUSHER_CLUSTER || 'mt1',
-  useTLS: true
-})
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -228,17 +219,6 @@ export async function POST(req: NextRequest) {
     
     const message = await messageResponse.json()
 
-    // Trigger Pusher event for real-time update
-    await pusher.trigger(`conversation-${convId}`, 'new-message', {
-      message: {
-        ...message,
-        id: message.id || 0,
-        conversation_id: parseInt(convId),
-        sender_id: userId
-      },
-      senderId: userId
-    })
-
     // Validate we have buyer and seller IDs
     if (!buyerId || !actualSellerId) {
       console.error('Missing buyer or seller ID. Cannot send notification.')
@@ -261,13 +241,15 @@ export async function POST(req: NextRequest) {
     // Get sender info for notification
     const senderResponse = await fetch(`https://buysel.azurewebsites.net/api/user/${userId}`)
     const senderData = await senderResponse.json()
-    
-    // Trigger notification to recipient
-    const notificationChannel = `user-notifications-${recipientId}`
+
+    // Get property info for notification
+    const propertyResponse = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+    const propertyData = await propertyResponse.json()
+
+    // Send Web Push notification to recipient
     console.log('🔔 NOTIFICATION SUMMARY:')
     console.log('  - Sender ID:', userId, '(', userId === buyerId ? 'BUYER' : 'SELLER', ')')
     console.log('  - Recipient ID:', recipientId, '(', recipientId === buyerId ? 'BUYER' : 'SELLER', ')')
-    console.log('  - Notification channel:', notificationChannel)
     console.log('Notification data:', {
       conversationId: convId,
       propertyId: propertyId,
@@ -276,29 +258,36 @@ export async function POST(req: NextRequest) {
       recipientId: recipientId,
       message: content.substring(0, 100)
     })
-    
-    console.log('🚀 About to send Pusher notification with data:', {
-      channel: notificationChannel,
-      event: 'new-message',
-      payload: {
-        conversationId: convId,
-        propertyId: propertyId,
-        senderName: `${senderData.firstname} ${senderData.lastname}`,
-        senderId: userId,
-        message: content.substring(0, 100)
+
+    console.log('🚀 Sending Web Push notification')
+
+    try {
+      // Send push notification via our API
+      const pushResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/push/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: recipientId,
+          payload: {
+            title: `New message from ${senderData.firstname} ${senderData.lastname}`,
+            body: content.substring(0, 100),
+            url: `/buyer/messages?conversationId=${convId}`,
+            conversationId: convId,
+            propertyId: propertyId
+          }
+        })
+      })
+
+      if (pushResponse.ok) {
+        console.log('✅ Web Push notification sent successfully')
+      } else {
+        const errorText = await pushResponse.text()
+        console.error('❌ Failed to send Web Push notification:', errorText)
       }
-    })
-    
-    await pusher.trigger(notificationChannel, 'new-message', {
-      conversationId: convId,
-      propertyId: propertyId,
-      senderName: `${senderData.firstname} ${senderData.lastname}`,
-      senderId: userId,
-      message: content.substring(0, 100),
-      timestamp: new Date()
-    })
-    
-    console.log('✅ Pusher notification sent successfully')
+    } catch (pushError) {
+      console.error('❌ Error sending Web Push notification:', pushError)
+      // Don't fail the whole request if push fails
+    }
 
     return NextResponse.json({ ...message, conversationId: convId })
   } catch (error) {
