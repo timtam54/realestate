@@ -16,13 +16,28 @@ export default function PWAInstall() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      // Register the updated service worker that doesn't cache /api/auth/ routes
-      navigator.serviceWorker.register('/sw.js').then((registration) => {
-        console.log('Service worker registered successfully:', registration)
-        // Force update to ensure latest version is used
+      // CRITICAL FIX: Force unregister ALL old service workers first
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        const unregisterPromises = registrations.map(registration => {
+          console.log('🔴 Unregistering old service worker:', registration)
+          return registration.unregister()
+        })
+
+        // Wait for all to unregister, then register the new one
+        return Promise.all(unregisterPromises)
+      }).then(() => {
+        console.log('✅ All old service workers unregistered')
+        // Small delay to ensure cleanup is complete
+        return new Promise(resolve => setTimeout(resolve, 100))
+      }).then(() => {
+        // Register the updated service worker that doesn't cache /api/auth/ routes
+        return navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
+      }).then((registration) => {
+        console.log('✅ New service worker registered:', registration)
+        // Force immediate update check
         registration.update()
       }).catch((error) => {
-        console.error('Service worker registration failed:', error)
+        console.error('❌ Service worker error:', error)
       })
     }
 
