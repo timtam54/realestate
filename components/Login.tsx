@@ -13,11 +13,15 @@ export default function Login({ onClose, callbackUrl = '/' }: LoginProps) {
   const [loading, setLoading] = useState<string | null>(null)
 
   const handleSignIn = async (provider: string) => {
+    console.log('🔵 handleSignIn called with provider:', provider)
+    console.log('🔵 callbackUrl:', callbackUrl)
     setLoading(provider)
     try {
-      await signIn(provider, { callbackUrl })
+      console.log('🔵 About to call signIn...')
+      const result = await signIn(provider, { callbackUrl, redirect: true })
+      console.log('🔵 signIn result:', result)
     } catch (error) {
-      console.error('Sign in error:', error)
+      console.error('🔴 Sign in error:', error)
       setLoading(null)
     }
   }

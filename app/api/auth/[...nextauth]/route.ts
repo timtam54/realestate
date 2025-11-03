@@ -5,7 +5,6 @@ import FacebookProvider from "next-auth/providers/facebook"
 import { NextAuthOptions } from "next-auth"
 
 export const authOptions: NextAuthOptions = {
-  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -21,54 +20,55 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
     }),
   ],
-  callbacks: {
-    async session({ session, token }) {
-      if (session.user) {
-        // Add user ID from email or token
-        session.user.id = token.sub || session.user.email || ''
-      }
-      return session
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
     },
-    async jwt({ token, account }) {
-      if (account) {
-        token.accessToken = account.access_token
-      }
-      return token
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
     },
-    async signIn({ user }) {
-      // Log authentication to audit trail
-      try {
-        await fetch('https://buysel.azurewebsites.net/api/audit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            id: 0,
-            action: 'User logged in',
-            page: 'Authentication/Sign in',
-            username: user.email || 'Unknown',
-            ipaddress: '',
-            dte: new Date().toISOString(),
-          }),
-        })
-      } catch (error) {
-        console.error('Failed to log authentication:', error)
-      }
-      return true
-    },
-    async redirect({ url, baseUrl }) {
-      // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`
-      // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url
-      return baseUrl
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
     },
   },
   pages: {
     signIn: '/auth/signin',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true, // Enable debug mode to see what's happening
+  logger: {
+    error(code, metadata) {
+      console.error('🔴 NextAuth Error:', code, metadata)
+    },
+    warn(code) {
+      console.warn('⚠️ NextAuth Warning:', code)
+    },
+    debug(code, metadata) {
+      console.log('🔵 NextAuth Debug:', code, metadata)
+    },
+  },
 }
 
 const handler = NextAuth(authOptions)

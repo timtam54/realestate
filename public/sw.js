@@ -47,6 +47,18 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Never cache NextAuth API routes - they need real-time responses
+  if (event.request.url.includes('/api/auth/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Never cache other API routes
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request)

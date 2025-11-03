@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  output: 'standalone',
   compress: true,
   poweredByHeader: false,
-  reactStrictMode: true,
+  reactStrictMode: false, // Disabled: causes duplicate OAuth callbacks in dev mode
   images: {
     unoptimized: true,
     minimumCacheTTL: 60,
@@ -23,7 +23,6 @@ const nextConfig: NextConfig = {
     optimizeCss: false,
     optimizePackageImports: ['lucide-react', 'date-fns'],
   },
-  trailingSlash: true,
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.

@@ -3,11 +3,13 @@
 import Login from '@/components/Login'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, Suspense } from 'react'
+import { signOut } from 'next-auth/react'
 
 function SignInContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
+  const error = searchParams.get('error')
 
   useEffect(() => {
     // Store the callback URL in sessionStorage as a workaround for providers that don't preserve it

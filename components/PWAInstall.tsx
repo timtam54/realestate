@@ -16,7 +16,14 @@ export default function PWAInstall() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      // Register the updated service worker that doesn't cache /api/auth/ routes
+      navigator.serviceWorker.register('/sw.js').then((registration) => {
+        console.log('Service worker registered successfully:', registration)
+        // Force update to ensure latest version is used
+        registration.update()
+      }).catch((error) => {
+        console.error('Service worker registration failed:', error)
+      })
     }
 
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window)
