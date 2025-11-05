@@ -32,7 +32,7 @@ jobs:
           api_location: "" # Api source code path - optional
           output_location: "out" # Built app content directory - optional
           ###### End of Repository/Build Configurations ######
-        env:
+        env: 
           SKIP_DEPLOY_ON_MISSING_SECRETS: true
           NEXT_PUBLIC_GOOGLE_MAP_API: AIzaSyANThwic7Udj0r5ulBoPN9Dp2lSwJKOAK4
           NEXT_PUBLIC_AZUREBLOB_CONTAINER: photosdocs
@@ -41,7 +41,18 @@ jobs:
           GOOGLE_CLIENT_ID: 155334538327-i07ipbgfbg95nhb0h5cfe8vu27lcek9f.apps.googleusercontent.com
           GOOGLE_CLIENT_SECRET: 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
           NEXTAUTH_SECRET: Y8jih3rwDE7U0mPwxHms0a72eBapQPNuW8NlDVsCGw8=
-          NEXTAUTH_URL: https://buysel.azurewebsites.net/
+          NEXTAUTH_URL: https://agreeable-sky-08a3a0e00.australiaeast.5.azurestaticapps.net
+          NEXT_PUBLIC_API_URL: https://buysel.azurewebsites.net
+          JWT_SECRET: dev-jwt-secret-key-must-be-at-least-32-characters-long-for-development
+          SESSION_SECRET: Y8jih3rwDE7U0mPwxHms0a72eBapQPNuW8NlDVsCGw8=
+          AZURE_AD_CLIENT_ID: fc8b4cc8-e653-4887-9bb2-21c63b3a4d59
+          AZURE_AD_CLIENT_SECRET: Dnw8Q~otHIogO522Npd6KOPTTaH~zqF6aIB5Dc5U
+          AZURE_AD_TENANT_ID: common
+          FACEBOOK_CLIENT_ID: 1892744611304190
+          FACEBOOK_CLIENT_SECRET: a4b36b640772390df34834a480c9cce4
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: BIh49CHmmuAuHOPGiZdzVj-_3_dZXIEv57JNWeOibt2agftbQWpcC_kngiLQEzRKZ3T7ptb1bvGqxzu3PRkdGec
+          VAPID_PRIVATE_KEY: EKIzkxo_icPeY9CDXb5tcnAPUZl_O3lFG6J27Cu4fIA
+          VAPID_EMAIL: mailto:admin@buysel.com
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
