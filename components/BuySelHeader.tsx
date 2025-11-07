@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Home, User, Search, Briefcase, Settings, LogOut, Menu, X } from 'lucide-react'
-import { signOut } from 'next-auth/react'
+import { Home, User, Search, Briefcase, Settings, LogOut, Menu, X, MessageCircle } from 'lucide-react'
+import { useAuth } from '@/lib/auth/auth-context'
 import { useState } from 'react'
 import Login from './Login'
 import UserProfile from './UserProfile'
@@ -21,6 +21,7 @@ interface BuySelHeaderProps {
 }
 
 export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProps) {
+  const { signOut: handleSignOut } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [chatProperty, setChatProperty] = useState<Property | null>(null)
@@ -69,21 +70,30 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-3">
             {isAuthenticated && (
-              <UnreadMessagesIndicator 
-                onOpenChat={async (propertyId, conversationId) => {
-                  try {
-                    const response = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
-                    if (response.ok) {
-                      const property = await response.json()
-                      setChatProperty(property)
-                      setChatConversationId(conversationId)
-                      setShowChatModal(true)
+              <>
+                <Link
+                  href="/conversation"
+                  className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-3 py-2 rounded-lg transition-all hover:bg-orange-50"
+                  title="View all conversations"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </Link>
+                <UnreadMessagesIndicator
+                  onOpenChat={async (propertyId, conversationId) => {
+                    try {
+                      const response = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                      if (response.ok) {
+                        const property = await response.json()
+                        setChatProperty(property)
+                        setChatConversationId(conversationId)
+                        setShowChatModal(true)
+                      }
+                    } catch (error) {
+                      console.error('Failed to fetch property:', error)
                     }
-                  } catch (error) {
-                    console.error('Failed to fetch property:', error)
-                  }
-                }}
-              />
+                  }}
+                />
+              </>
             )}
             {isAuthenticated ? (
               <>
@@ -91,17 +101,25 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                   onClick={() => setShowProfile(true)}
                   className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-3 py-2 rounded-lg transition-all hover:bg-orange-50"
                 >
-                  {user?.image && (
-                    <img 
-                      src={user.image} 
-                      alt={user.name || 'User'} 
-                      className="w-8 h-8 rounded-full"
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt={user.name || 'User'}
+                      className="w-8 h-8 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                        if (fallback) fallback.style.display = 'flex'
+                      }}
                     />
-                  )}
+                  ) : null}
+                  <div className={`w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center ${user?.image ? 'hidden' : 'flex'}`}>
+                    <User className="w-5 h-5 text-[#FF6600]" />
+                  </div>
                   <span className="font-medium">{user?.name || user?.email}</span>
                 </button>
                 <button
-                  onClick={() => signOut({ callbackUrl: '/' })}
+                  onClick={handleSignOut}
                   className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-4 py-2.5 rounded-lg transition-all font-medium border border-gray-300 hover:border-[#FF6600] hover:bg-orange-50"
                 >
                   <LogOut className="w-4 h-4" />
@@ -120,14 +138,16 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
             
             <div className="relative">
               <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-700 pointer-events-none" />
-              <select 
+              <select
                 onChange={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
                   if (e.target.value === 'seller') {
                     window.location.href = '/seller'
                   } else if (e.target.value === 'conveyancer') {
                     window.location.href = '/conveyancer/queue'
                   } else if (e.target.value === 'admin') {
-                    window.location.href = '/admin/dashboard'
+                    window.location.href = '/admin/listings'
                   }
                 }}
                 className="pl-10 pr-4 py-2.5 bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 font-medium cursor-pointer hover:from-red-200 hover:to-red-300 transition-all appearance-none"
@@ -143,7 +163,14 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
           <div className="flex md:hidden items-center gap-2">
             {isAuthenticated ? (
               <>
-                <UnreadMessagesIndicator 
+                <Link
+                  href="/conversation"
+                  className="p-2 rounded-lg text-[#333333] hover:text-[#FF6600] hover:bg-orange-50 transition-all"
+                  title="View all conversations"
+                >
+                  <MessageCircle className="h-6 w-6" />
+                </Link>
+                <UnreadMessagesIndicator
                   onOpenChat={async (propertyId, conversationId) => {
                     try {
                       const response = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
@@ -162,13 +189,21 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                   onClick={() => setShowProfile(true)}
                   className="flex items-center gap-1"
                 >
-                  {user?.image && (
-                    <img 
-                      src={user.image} 
-                      alt={user.name || 'User'} 
-                      className="w-8 h-8 rounded-full"
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt={user.name || 'User'}
+                      className="w-8 h-8 rounded-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none'
+                        const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                        if (fallback) fallback.style.display = 'flex'
+                      }}
                     />
-                  )}
+                  ) : null}
+                  <div className={`w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center ${user?.image ? 'hidden' : 'flex'}`}>
+                    <User className="w-5 h-5 text-[#FF6600]" />
+                  </div>
                   <span className="text-xs font-medium text-[#333333] max-w-[80px] truncate">{user?.name || user?.email}</span>
                 </button>
               </>
@@ -227,19 +262,27 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                     }}
                     className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-4 py-3 rounded-lg transition-all hover:bg-orange-50 text-left"
                   >
-                    {user?.image && (
-                      <img 
-                        src={user.image} 
-                        alt={user.name || 'User'} 
-                        className="w-6 h-6 rounded-full"
+                    {user?.image ? (
+                      <img
+                        src={user.image}
+                        alt={user.name || 'User'}
+                        className="w-6 h-6 rounded-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          const fallback = e.currentTarget.nextElementSibling as HTMLElement
+                          if (fallback) fallback.style.display = 'flex'
+                        }}
                       />
-                    )}
+                    ) : null}
+                    <div className={`w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center ${user?.image ? 'hidden' : 'flex'}`}>
+                      <User className="w-4 h-4 text-[#FF6600]" />
+                    </div>
                     <span className="font-medium">{user?.name || user?.email}</span>
                   </button>
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false)
-                      signOut({ callbackUrl: '/' })
+                      handleSignOut()
                     }}
                     className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] px-4 py-3 rounded-lg transition-all hover:bg-orange-50 text-left"
                   >
@@ -265,14 +308,16 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
               <div className="px-4 py-2">
                 <div className="relative">
                   <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-700 pointer-events-none" />
-                  <select 
+                  <select
                     onChange={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
                       if (e.target.value === 'seller') {
                         handleNavigation('/seller')
                       } else if (e.target.value === 'conveyancer') {
                         handleNavigation('/conveyancer/queue')
                       } else if (e.target.value === 'admin') {
-                        handleNavigation('/admin/dashboard')
+                        handleNavigation('/admin/listings')
                       }
                     }}
                     className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 font-medium cursor-pointer hover:from-red-200 hover:to-red-300 transition-all"

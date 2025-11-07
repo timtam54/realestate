@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft, Home, Building2, Building, MapPin, Hash, Bed, Bath, Car, Maximize, Calendar, Flag, DollarSign } from 'lucide-react'
+import { Camera, X, Upload, ChevronLeft, ChevronRight, Plus, ArrowLeft, Home, Building2, Building, MapPin, Hash, Bed, Bath, Car, Maximize, Calendar, Flag, DollarSign, Loader2 } from 'lucide-react'
 import { BlobServiceClient } from '@azure/storage-blob'
 import type { GoogleAutocomplete } from '@/types/google-maps'
 import { Property } from '@/types/property'
 import toast from 'react-hot-toast'
 import { getPhotoUrl } from '@/lib/azure-config'
 
-
+import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 
 interface Photo {
   id: number
@@ -23,11 +23,12 @@ interface AddPropertyDialogProps {
   onClose: () => void
   onSave: (property: Property) => Promise<void>
   property: Property
+  admin?: boolean
 }
 
 type WizardStep = 'property-details' | 'price-terms' | 'photos-video' | 'compliance' | 'review'
 
-export default function AddPropertyDialog({  onClose, onSave, property: initialProperty }: AddPropertyDialogProps) {
+export default function AddPropertyDialog({  onClose, onSave, property: initialProperty, admin = false }: AddPropertyDialogProps) {
   const [property, setProperty] = useState<Property>(initialProperty)
   const [currentStep, setCurrentStep] = useState<WizardStep>('property-details')
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
@@ -40,6 +41,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [showAddPhoto, setShowAddPhoto] = useState(false)
   const [isUploadedFromLocal, setIsUploadedFromLocal] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -49,7 +51,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const titleSrchFileRef = useRef<HTMLInputElement>(null)
   const addressInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
-
+  const correctDateForTimezone = useTimezoneCorrection()
   const fetchPhotos = useCallback(async () => {
     try {
       const response = await fetch(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
@@ -282,7 +284,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
           propertyid: property.id,
           photobloburl: blobUrl,
           title: photoTitle,
-          dte: new Date(),
+          dte: correctDateForTimezone(new Date()),
           doc:doc
         }),
       })
@@ -442,22 +444,32 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   }
 
   const handleNext = async () => {
-    const saved = await saveProperty()
-    if (saved) {
-      const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
-      const currentIndex = steps.indexOf(currentStep)
-      if (currentIndex < steps.length - 1) {
-        setCurrentStep(steps[currentIndex + 1])
+    setIsNavigating(true)
+    try {
+      const saved = await saveProperty()
+      if (saved) {
+        const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
+        const currentIndex = steps.indexOf(currentStep)
+        if (currentIndex < steps.length - 1) {
+          setCurrentStep(steps[currentIndex + 1])
+        }
       }
+    } finally {
+      setIsNavigating(false)
     }
   }
 
   const handlePrevious = async () => {
-    await saveProperty()
-    const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
-    const currentIndex = steps.indexOf(currentStep)
-    if (currentIndex > 0) {
-      setCurrentStep(steps[currentIndex - 1])
+    setIsNavigating(true)
+    try {
+      await saveProperty()
+      const steps: WizardStep[] = ['property-details', 'price-terms', 'photos-video', 'compliance', 'review']
+      const currentIndex = steps.indexOf(currentStep)
+      if (currentIndex > 0) {
+        setCurrentStep(steps[currentIndex - 1])
+      }
+    } finally {
+      setIsNavigating(false)
     }
   }
 
@@ -467,7 +479,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     { id: 'property-details' as WizardStep, label: 'Property Details', number: 1 },
     { id: 'price-terms' as WizardStep, label: 'Price & Terms', number: 2 },
     { id: 'photos-video' as WizardStep, label: 'Photos & Video', number: 3 },
-    { id: 'compliance' as WizardStep, label: 'Compliance & Documents', number: 4 },
+    { id: 'compliance' as WizardStep, label: 'Property Documents', number: 4 },
     { id: 'review' as WizardStep, label: 'Review & Price', number: 5 },
   ]
 
@@ -531,7 +543,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                 <select
                   value={property.typeofprop || ''}
                   onChange={(e) => setProperty({ ...property, typeofprop: e.target.value as Property['typeofprop'] })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent bg-white"
+                  className="max-w-sm px-4 py-4 h-14 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent bg-white text-base"
                 >
                   <option value="">Select property type</option>
                   <option value="House">House</option>
@@ -705,7 +717,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                   min="0"
                   value={property.landsize || ''}
                   onChange={(e) => setProperty({ ...property, landsize: e.target.value ? Number(e.target.value) : null })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                  className="max-w-sm px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
                   placeholder="Enter land size in square meters"
                 />
               </div>
@@ -717,12 +729,26 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
               >
                 Cancel
               </button>
-              <button
-                onClick={handleNext}
-                className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
-              >
-                Next: Price & Terms
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Save & Exit
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={isNavigating}
+                  className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="hidden sm:inline">Next: Price & Terms</span>
+                  {isNavigating ? (
+                    <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         ) : currentStep === 'price-terms' ? (
@@ -757,9 +783,15 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             <div className="flex justify-between gap-3 mt-8">
               <button
                 onClick={handlePrevious}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={isNavigating}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                {isNavigating ? (
+                  <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
+                ) : (
+                  <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+                )}
+                <span className="hidden sm:inline">Previous</span>
               </button>
               <div className="flex gap-3">
                 <button
@@ -770,21 +802,97 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                 </button>
                 <button
                   onClick={handleNext}
-                  className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
+                  disabled={isNavigating}
+                  className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next: Photos & Video
+                  <span className="hidden sm:inline">Next: Photos & Video</span>
+                  {isNavigating ? (
+                    <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+                  )}
                 </button>
               </div>
             </div>
           </div>
         ) : currentStep === 'compliance' ? (
           <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Compliance & Documents</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-800">Property Documents</h2>
             <p className="text-gray-600 mb-8">Add inspection reports to build trust with buyers.</p>
 
             <div className="space-y-8">
               <div className="border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Title Search or Council Rates Notice</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800">Title Search or Council Rates Notice</h3>
+
+                    <div className="mt-3 space-y-3">
+                      <div>
+                        <p className="font-medium text-gray-800">Rates Notice</p>
+                        <p className="text-sm text-gray-600 mt-1">This helps confirm property ownership and builds buyer confidence in your listing.</p>
+                        <p className="text-sm text-green-700 mt-2 flex items-center gap-1">
+                          <span className="font-medium">✅ Accepted:</span> Council rates notice issued within the last 12 months
+                        </p>
+                      </div>
+
+                      <div className="border-t pt-3">
+                        <p className="font-medium text-gray-800">Title Search <span className="text-gray-500 font-normal">(optional)</span></p>
+                        <p className="text-sm text-gray-600 mt-1">Providing a recent title search gives buyers added confidence in the accuracy of the property details.</p>
+                        <p className="text-sm text-green-700 mt-2 flex items-center gap-1">
+                          <span className="font-medium">✅ Accepted:</span> Standard Queensland Title Search
+                        </p>
+                        <p className="text-sm text-blue-700 mt-2 flex items-center gap-1">
+                          <span className="font-medium">🔒 Your privacy matters:</span> You choose who can view it.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href="https://www.titlesqld.com.au/title-searches/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 underline whitespace-nowrap ml-4"
+                  >
+                    QLD Title Search
+                  </a>
+                </div>
+                {property.titlesrchcouncilrateazureblob && (
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                    <div className="flex items-start gap-2">
+                      <span className="text-sm font-medium text-gray-700">Visibility:</span>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 mb-2">
+                          🔒 Your privacy matters: You control who can view this document
+                        </p>
+                        <div className="text-xs text-gray-600 space-y-1">
+                          <p>• <strong>Public</strong> — visible in your listing to attract confident buyers</p>
+                          <p>• <strong>On Request</strong> — only shared when a buyer asks for proof</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
+                      <span className={`text-sm ${!property.titlesrchcouncilratepublic ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                        On Request
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setProperty({ ...property, titlesrchcouncilratepublic: !property.titlesrchcouncilratepublic })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          property.titlesrchcouncilratepublic ? 'bg-[#FF6600]' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            property.titlesrchcouncilratepublic ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className={`text-sm ${property.titlesrchcouncilratepublic ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                        Public
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {property.titlesrchcouncilrateazureblob ? (
                   <div className="space-y-4">
                     <div className="bg-gray-100 rounded-lg p-4">
@@ -840,12 +948,54 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
 
               <div className="border rounded-lg p-6">
                 <h3 className="text-lg font-semibold mb-4 text-gray-800">Building Inspection Report</h3>
+                {property.buildinginspazureblob && (
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                    <div className="flex items-start gap-2">
+                      <span className="text-sm font-medium text-gray-700">Visibility:</span>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 mb-2">
+                          🔒 Your privacy matters: You control who can view this document
+                        </p>
+                        <div className="text-xs text-gray-600 space-y-1">
+                          <p>• <strong>Public</strong> — visible in your listing to attract confident buyers</p>
+                          <p>• <strong>On Request</strong> — only shared when a buyer asks for proof</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
+                      <span className={`text-sm ${!property.buildinginsppublic ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                        On Request
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setProperty({ ...property, buildinginsppublic: !property.buildinginsppublic })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          property.buildinginsppublic ? 'bg-[#FF6600]' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            property.buildinginsppublic ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className={`text-sm ${property.buildinginsppublic ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                        Public
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {property.buildinginspazureblob ? (
                   <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                      <p className="text-sm text-blue-800">
+                        <strong>Note:</strong> Older than 30 days? Buyers may request a fresh inspection
+                      </p>
+                    </div>
                     <div className="bg-gray-100 rounded-lg p-4">
-                      <iframe 
-                        src={getPhotoUrl(property.buildinginspazureblob) || ''} 
-                        title="Building Inspection Report" 
+                      <iframe
+                        src={getPhotoUrl(property.buildinginspazureblob) || ''}
+                        title="Building Inspection Report"
                         className="w-full h-96 rounded"
                       />
                     </div>
@@ -895,12 +1045,54 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
 
               <div className="border rounded-lg p-6">
                 <h3 className="text-lg font-semibold mb-4 text-gray-800">Pest Inspection Report</h3>
+                {property.pestinspazureblob && (
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                    <div className="flex items-start gap-2">
+                      <span className="text-sm font-medium text-gray-700">Visibility:</span>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 mb-2">
+                          🔒 Your privacy matters: You control who can view this document
+                        </p>
+                        <div className="text-xs text-gray-600 space-y-1">
+                          <p>• <strong>Public</strong> — visible in your listing to attract confident buyers</p>
+                          <p>• <strong>On Request</strong> — only shared when a buyer asks for proof</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
+                      <span className={`text-sm ${!property.pestinsppublic ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                        On Request
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setProperty({ ...property, pestinsppublic: !property.pestinsppublic })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          property.pestinsppublic ? 'bg-[#FF6600]' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            property.pestinsppublic ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                      <span className={`text-sm ${property.pestinsppublic ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
+                        Public
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {property.pestinspazureblob ? (
                   <div className="space-y-4">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                      <p className="text-sm text-blue-800">
+                        <strong>Note:</strong> Older than 30 days? Buyers may request a fresh inspection
+                      </p>
+                    </div>
                     <div className="bg-gray-100 rounded-lg p-4">
-                      <iframe 
-                        src={getPhotoUrl(property.pestinspazureblob) || ''} 
-                        title="Pest Inspection Report" 
+                      <iframe
+                        src={getPhotoUrl(property.pestinspazureblob) || ''}
+                        title="Pest Inspection Report"
                         className="w-full h-96 rounded"
                       />
                     </div>
@@ -952,16 +1144,36 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             <div className="flex justify-between gap-3 mt-8">
               <button
                 onClick={handlePrevious}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={isNavigating}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                {isNavigating ? (
+                  <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
+                ) : (
+                  <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+                )}
+                <span className="hidden sm:inline">Previous</span>
               </button>
-              <button
-                onClick={handleNext}
-                className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
-              >
-                Next: Review & Price
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Save & Exit
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={isNavigating}
+                  className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="hidden sm:inline">Next: Review & Price</span>
+                  {isNavigating ? (
+                    <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         ) : currentStep === 'review' ? (
@@ -977,20 +1189,92 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                 <h3 className="font-medium text-gray-700">Price</h3>
                 <p className="text-gray-600">${property.price.toLocaleString()}</p>
               </div>
+              <div className="border-b pb-4">
+                <h3 className="font-medium text-gray-700 mb-3">Listing Status</h3>
+                <select
+                  value={property.status || 'draft'}
+                  onChange={(e) => {
+                    const newStatus = e.target.value
+                    if (newStatus === 'published' && photos.length < 6) {
+                      toast.error('You require 6 photos to publish')
+                      return
+                    }
+                    setProperty({ ...property, status: newStatus })
+                  }}
+                  disabled={!admin}
+                  className={`w-full max-w-xs px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent ${
+                    admin ? 'bg-white' : 'bg-gray-100 cursor-not-allowed'
+                  }`}
+                >
+                  <option value="draft">Draft</option>
+                  <option value="pendingapproval">Pending Approval</option>
+                  <option value="needsfix">Needs Fix</option>           
+                  <option value="published">Published</option>                  
+                  <option value="rejected">Rejected</option>
+                  <option value="archived">Unpublish/Suspend</option>
+                </select>
+                <p className="text-sm text-gray-500 mt-2">
+                  {property.status === 'published'
+                    ? 'This property is visible to all buyers'
+                    : 'This property is saved as a draft and not visible to buyers'}
+                </p>
+              </div>
+              {admin ? (
+                <div className="border-b pb-4">
+                  <h3 className="font-medium text-gray-700 mb-3">Rejection Reason</h3>
+                  <textarea
+                    value={property.rejecvtedreason || ''}
+                    onChange={(e) => setProperty({ ...property, rejecvtedreason: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                    rows={4}
+                    placeholder="Enter reason for rejection (if applicable)"
+                  />
+                </div>
+              ) : (
+                property.rejecvtedreason && (
+                  <div className="border-b pb-4">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <p className="text-red-800 font-semibold mb-2">Rejected:</p>
+                      <p className="text-red-700">{property.rejecvtedreason}</p>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
             <div className="flex justify-between gap-3 mt-8">
               <button
                 onClick={handlePrevious}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={isNavigating}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                {isNavigating ? (
+                  <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
+                ) : (
+                  <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+                )}
+                <span className="hidden sm:inline">Previous</span>
               </button>
-              <button
-                onClick={handleSave}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Complete & Publish
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Save and Exit
+                </button>
+                {(property.status === 'draft' || property.status === 'needsfix') && (
+                  <button
+                    onClick={async () => {
+                      setProperty({ ...property, status: 'pendingapproval' })
+                      await onSave({ ...property, status: 'pendingapproval' })
+                      toast.success('Property submitted for review!')
+                      handleClose()
+                    }}
+                    className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
+                  >
+                    Submit for Review
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         ) : showAddPhoto ? (
@@ -1136,16 +1420,36 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
             <div className="flex justify-between gap-3 mt-8">
               <button
                 onClick={handlePrevious}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                disabled={isNavigating}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Previous
+                {isNavigating ? (
+                  <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
+                ) : (
+                  <ChevronLeft className="h-5 w-5 sm:h-4 sm:w-4" />
+                )}
+                <span className="hidden sm:inline">Previous</span>
               </button>
-              <button
-                onClick={handleNext}
-                className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
-              >
-                Next: Compliance & Documents
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSave}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Save & Exit
+                </button>
+                <button
+                  onClick={handleNext}
+                  disabled={isNavigating}
+                  className="px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="hidden sm:inline">Next: Documents</span>
+                  {isNavigating ? (
+                    <Loader2 className="h-5 w-5 sm:h-4 sm:w-4 animate-spin" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 sm:h-4 sm:w-4" />
+                  )}
+                </button>
+              </div>
             </div>
             <canvas ref={canvasRef} className="hidden" />
           </div>

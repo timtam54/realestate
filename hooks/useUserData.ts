@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth/auth-context'
 //import { useRouter } from 'next/navigation'
 
 interface UserData {
@@ -51,7 +51,7 @@ export function invalidateUserDataCache() {
 }
 
 export function useUserData(): UseUserDataReturn {
-  const { data: session, status } = useSession()
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   //const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -59,9 +59,9 @@ export function useUserData(): UseUserDataReturn {
 
   // Load from localStorage on mount
   useEffect(() => {
-    if (status === 'loading') return
+    if (authLoading) return
 
-    if (status === 'unauthenticated' || !session?.user?.email) {
+    if (!isAuthenticated || !user?.email) {
       clearUserData()
       setIsLoading(false)
       return
@@ -70,16 +70,16 @@ export function useUserData(): UseUserDataReturn {
     // Check localStorage first
     const cachedData = localStorage.getItem(USER_DATA_KEY)
     const cachedExpiry = localStorage.getItem(USER_DATA_EXPIRY_KEY)
-    
+
     if (cachedData && cachedExpiry) {
       const expiry = parseInt(cachedExpiry)
       const now = Date.now()
-      
+
       if (now < expiry) {
         try {
           const parsedData = JSON.parse(cachedData)
           // Verify the cached data is for the current user
-          if (parsedData.email === session.user.email) {
+          if (parsedData.email === user.email) {
             console.log('Using cached user data for:', parsedData.email)
             setUserData(parsedData)
             setIsLoading(false)
@@ -93,10 +93,10 @@ export function useUserData(): UseUserDataReturn {
 
     // If no valid cache, fetch from API
     fetchUserData()
-  }, [session?.user?.email, status])
+  }, [user?.email, isAuthenticated, authLoading])
 
   const fetchUserData = useCallback(async () => {
-    if (!session?.user?.email) {
+    if (!user?.email) {
       setError('No user email found')
       setIsLoading(false)
       return
@@ -105,9 +105,9 @@ export function useUserData(): UseUserDataReturn {
     try {
       setIsLoading(true)
       setError(null)
-      
-      console.log('Fetching user data for:', session.user.email)
-      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(session.user.email)}`)
+
+      console.log('Fetching user data for:', user.email)
+      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(user.email)}`)
       
       if (!response.ok) {
         if (response.status === 404) {
@@ -134,7 +134,7 @@ export function useUserData(): UseUserDataReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [session?.user?.email])
+  }, [user?.email])
 
   const refetchUserData = useCallback(async () => {
     // Clear cache and refetch

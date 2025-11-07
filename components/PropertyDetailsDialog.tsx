@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X, MapPin, Bed, Bath, Car, Home, Maximize, Calendar, Building, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react'
+import { X, MapPin, Bed, Bath, Car, Home, Maximize, Calendar, Building, ChevronLeft, ChevronRight, MessageCircle, Bug, FileText } from 'lucide-react'
 import { Property } from '@/types/property'
 import { getPhotoUrl } from '@/lib/azure-config'
 import ChatModal from './ChatModal'
 import { useAuth } from '@/hooks/useAuth'
-
+import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 interface Photo {
   id: number
   propertyid: number
@@ -22,12 +22,16 @@ interface PropertyDetailsDialogProps {
 }
 
 export default function PropertyDetailsDialog({ property, onClose }: PropertyDetailsDialogProps) {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [photos, setPhotos] = useState<Photo[]>([])
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
   const [loadingPhotos, setLoadingPhotos] = useState(true)
   const [showChatModal, setShowChatModal] = useState(false)
-
+  const [showPdfDialog, setShowPdfDialog] = useState(false)
+  const [showPestPdfDialog, setShowPestPdfDialog] = useState(false)
+  const [showTitleSearchPdfDialog, setShowTitleSearchPdfDialog] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const correctDateForTimezone = useTimezoneCorrection()
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
@@ -47,6 +51,57 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
       fetchPhotos()
     }
   }, [property.id])
+
+  const handleRequestProperty = async (req:string) => {
+    try {
+      const ep=`https://buysel.azurewebsites.net/api/user/email/${user?.email}`
+      //alert(ep)
+
+
+      // Fetch user data from email endpoint
+      const userResponse = await fetch(ep)
+
+      if (!userResponse.ok) {
+        setToast('Failed to fetch user data')
+        return
+      }
+
+      const userData: { email: string; id: number } = await userResponse.json()
+
+      const payload = {
+        id: 0,
+        propertyid: property.id,
+        dte: correctDateForTimezone(new Date()),
+        buyerid: userData.id,
+        requestdoc: req,
+        action: null
+      }
+
+      const jsn = JSON.stringify(payload)
+      console.log('Requesting '+req+' Inspection with payload:', payload)
+      const response = await fetch('https://buysel.azurewebsites.net/api/propertybuyerdoc', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsn
+      })
+
+      console.log(req+' Inspection response status:', response.status)
+
+      if (response.ok) {
+        setToast(req+` Search requested for this property`)
+      } else {
+        const errorText = await response.text()
+        console.error('API Error:', errorText)
+        setToast(`Failed to request ${req} Inspection: ${response.status}`)
+      }
+    } catch (error) {
+      console.error('Error requesting '+req+' Inspection:', error)
+      setToast(`Error requesting ${req} Inspection: ${error}`)
+    }
+    setTimeout(() => setToast(null), 3000)
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -246,6 +301,114 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
             )}
           </div>
 
+          {/* Document Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Building Inspection Badge */}
+            {property.buildinginspazureblob && property.buildinginspverified && (
+              <div>
+                {property.buildinginsppublic ? (
+                  <button
+                    onClick={() => setShowPdfDialog(true)}
+                    className="flex flex-col items-center gap-3 p-6 bg-green-50 rounded-lg border-2 border-green-500 hover:bg-green-100 hover:shadow-lg transition-all w-full h-full"
+                  >
+                    <div className="bg-green-500 rounded-full p-4">
+                      <Building className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-green-700 font-medium mb-1">Verified Document</p>
+                      <p className="font-bold text-green-900 mb-2">Building Inspection</p>
+                      <p className="text-xs text-green-600">Click to view PDF</p>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleRequestProperty('Building')}
+                    className="flex flex-col items-center gap-3 p-6 bg-green-50 rounded-lg border-2 border-green-500 hover:bg-green-100 hover:shadow-lg transition-all w-full h-full"
+                  >
+                    <div className="bg-green-500 rounded-full p-4">
+                      <Building className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-green-700 font-medium mb-1">Verified Document</p>
+                      <p className="font-bold text-green-900 mb-2">Building Inspection</p>
+                      <p className="text-xs text-green-600">Click to request access</p>
+                    </div>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Pest Inspection Badge */}
+            {property.pestinspazureblob && property.pestinspverified && (
+              <div>
+                {property.pestinsppublic ? (
+                  <button
+                    onClick={() => setShowPestPdfDialog(true)}
+                    className="flex flex-col items-center gap-3 p-6 bg-amber-50 rounded-lg border-2 border-amber-500 hover:bg-amber-100 hover:shadow-lg transition-all w-full h-full"
+                  >
+                    <div className="bg-amber-500 rounded-full p-4">
+                      <Bug className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-amber-700 font-medium mb-1">Verified Document</p>
+                      <p className="font-bold text-amber-900 mb-2">Pest Inspection</p>
+                      <p className="text-xs text-amber-600">Click to view PDF</p>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleRequestProperty('Pest')}
+                    className="flex flex-col items-center gap-3 p-6 bg-amber-50 rounded-lg border-2 border-amber-500 hover:bg-amber-100 hover:shadow-lg transition-all w-full h-full"
+                  >
+                    <div className="bg-amber-500 rounded-full p-4">
+                      <Bug className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-amber-700 font-medium mb-1">Verified Document</p>
+                      <p className="font-bold text-amber-900 mb-2">Pest Inspection</p>
+                      <p className="text-xs text-amber-600">Click to request access</p>
+                    </div>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Title Search Council Rates Badge */}
+            {property.titlesrchcouncilrateazureblob && property.titlesrchcouncilrateverified && (
+              <div>
+                {property.titlesrchcouncilratepublic ? (
+                  <button
+                    onClick={() => setShowTitleSearchPdfDialog(true)}
+                    className="flex flex-col items-center gap-3 p-6 bg-blue-50 rounded-lg border-2 border-blue-500 hover:bg-blue-100 hover:shadow-lg transition-all w-full h-full"
+                  >
+                    <div className="bg-blue-500 rounded-full p-4">
+                      <FileText className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-blue-700 font-medium mb-1">Verified Document</p>
+                      <p className="font-bold text-blue-900 mb-2">Title Search Council Rates</p>
+                      <p className="text-xs text-blue-600">Click to view PDF</p>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleRequestProperty('Title or Council')}
+                    className="flex flex-col items-center gap-3 p-6 bg-blue-50 rounded-lg border-2 border-blue-500 hover:bg-blue-100 hover:shadow-lg transition-all w-full h-full"
+                  >
+                    <div className="bg-blue-500 rounded-full p-4">
+                      <FileText className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-blue-700 font-medium mb-1">Verified Document</p>
+                      <p className="font-bold text-blue-900 mb-2">Title Search Council Rates</p>
+                      <p className="text-xs text-blue-600">Click to request access</p>
+                    </div>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-6">
             <button
@@ -277,6 +440,96 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
           property={property}
           currentUserId={0}
         />
+      )}
+
+      {/* PDF Viewer Dialog - Building Inspection */}
+      {showPdfDialog && property.buildinginspazureblob && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-xl font-bold text-gray-900">Building Inspection Report</h3>
+              <button
+                onClick={() => setShowPdfDialog(false)}
+                className="bg-gray-200 rounded-full p-2 hover:bg-gray-300 transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-700" />
+              </button>
+            </div>
+
+            {/* PDF Viewer */}
+            <div className="flex-1 overflow-hidden">
+              <iframe
+                src={getPhotoUrl(property.buildinginspazureblob) || ''}
+                className="w-full h-full"
+                title="Building Inspection Report"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Viewer Dialog - Pest Inspection */}
+      {showPestPdfDialog && property.pestinspazureblob && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-xl font-bold text-gray-900">Pest Inspection Report</h3>
+              <button
+                onClick={() => setShowPestPdfDialog(false)}
+                className="bg-gray-200 rounded-full p-2 hover:bg-gray-300 transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-700" />
+              </button>
+            </div>
+
+            {/* PDF Viewer */}
+            <div className="flex-1 overflow-hidden">
+              <iframe
+                src={getPhotoUrl(property.pestinspazureblob) || ''}
+                className="w-full h-full"
+                title="Pest Inspection Report"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDF Viewer Dialog - Title Search Council Rates */}
+      {showTitleSearchPdfDialog && property.titlesrchcouncilrateazureblob && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-xl font-bold text-gray-900">Title Search Council Rates</h3>
+              <button
+                onClick={() => setShowTitleSearchPdfDialog(false)}
+                className="bg-gray-200 rounded-full p-2 hover:bg-gray-300 transition-colors"
+              >
+                <X className="w-6 h-6 text-gray-700" />
+              </button>
+            </div>
+
+            {/* PDF Viewer */}
+            <div className="flex-1 overflow-hidden">
+              <iframe
+                src={getPhotoUrl(property.titlesrchcouncilrateazureblob) || ''}
+                className="w-full h-full"
+                title="Title Search Council Rates"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[70] animate-fade-in">
+          <div className="bg-gray-900 text-white px-6 py-3 rounded-lg shadow-lg">
+            {toast}
+          </div>
+        </div>
       )}
     </div>
   )

@@ -9,19 +9,21 @@ import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
 import ChatModal from '@/components/ChatModal'
 import NotificationHeader from '@/components/NotificationHeader'
 import UserProfile from '@/components/UserProfile'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth as useAuthHook } from '@/hooks/useAuth'
+import { useAuth } from '@/lib/auth/auth-context'
 import { useUserData } from '@/hooks/useUserData'
+import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
 import type { GoogleMap } from '@/types/google-maps'
-import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 export default function SellerPage() {
-  const { user, isAuthenticated } = useAuth()
-  const { status } = useSession()
+  const { user, isAuthenticated: authContextIsAuthenticated, isLoading: authLoading } = useAuth()
+  const { isAuthenticated } = useAuthHook()
   const router = useRouter()
   const { userId, isProfileComplete, isLoading: userDataLoading, refetchUserData, dateofbirth, idbloburl, idverified } = useUserData()
+  const correctDateForTimezone = useTimezoneCorrection()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
@@ -38,21 +40,21 @@ export default function SellerPage() {
   const [showProfileDialog, setShowProfileDialog] = useState(false)
 
   useEffect(() => {
-    if (status === 'loading' || userDataLoading) return // Still loading authentication status or user data
-    
-    if (status === 'unauthenticated') {
-      // Redirect to sign in page with callback to return here after sign in
-      router.push('/api/auth/signin?callbackUrl=/seller')
-    } else if (status === 'authenticated' && !isProfileComplete) {
+    if (authLoading || userDataLoading) return // Still loading authentication status or user data
+
+    if (!isAuthenticated) {
+      // Redirect to home page - they can sign in from there
+      router.push('/')
+    } else if (isAuthenticated && !isProfileComplete) {
       // Profile is incomplete
       toast.error('Please complete your profile to list properties', { duration: 5000 })
       setShowProfileDialog(true)
       setLoading(false)
-    } else if (status === 'authenticated' && isProfileComplete) {
+    } else if (isAuthenticated && isProfileComplete) {
       // Profile is complete, fetch properties
       fetchProperties()
     }
-  }, [status, router, isProfileComplete, userDataLoading])
+  }, [authLoading, isAuthenticated, router, isProfileComplete, userDataLoading])
 
   const initializeMap = React.useCallback(() => {
     if (!mapRef.current || !window.google?.maps || properties.length === 0) return
@@ -184,7 +186,7 @@ export default function SellerPage() {
   }
 
   // Show loading state while checking authentication
-  if (status === 'loading') {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -196,7 +198,7 @@ export default function SellerPage() {
   }
 
   // Don't render the page content if not authenticated (will redirect)
-  if (status === 'unauthenticated') {
+  if (!isAuthenticated) {
     return null
   }
 
@@ -243,7 +245,7 @@ export default function SellerPage() {
                   setShowProfileDialog(true)
                   return
                 }
-                const today = new Date()
+                const today = correctDateForTimezone(new Date())
                 const birthDate = new Date(dateofbirth)
                 const age = today.getFullYear() - birthDate.getFullYear()
                 const monthDiff = today.getMonth() - birthDate.getMonth()
@@ -264,13 +266,13 @@ export default function SellerPage() {
                   toast.error('Your ID needs to be verified before you can list properties')
                   return
                 }
-                
+
                 setNewProperty(
                   {
                     id: 0,
                     title: '',
                     address: '',
-                    dte: new Date(),
+                    dte: correctDateForTimezone(new Date()),
                     sellerid: userId || 0,
                     price: 0,
                     lat: 0,
@@ -291,7 +293,12 @@ export default function SellerPage() {
                     pestinspazureblob: null,
                     pestinspverified: null,
                     titlesrchcouncilrateazureblob: null,
-                    titlesrchcouncilrateverified: null
+                    titlesrchcouncilrateverified: null,
+                    titlesrchcouncilratepublic:null,
+                    pestinsppublic:null,
+                    buildinginsppublic:null,
+                    status:'draft',
+                    rejecvtedreason: null
                   }
                 )
               }}
@@ -326,7 +333,7 @@ export default function SellerPage() {
                     return
                   }
 
-                  const today = new Date()
+                  const today = correctDateForTimezone(new Date())
                   const birthDate = new Date(dateofbirth)
                   const age = today.getFullYear() - birthDate.getFullYear()
                   const monthDiff = today.getMonth() - birthDate.getMonth()
@@ -347,13 +354,13 @@ export default function SellerPage() {
                     toast.error('Your ID needs to be verified before you can list properties')
                     return
                   }
-                  
+
                   setNewProperty(
                     {
                       id: 0,
                       title: '',
                       address: '',
-                      dte: new Date(),
+                      dte: correctDateForTimezone(new Date()),
                       sellerid: userId || 0,
                       price: 0,
                       lat: 0,
@@ -374,7 +381,12 @@ export default function SellerPage() {
                       pestinspazureblob: null,
                       pestinspverified: null,
                       titlesrchcouncilrateazureblob: null,
-                      titlesrchcouncilrateverified: null
+                      titlesrchcouncilrateverified: null,
+                      titlesrchcouncilratepublic:null,
+                      pestinsppublic:null,
+                      buildinginsppublic:null,
+                      status:'draft',
+                      rejecvtedreason: null
                     }
                   )
                 }}
@@ -428,6 +440,7 @@ export default function SellerPage() {
         }}
         onSave={handleAddProperty}
         property={newProperty}
+        admin={false}
       />}
       {showProfileDialog && user?.email && (
         <UserProfile

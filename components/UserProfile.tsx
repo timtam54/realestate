@@ -8,7 +8,7 @@ import { loadGoogleMapsScript } from '@/utils/googleMapsLoader'
 import { BlobServiceClient } from '@azure/storage-blob'
 import { getAzureBlobUrl, config } from '@/lib/config'
 import { invalidateUserDataCache } from '@/hooks/useUserData'
-
+import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 interface User {
   id: number
   email: string
@@ -69,7 +69,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
   const [ratesNoticePreview, setRatesNoticePreview] = useState<string | null>(null)
   const [titleSearchPreview, setTitleSearchPreview] = useState<string | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  
+  const correctDateForTimezone = useTimezoneCorrection()
   const addressInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -151,7 +151,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     titlesearchverified: null,
     photoazurebloburl: null,
     photoverified: null,
-    dte: new Date(),
+    dte: correctDateForTimezone(new Date())
   })
 
   const updateCompletedTabs = (userData: User) => {
@@ -317,7 +317,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
 
   const handleSave = async () => {
     if (!user) return
-    
+
     setSaving(true)
     setError(null)
     try {
@@ -339,6 +339,44 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
         updateCompletedTabs(user)
         invalidateUserDataCache() // Invalidate cache for all components
         toast.success('Profile saved successfully!')
+      } else {
+        toast.error('Failed to save profile')
+        setError('Failed to save profile')
+      }
+    } catch (error) {
+      console.error('Error saving user:', error)
+      toast.error('Failed to save profile')
+      setError('Failed to save profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveAndExit = async () => {
+    if (!user) return
+
+    setSaving(true)
+    setError(null)
+    try {
+      const method = user.id === 0 ? 'POST' : 'PUT'
+      const userDataToSave = prepareUserForSave(user)
+      const response = await fetch('https://buysel.azurewebsites.net/api/user', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userDataToSave),
+      })
+
+      if (response.ok) {
+        if (user.id === 0) {
+          const savedUser = await response.json()
+          setUser(savedUser)
+        }
+        updateCompletedTabs(user)
+        invalidateUserDataCache() // Invalidate cache for all components
+        toast.success('Profile saved successfully!')
+        onClose() // Close the dialog after successful save
       } else {
         toast.error('Failed to save profile')
         setError('Failed to save profile')
@@ -427,6 +465,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
       case 'personal':
         return (
           <div className="space-y-6">
+            <h3 className="text-base font-semibold text-gray-800 mb-4">Basic information required for all users</h3>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -471,15 +511,14 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Calendar className="inline w-4 h-4 mr-1" />
-                  Date of Birth *
+                  <Mail className="inline w-4 h-4 mr-1" />
+                  Email Address *
                 </label>
                 <input
-                  type="date"
-                  value={formatDateForInput(user.dateofbirth)}
-                  onChange={(e) => setUser({ ...user, dateofbirth: e.target.value ? new Date(e.target.value) : null })}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
-                  required
+                  type="email"
+                  value={user.email}
+                  readOnly
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                 />
               </div>
               <div>
@@ -498,53 +537,61 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Mail className="inline w-4 h-4 mr-1" />
-                Email Address
-              </label>
-              <input
-                type="email"
-                value={user.email}
-                readOnly
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
-              />
-            </div>
+            <div className="border-t pt-6 mt-6">
+              <h3 className="text-base font-semibold text-gray-800 mb-4">Additional information required for sellers</h3>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Home className="inline w-4 h-4 mr-1" />
-                Residential Address *
-              </label>
-              <input
-                ref={addressInputRef}
-                type="text"
-                value={user.address}
-                onChange={(e) => setUser({ ...user, address: e.target.value })}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
-                placeholder="Start typing your address..."
-                autoComplete="off"
-                required
-              />
-            </div>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <Home className="inline w-4 h-4 mr-1" />
+                    Residential Address *
+                  </label>
+                  <input
+                    ref={addressInputRef}
+                    type="text"
+                    value={user.address}
+                    onChange={(e) => setUser({ ...user, address: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                    placeholder="Start typing your address..."
+                    autoComplete="off"
+                    required
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <Globe className="inline w-4 h-4 mr-1" />
-                Australian Residency Status *
-              </label>
-              <select
-                value={user.residencystatus || ''}
-                onChange={(e) => setUser({ ...user, residencystatus: e.target.value as User['residencystatus'] })}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
-                required
-              >
-                <option value="">Select status</option>
-                <option value="citizen">Australian Citizen</option>
-                <option value="permanent">Permanent Resident</option>
-                <option value="temporary">Temporary Resident</option>
-                <option value="foreign">Foreign Resident</option>
-              </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Calendar className="inline w-4 h-4 mr-1" />
+                      Date of Birth *
+                    </label>
+                    <input
+                      type="date"
+                      value={formatDateForInput(user.dateofbirth)}
+                      onChange={(e) => setUser({ ...user, dateofbirth: e.target.value ? new Date(e.target.value) : null })}
+                      className="w-full h-[46px] px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Globe className="inline w-4 h-4 mr-1" />
+                      Australian Residency Status *
+                    </label>
+                    <select
+                      value={user.residencystatus || ''}
+                      onChange={(e) => setUser({ ...user, residencystatus: e.target.value as User['residencystatus'] })}
+                      className="w-full h-[46px] px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
+                      required
+                    >
+                      <option value="">Select status</option>
+                      <option value="citizen">Australian Citizen</option>
+                      <option value="permanent">Permanent Resident</option>
+                      <option value="temporary">Temporary Resident</option>
+                      <option value="foreign">Foreign Resident</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )
@@ -1192,6 +1239,23 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
             <button
               onClick={handleSave}
               disabled={saving || loading}
+              className="flex items-center gap-2 px-6 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  Save
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleSaveAndExit}
+              disabled={saving || loading}
               className="flex items-center gap-2 px-6 py-2.5 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               {saving ? (
@@ -1202,7 +1266,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  Save Profile
+                  <X className="w-4 h-4" />
+                  Save & Exit
                 </>
               )}
             </button>
@@ -1213,7 +1278,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
             disabled={getCurrentTabIndex() === tabs.length - 1 || saving}
             className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Next
+            Save / Next
             {saving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (

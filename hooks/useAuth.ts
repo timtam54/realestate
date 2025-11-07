@@ -1,13 +1,13 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useAuth as useAuthContext } from '@/lib/auth/auth-context'
 
 export function useAuth() {
-  const { data: session, status } = useSession()
-  
+  const { user, isAuthenticated, isLoading } = useAuthContext()
+
   return {
-    user: session?.user || null,
-    isAuthenticated: status === 'authenticated',
-    isLoading: status === 'loading',
+    user,
+    isAuthenticated,
+    isLoading,
   }
 }

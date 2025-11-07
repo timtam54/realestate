@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { MessageCircle, X } from 'lucide-react'
 import Pusher from 'pusher-js'
 import { useAuth } from '@/hooks/useAuth'
-
+import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 interface Notification {
   id: string
   conversationId: string
@@ -25,7 +25,7 @@ export default function NotificationBar({ onOpenChat }: NotificationBarProps) {
   const { user } = useAuth()
   const pusherRef = useRef<Pusher | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
-
+  const correctDateForTimezone = useTimezoneCorrection()
   useEffect(() => {
     if (!user?.id) return
 
@@ -81,7 +81,7 @@ export default function NotificationBar({ onOpenChat }: NotificationBarProps) {
           propertyTitle: property.title || 'Property',
           senderName: data.senderName || 'Someone',
           message: data.message,
-          timestamp: new Date()
+          timestamp: correctDateForTimezone(new Date())
         }
         
         setNotifications(prev => [...prev, notification])

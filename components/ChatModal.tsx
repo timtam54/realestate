@@ -4,12 +4,12 @@ import { useState, useEffect, useRef } from 'react'
 import { X, Send, AlertCircle } from 'lucide-react'
 import { Property } from '@/types/property'
 import { requestNotificationPermission, subscribeToPushNotifications } from '@/lib/push-notifications'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth/auth-context'
 import { useUserData } from '@/hooks/useUserData'
 import { useUserCache } from '@/hooks/useUserCache'
 import { useRouter } from 'next/navigation'
 import { getPhotoUrl } from '@/lib/azure-config'
-
+import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 interface Message {
   id: string
   content: string
@@ -27,7 +27,7 @@ interface ChatModalProps {
 }
 
 export default function ChatModal({ isOpen, onClose, property, currentUserId, initialConversationId }: ChatModalProps) {
-  const { data: session } = useSession()
+  const { user, isAuthenticated } = useAuth()
   const router = useRouter()
   const { userId, isProfileComplete, isLoading: userDataLoading } = useUserData()
   const { fetchUser } = useUserCache()
@@ -41,7 +41,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const notificationSoundRef = useRef<HTMLAudioElement | null>(null)
-
+  const correctDateForTimezone = useTimezoneCorrection()
   useEffect(() => {
     // Initialize notification sound
     if (!notificationSoundRef.current) {
@@ -228,12 +228,12 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
           
           // Mark unread messages as read
           await markMessagesAsRead(messages, initialConversationId)
-          
+
           setMessages(messages.map((msg: any) => ({
             id: msg.id.toString(),
             content: msg.content,
             senderId: msg.sender_id,
-            timestamp: new Date(msg.created_at),
+            timestamp: correctDateForTimezone(new Date(msg.created_at)),
             read: !!msg.read_at
           })))
         }
@@ -306,12 +306,12 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
             
             // Mark unread messages as read
             await markMessagesAsRead(messages, existingConv.id.toString())
-            
+
             setMessages(messages.map((msg: any) => ({
               id: msg.id.toString(), // Convert integer ID to string
               content: msg.content,
               senderId: msg.sender_id,
-              timestamp: new Date(msg.created_at),
+              timestamp: correctDateForTimezone(new Date(msg.created_at)),
               read: !!msg.read_at
             })))
           }
@@ -389,7 +389,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
             id: msg.id.toString(),
             content: msg.content,
             senderId: msg.sender_id,
-            timestamp: new Date(msg.created_at),
+            timestamp: correctDateForTimezone(new Date(msg.created_at)),
             read: msg.read || false
           }))
 
@@ -432,7 +432,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
       id: 'temp-' + Date.now().toString(), // Temporary ID for optimistic update
       content: newMessage,
       senderId: userId,
-      timestamp: new Date(),
+      timestamp: correctDateForTimezone(new Date()),
       read: false
     }
 
@@ -465,12 +465,12 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
         setIsBuyer(true)
       }
       // Update with server response
-      setMessages(prev => prev.map(msg => 
-        msg.id === tempMessage.id ? { 
+      setMessages(prev => prev.map(msg =>
+        msg.id === tempMessage.id ? {
           id: savedMessage.id.toString(), // Convert integer ID to string
           content: savedMessage.content,
           senderId: savedMessage.sender_id || currentUserId,
-          timestamp: new Date(savedMessage.created_at || Date.now()),
+          timestamp: savedMessage.created_at ? correctDateForTimezone(new Date(savedMessage.created_at)) : correctDateForTimezone(new Date()),
           read: false
         } : msg
       ))
@@ -496,7 +496,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   // 2. No numeric user ID found
   // 3. Not loading
   // 4. Not checking profile
-  if (isOpen && session?.user?.email && userId === null && !loading && !userDataLoading && !initialConversationId) {
+  if (isOpen && user?.email && userId === null && !loading && !userDataLoading && !initialConversationId) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
@@ -646,9 +646,9 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
               <Send className="h-5 w-5" />
             </button>
           </div>
-          {session?.user?.email && (
+          {user?.email && (
             <p className="text-xs text-gray-400 mt-2">
-              Sender: {session.user.email}
+              Sender: {user.email}
             </p>
           )}
         </div>

@@ -1,12 +1,16 @@
 'use client'
 
-import { SessionProvider } from 'next-auth/react'
 import { Toaster } from 'react-hot-toast'
+import { AuthProvider } from '@/lib/auth/auth-context'
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+export default function Providers({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <SessionProvider>
-      <Toaster 
+    <AuthProvider>
+      <Toaster
         position="top-center"
         toastOptions={{
           duration: 4000,
@@ -29,6 +33,6 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         }}
       />
       {children}
-    </SessionProvider>
+    </AuthProvider>
   )
 }

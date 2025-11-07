@@ -31,7 +31,7 @@ const steps = [
   { id: 1, name: 'Property Details', icon: Home },
   { id: 2, name: 'Price & Terms', icon: DollarSign },
   { id: 3, name: 'Photos & Video', icon: Camera },
-  { id: 4, name: 'Compliance & Documents', icon: Shield },
+  { id: 4, name: 'Documents', icon: Shield },
   { id: 5, name: 'Review & Payment', icon: CreditCard },
 ]
 
@@ -429,7 +429,7 @@ export default function ListPropertyPage() {
           {/* Step 4: Compliance & Documents */}
           {currentStep === 4 && (
             <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-2xl font-bold mb-6">Compliance & Documents</h2>
+              <h2 className="text-2xl font-bold mb-6">Documents</h2>
               
               <div className="space-y-6">
                 {/* Contract of Sale - Mandatory */}

@@ -24,4 +24,9 @@ export interface Property {
   pestinspverified:boolean|null,
   titlesrchcouncilrateazureblob:string|null,
   titlesrchcouncilrateverified:boolean|null
+  titlesrchcouncilratepublic:boolean|null,
+  pestinsppublic:boolean|null,
+  buildinginsppublic:boolean|null,
+  status:string|null,
+  rejecvtedreason:string|null
 }

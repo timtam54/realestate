@@ -7,12 +7,11 @@ export const config = {
     blobSasUrlBase: process.env.NEXT_PUBLIC_AZUREBLOB_SASURL_BASE || '',
     blobContainer: process.env.NEXT_PUBLIC_AZUREBLOB_CONTAINER || '',
   },
-  pusher: {
-    key: process.env.NEXT_PUBLIC_PUSHER_KEY || '',
-    cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER || '',
-  },
   googleMaps: {
     apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAP_API || '',
+  },
+  vapid: {
+    publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
   }
 }
 

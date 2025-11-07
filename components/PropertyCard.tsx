@@ -1,4 +1,4 @@
-import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, MessageCircle, Camera } from 'lucide-react'
+import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, MessageCircle, Camera, FileText } from 'lucide-react'
 import { Property } from '@/types/property'
 import { getPhotoUrl } from '@/lib/azure-config'
 
@@ -99,7 +99,7 @@ export default function PropertyCard({ property, onClick, onChatClick, userId }:
           )}
           
           {/* Building Inspection badge - shown if report uploaded */}
-          {property.buildinginspazureblob && (
+          {property.buildinginspazureblob && property.buildinginspverified==true && (
             <span className="text-xs px-2 py-1 rounded-full flex items-center text-blue-600 bg-blue-100">
               <CheckCircle className="h-3 w-3 mr-1" />
               Building Inspect
@@ -107,13 +107,22 @@ export default function PropertyCard({ property, onClick, onChatClick, userId }:
           )}
           
           {/* Pest Inspection badge - shown if report uploaded */}
-          {property.pestinspazureblob && (
+          {property.pestinspazureblob && property.pestinspverified==true && (
             <span className="text-xs px-2 py-1 rounded-full flex items-center text-blue-600 bg-blue-100">
               <CheckCircle className="h-3 w-3 mr-1" />
               Pest Inspect
             </span>
           )}
-          
+
+          {/* Rates/Title Doc badge - shown if document uploaded and verified */}
+          {property.titlesrchcouncilrateazureblob && property.titlesrchcouncilrateverified==true && (
+            <span className="text-xs px-2 py-1 rounded-full flex items-center text-orange-600 bg-orange-100">
+              <FileText className="h-3 w-3 mr-1" />
+              Rates/Title Proof
+            </span>
+          )}
+
+
           {/* Pro Photos badge - shown if property listed more than 7 days ago */}
           {(() => {
             const listingDate = new Date(property.dte)

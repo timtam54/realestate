@@ -1,5 +1,8 @@
 'use client'
 
+import { config } from './config'
+import toast from 'react-hot-toast'
+
 export async function requestNotificationPermission() {
   if (!('Notification' in window)) {
     console.log('This browser does not support notifications');
@@ -18,42 +21,95 @@ export async function requestNotificationPermission() {
   return false;
 }
 
-export async function subscribeToPushNotifications(userId: number) {
+export async function subscribeToPushNotifications() {
   try {
-    const registration = await navigator.serviceWorker.ready;
-    
-    // Check if push is supported
-    if (!('pushManager' in registration)) {
-      throw new Error('Push notifications not supported');
+    console.log('[Push] Subscribing to push notifications');
+
+    // Check if service worker is supported
+    if (!('serviceWorker' in navigator)) {
+      console.error('[Push] Service workers not supported');
+      toast.error('Push notifications are not supported in this browser');
+      return false;
     }
 
-    // For now, skip push notifications if no VAPID key
-    // You'll need to generate VAPID keys and add them to your .env
-    console.log('Push notifications require VAPID keys to be configured');
-    return false;
-    
-    /* Uncomment when you have VAPID keys:
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!)
-    });
-    */
+    const registration = await navigator.serviceWorker.ready;
+    console.log('[Push] Service worker is ready');
 
-    // Send subscription to your Azure backend
-    await fetch('https://buysel.azurewebsites.net/api/push_subscription', {
+    // Check if push is supported
+    if (!('pushManager' in registration)) {
+      console.error('[Push] Push manager not supported');
+      toast.error('Push notifications are not supported in this browser');
+      return false;
+    }
+
+    // Check if we already have a subscription
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (subscription) {
+      console.log('[Push] Existing subscription found');
+    } else {
+      // Subscribe to push notifications
+      console.log('[Push] Creating new subscription');
+
+      // Get VAPID key from config
+      const vapidPublicKey = config.vapid.publicKey;
+
+      console.log('[Push] VAPID key available:', !!vapidPublicKey);
+      console.log('[Push] VAPID key length:', vapidPublicKey?.length);
+
+      if (!vapidPublicKey) {
+        console.error('[Push] VAPID public key not configured');
+        toast.error('Push notifications are not properly configured. Please contact support.');
+        return false;
+      }
+
+      try {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+        });
+
+        console.log('[Push] New subscription created');
+      } catch (subscribeError) {
+        console.error('[Push] Error creating subscription:', subscribeError);
+        toast.error('Failed to subscribe to push notifications. Please check your browser settings.');
+        return false;
+      }
+    }
+
+    // Send subscription to the backend (uses session email on server)
+    console.log('[Push] Sending subscription to backend');
+    const response = await fetch('/api/push/subscribe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        user_id: userId,
-        subscription_data: subscription.toJSON()
+        subscription: subscription.toJSON()
       }),
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[Push] Server error:', errorText);
+      throw new Error(`Failed to save subscription: ${response.statusText}`);
+    }
+
+    console.log('[Push] Subscription saved successfully');
+
+    // Only show the toast once per user
+    const hasShownNotification = localStorage.getItem('push_notification_shown');
+    if (!hasShownNotification) {
+      toast.success('Push notifications enabled! You will now receive notifications for new messages.', {
+        duration: 4000,
+      });
+      localStorage.setItem('push_notification_shown', 'true');
+    }
+
     return true;
   } catch (error) {
-    console.error('Error subscribing to push notifications:', error);
+    console.error('[Push] Error subscribing to push notifications:', error);
+    toast.error('Failed to enable push notifications. Check the console for details.');
     return false;
   }
 }

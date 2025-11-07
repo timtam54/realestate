@@ -15,29 +15,23 @@ export default function PWAInstall() {
   const [isStandalone, setIsStandalone] = useState(false)
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      // CRITICAL FIX: Force unregister ALL old service workers first
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        const unregisterPromises = registrations.map(registration => {
-          console.log('🔴 Unregistering old service worker:', registration)
-          return registration.unregister()
-        })
+    // DISABLED: Service worker functionality is completely disabled
+    // Service workers were causing infinite reload loops and OAuth issues
+    console.log('✅ [PWAInstall] Service worker functionality is disabled')
 
-        // Wait for all to unregister, then register the new one
-        return Promise.all(unregisterPromises)
-      }).then(() => {
-        console.log('✅ All old service workers unregistered')
-        // Small delay to ensure cleanup is complete
-        return new Promise(resolve => setTimeout(resolve, 100))
-      }).then(() => {
-        // Register the updated service worker that doesn't cache /api/auth/ routes
-        return navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' })
-      }).then((registration) => {
-        console.log('✅ New service worker registered:', registration)
-        // Force immediate update check
-        registration.update()
-      }).catch((error) => {
-        console.error('❌ Service worker error:', error)
+    if ('serviceWorker' in navigator) {
+      // Only unregister existing service workers, don't register new ones
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        if (registrations.length > 0) {
+          console.log('🧹 [PWAInstall] Unregistering ' + registrations.length + ' existing service worker(s)')
+          registrations.forEach(function(registration) {
+            registration.unregister().then(function() {
+              console.log('🧹 [PWAInstall] Unregistered service worker:', registration.scope)
+            })
+          })
+        } else {
+          console.log('✅ [PWAInstall] No service workers to clean up')
+        }
       })
     }
 

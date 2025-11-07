@@ -1,6 +1,6 @@
 'use client'
 
-import { signIn } from 'next-auth/react'
+import { useAuth } from '@/lib/auth/auth-context'
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
@@ -10,23 +10,21 @@ interface LoginProps {
 }
 
 export default function Login({ onClose, callbackUrl = '/' }: LoginProps) {
+  const { signIn } = useAuth()
   const [loading, setLoading] = useState<string | null>(null)
 
-  const handleSignIn = async (provider: string) => {
-    console.log('🔵 handleSignIn called with provider:', provider)
-    console.log('🔵 callbackUrl:', callbackUrl)
+  const handleSignIn = (provider: 'google' | 'microsoft' | 'facebook') => {
     setLoading(provider)
-    try {
-      console.log('🔵 About to call signIn...')
-      const result = await signIn(provider, { callbackUrl, redirect: true })
-      console.log('🔵 signIn result:', result)
-    } catch (error) {
-      console.error('🔴 Sign in error:', error)
-      setLoading(null)
-    }
+    signIn(provider, callbackUrl)
   }
 
-  const providers = [
+  const providers: Array<{
+    id: 'google' | 'microsoft' | 'facebook'
+    name: string
+    icon: React.ReactNode
+    bgColor: string
+    textColor: string
+  }> = [
     {
       id: 'google',
       name: 'Google',
@@ -42,7 +40,7 @@ export default function Login({ onClose, callbackUrl = '/' }: LoginProps) {
       textColor: 'text-gray-700'
     },
     {
-      id: 'azure-ad',
+      id: 'microsoft',
       name: 'Microsoft',
       icon: (
         <svg className="w-5 h-5" viewBox="0 0 21 21">
@@ -55,17 +53,18 @@ export default function Login({ onClose, callbackUrl = '/' }: LoginProps) {
       bgColor: 'bg-gray-800 hover:bg-gray-900',
       textColor: 'text-white'
     },
-    {
-      id: 'facebook',
-      name: 'Facebook',
-      icon: (
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
-          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-        </svg>
-      ),
-      bgColor: 'bg-[#1877F2] hover:bg-[#166FE5]',
-      textColor: 'text-white'
-    }
+    // Facebook temporarily disabled - uncomment when ready
+    // {
+    //   id: 'facebook',
+    //   name: 'Facebook',
+    //   icon: (
+    //     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
+    //       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+    //     </svg>
+    //   ),
+    //   bgColor: 'bg-[#1877F2] hover:bg-[#166FE5]',
+    //   textColor: 'text-white'
+    // }
   ]
 
   return (

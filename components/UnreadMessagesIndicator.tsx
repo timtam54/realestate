@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { MessageCircle, X } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth/auth-context'
 
 interface UnreadConversation {
   conversationId: string
@@ -20,17 +20,17 @@ interface UnreadMessagesIndicatorProps {
 
 export default function UnreadMessagesIndicator({ onOpenChat }: UnreadMessagesIndicatorProps) {
   console.log('🔔 UnreadMessagesIndicator: Component mounting')
-  const { data: session, status } = useSession()
-  console.log('🔔 UnreadMessagesIndicator: Session status:', status, 'Session data:', session)
+  const { user, isAuthenticated, isLoading } = useAuth()
+  console.log('🔔 UnreadMessagesIndicator: Auth status:', isAuthenticated, 'Loading:', isLoading, 'User:', user)
   const [unreadConversations, setUnreadConversations] = useState<UnreadConversation[]>([])
   const [isOpen, setIsOpen] = useState(false)
   const [totalUnread, setTotalUnread] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    console.log('🔔 UnreadMessagesIndicator: useEffect running, session:', session)
-    if (!session?.user?.email) {
-      console.log('🔔 UnreadMessagesIndicator: No session email, returning')
+    console.log('🔔 UnreadMessagesIndicator: useEffect running, user:', user)
+    if (!user?.email || !isAuthenticated) {
+      console.log('🔔 UnreadMessagesIndicator: No user email or not authenticated, returning')
       return
     }
 
@@ -39,7 +39,7 @@ export default function UnreadMessagesIndicator({ onOpenChat }: UnreadMessagesIn
     const interval = setInterval(fetchUnreadMessages, 30000) // Check every 30 seconds
 
     return () => clearInterval(interval)
-  }, [session?.user?.email])
+  }, [user?.email, isAuthenticated])
 
   useEffect(() => {
     // Handle clicks outside dropdown
@@ -55,7 +55,7 @@ export default function UnreadMessagesIndicator({ onOpenChat }: UnreadMessagesIn
 
   const fetchUnreadMessages = async () => {
     try {
-      console.log('UnreadMessagesIndicator: Fetching unread messages for email:', session?.user?.email)
+      console.log('UnreadMessagesIndicator: Fetching unread messages for email:', user?.email)
       const response = await fetch('/api/chat/unread')
       console.log('UnreadMessagesIndicator: Response status:', response.status)
       

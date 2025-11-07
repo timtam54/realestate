@@ -1,30 +1,30 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/lib/auth/auth-context'
 import { useRouter } from 'next/navigation'
 import UserProfile from '@/components/UserProfile'
 import BuySelHeader from '@/components/BuySelHeader'
 
 export default function CompleteProfilePage() {
-  const { data: session, status } = useSession()
+  const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
 
   useEffect(() => {
-    if (status === 'loading') return
+    if (isLoading) return
 
-    if (status === 'unauthenticated') {
-      router.push('/api/auth/signin?callbackUrl=/complete-profile')
-    } else if (session?.user?.email) {
+    if (!isAuthenticated) {
+      router.push('/')
+    } else if (user?.email) {
       // Check if user already has a profile
       checkExistingProfile()
     }
-  }, [status, session, router])
+  }, [isLoading, isAuthenticated, user, router])
 
   const checkExistingProfile = async () => {
     try {
-      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(session?.user?.email || '')}`)
+      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(user?.email || '')}`)
       if (response.ok) {
         const userData = await response.json()
         if (userData && userData.id) {
@@ -44,7 +44,7 @@ export default function CompleteProfilePage() {
     }
   }
 
-  if (status === 'loading') {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -57,7 +57,7 @@ export default function CompleteProfilePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
-      <BuySelHeader user={session?.user || null} isAuthenticated={status === 'authenticated'} />
+      <BuySelHeader user={user || null} isAuthenticated={isAuthenticated} />
       
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
@@ -68,9 +68,9 @@ export default function CompleteProfilePage() {
             you need to complete your profile.
           </p>
 
-          {showProfile && session?.user?.email ? (
+          {showProfile && user?.email ? (
             <UserProfile
-              email={session.user.email}
+              email={user.email}
               isOpen={true}
               onClose={() => {
                 // After profile completion, redirect to home
