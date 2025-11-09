@@ -1,0 +1,70 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
+
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: 1572c9a506c251f28f7b4739ef9ef9f580c3204db48bc40b70e64dbbd3c91e6403-b519ce28-21d7-4687-8d48-745d095f85be00026290f24cf100
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          ###### Repository/Build Configurations ######
+          # IMPORTANT: For Next.js with API routes, DO NOT specify output_location
+          # Azure Static Web Apps will automatically detect Next.js and handle API routes
+          app_location: "/" # App source code path
+          api_location: "" # Leave empty for Next.js API routes
+          # output_location is intentionally NOT set - let Azure auto-detect
+          ###### End of Repository/Build Configurations ######
+        env:
+          # Build-time environment variables (NEXT_PUBLIC_* are embedded in client bundle)
+          NEXT_PUBLIC_GOOGLE_MAP_API: AIzaSyANThwic7Udj0r5ulBoPN9Dp2lSwJKOAK4
+          NEXT_PUBLIC_AZUREBLOB_CONTAINER: photosdocs
+          NEXT_PUBLIC_AZUREBLOB_SASTOKEN: sv=2024-11-04&ss=b&srt=sco&sp=rwdlaciytfx&se=2035-10-14T18:02:51Z&st=2025-10-14T09:47:51Z&spr=https&sig=lFOuI%2FXifw3wGShtjUcjdeQn8DenYY%2FtIrWOQ%2FCZqvo%3D
+          NEXT_PUBLIC_AZUREBLOB_SASURL_BASE: https://buyselstore.blob.core.windows.net
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: BIh49CHmmuAuHOPGiZdzVj-_3_dZXIEv57JNWeOibt2agftbQWpcC_kngiLQEzRKZ3T7ptb1bvGqxzu3PRkdGec
+          NEXT_PUBLIC_API_URL: https://buysel.azurewebsites.net
+
+          # Runtime environment variables for API routes (server-side only)
+          SESSION_SECRET: Y8jih3rwDE7U0mPwxHms0a72eBapQPNuW8NlDVsCGw8=
+          JWT_SECRET: dev-jwt-secret-key-must-be-at-least-32-characters-long-for-development
+          GOOGLE_CLIENT_ID: 155334538327-i07ipbgfbg95nhb0h5cfe8vu27lcek9f.apps.googleusercontent.com
+          GOOGLE_CLIENT_SECRET: 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
+          AZURE_AD_CLIENT_ID: fc8b4cc8-e653-4887-9bb2-21c63b3a4d59
+          AZURE_AD_CLIENT_SECRET: Dnw8Q~otHIogO522Npd6KOPTTaH~zqF6aIB5Dc5U
+          AZURE_AD_TENANT_ID: common
+          FACEBOOK_CLIENT_ID: 1892744611304190
+          FACEBOOK_CLIENT_SECRET: a4b36b640772390df34834a480c9cce4
+          NEXTAUTH_URL: https://proud-flower-0f24cf100.3.azurestaticapps.net
+          VAPID_PRIVATE_KEY: EKIzkxo_icPeY9CDXb5tcnAPUZl_O3lFG6J27Cu4fIA
+          VAPID_EMAIL: mailto:admin@buysel.com
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: 1572c9a506c251f28f7b4739ef9ef9f580c3204db48bc40b70e64dbbd3c91e6403-b519ce28-21d7-4687-8d48-745d095f85be00026290f24cf100
+          action: "close"
