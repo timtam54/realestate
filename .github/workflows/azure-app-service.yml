@@ -34,9 +34,19 @@ jobs:
           VAPID_PRIVATE_KEY: EKIzkxo_icPeY9CDXb5tcnAPUZl_O3lFG6J27Cu4fIA
           VAPID_EMAIL: mailto:admin@buysel.com
 
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp -r .next deploy/
+          cp -r node_modules deploy/
+          cp -r public deploy/
+          cp package.json deploy/
+          cp package-lock.json deploy/
+          cd deploy && zip -r ../deploy.zip . && cd ..
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'buysel-webapp'
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: .
+          publish-profile: '<publishData><publishProfile profileName="buysel-webapp - Web Deploy" publishMethod="MSDeploy" publishUrl="buysel-webapp.scm.azurewebsites.net:443" msdeploySite="buysel-webapp" userName="$buysel-webapp" userPWD="kC34GC6czcDEk5r0YxnupCBdv9kp2fWV5k5qHbqy1LRpqfgsjBhxhLxvH0Bu" destinationAppUrl="http://buysel-webapp.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="https://portal.azure.com" webSystem="WebSites"><databases /></publishProfile><publishProfile profileName="buysel-webapp - FTP" publishMethod="FTP" publishUrl="ftps://waws-prod-sy3-097.ftp.azurewebsites.windows.net/site/wwwroot" ftpPassiveMode="True" userName="buysel-webapp\$buysel-webapp" userPWD="kC34GC6czcDEk5r0YxnupCBdv9kp2fWV5k5qHbqy1LRpqfgsjBhxhLxvH0Bu" destinationAppUrl="http://buysel-webapp.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="https://portal.azure.com" webSystem="WebSites"><databases /></publishProfile><publishProfile profileName="buysel-webapp - Zip Deploy" publishMethod="ZipDeploy" publishUrl="buysel-webapp.scm.azurewebsites.net:443" userName="$buysel-webapp" userPWD="kC34GC6czcDEk5r0YxnupCBdv9kp2fWV5k5qHbqy1LRpqfgsjBhxhLxvH0Bu" destinationAppUrl="http://buysel-webapp.azurewebsites.net" SQLServerDBConnectionString="" mySQLDBConnectionString="" hostingProviderForumLink="" controlPanelLink="https://portal.azure.com" webSystem="WebSites"><databases /></publishProfile></publishData>'
+          package: deploy.zip
