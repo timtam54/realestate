@@ -52,7 +52,8 @@ namespace IncidentWebAPI.endpoint
                         existingUser.firstname = request.Name.Split(' ').FirstOrDefault() ?? request.Name;
                         existingUser.lastname = request.Name.Split(' ').Skip(1).FirstOrDefault() ?? "";
 
-                        if (!string.IsNullOrEmpty(request.Picture))
+                        // Only set photo from OAuth if user doesn't already have one (don't overwrite uploaded photos)
+                        if (!string.IsNullOrEmpty(request.Picture) && string.IsNullOrEmpty(existingUser.photoazurebloburl))
                         {
                             existingUser.photoazurebloburl = request.Picture;
                         }
