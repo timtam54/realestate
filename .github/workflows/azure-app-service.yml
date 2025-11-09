@@ -8,18 +8,17 @@ on:
 
 env:
   AZURE_WEBAPP_NAME: buysel-webapp
-  AZURE_WEBAPP_PACKAGE_PATH: '.'
   NODE_VERSION: '20.x'
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -51,7 +50,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build-and-deploy
+    needs: build
     environment:
       name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
@@ -65,27 +64,10 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      - name: 'Deploy to Azure Web App using Kudu API'
-        run: |
-          # Zip the deployment
-          zip -r deploy.zip .
-
-          # Deploy using Kudu API with basic auth
-          echo "Deploying to Azure App Service..."
-          HTTP_CODE=$(curl -X POST \
-            -u '$buysel-webapp:kC34GC6czcDEk5r0YxnupCBdv9kp2fWV5k5qHbqy1LRpqfgsjBhxhLxvH0Bu' \
-            --data-binary @deploy.zip \
-            -H "Content-Type: application/zip" \
-            -w "%{http_code}" \
-            -o deployment-response.txt \
-            https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy)
-
-          echo "Deployment response code: $HTTP_CODE"
-          cat deployment-response.txt
-
-          if [ "$HTTP_CODE" -ne 200 ] && [ "$HTTP_CODE" -ne 202 ]; then
-            echo "Deployment failed with HTTP code: $HTTP_CODE"
-            exit 1
-          fi
-
-          echo "Deployment initiated successfully!"
+      - name: 'Deploy to Azure Web App'
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: .
