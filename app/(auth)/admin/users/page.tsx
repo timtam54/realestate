@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Users, User, Mail, Search, Ban, UserCheck, Edit, ShoppingCart, Home as HomeIcon, Phone, MapPin, Calendar, Shield, CheckCircle, XCircle, Loader2, Hash } from 'lucide-react'
+import { Users, User, Mail, Search, Ban, UserCheck, Edit, ShoppingCart, Home as HomeIcon, Phone, MapPin, Calendar, Shield, CheckCircle, XCircle, Loader2, Hash, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import Link from 'next/link'
 import { getAzureBlobUrl } from '@/lib/config'
 import type { Seller } from '@/types/seller'
@@ -300,6 +300,9 @@ export default function AdminUsersPage() {
   const [filterStatus, setFilterStatus] = useState('all')
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null)
   const [selectedApiUser, setSelectedApiUser] = useState<Seller | null>(null)
+  const [selectedApiUserTab, setSelectedApiUserTab] = useState<string>('info')
+  const [sortField, setSortField] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
   useEffect(() => {
     fetchUsers()
@@ -353,6 +356,53 @@ export default function AdminUsersPage() {
     // Log audit action
     console.log(`Audit Log: Admin changed user ${userId} status to ${newStatus}`)
   }
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      // Toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // New field, default to ascending
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  const sortedUsers = [...apiUsers].sort((a, b) => {
+    if (!sortField) return 0
+
+    let aValue: any
+    let bValue: any
+
+    switch (sortField) {
+      case 'name':
+        aValue = `${a.firstname} ${a.lastname}`.toLowerCase()
+        bValue = `${b.firstname} ${b.lastname}`.toLowerCase()
+        break
+      case 'address':
+        aValue = a.address?.toLowerCase() || ''
+        bValue = b.address?.toLowerCase() || ''
+        break
+      case 'idverified':
+        aValue = a.idverified ? 1 : 0
+        bValue = b.idverified ? 1 : 0
+        break
+      case 'photoverified':
+        aValue = a.photoverified ? 1 : 0
+        bValue = b.photoverified ? 1 : 0
+        break
+      case 'joined':
+        aValue = a.dte ? new Date(a.dte).getTime() : 0
+        bValue = b.dte ? new Date(b.dte).getTime() : 0
+        break
+      default:
+        return 0
+    }
+
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+    return 0
+  })
 
   const stats = {
     total: apiUsers.length,
@@ -469,32 +519,82 @@ export default function AdminUsersPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Photo
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
+                    <th
+                      className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort('name')}
+                    >
+                      <div className="flex items-center gap-2">
+                        User
+                        {sortField === 'name' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
+                        )}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Address
+                    <th
+                      className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort('address')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Address
+                        {sortField === 'address' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
+                        )}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID Verified
+                    <th
+                      className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort('idverified')}
+                    >
+                      <div className="flex items-center gap-2">
+                        ID Verified
+                        {sortField === 'idverified' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
+                        )}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Photo Verified
+                    <th
+                      className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort('photoverified')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Photo Verified
+                        {sortField === 'photoverified' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
+                        )}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Joined
+                    <th
+                      className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handleSort('joined')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Joined
+                        {sortField === 'joined' ? (
+                          sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
+                        ) : (
+                          <ArrowUpDown className="h-4 w-4 opacity-30" />
+                        )}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {apiUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                  {sortedUsers.map((user) => (
+                    <tr key={user.id} className={`hover:bg-gray-50 transition-colors text-black ${user.idverified ? 'bg-green-200' : 'bg-orange-200'}`}>
                       <td className="px-6 py-4">
                         {user.photoazurebloburl && user.photoazurebloburl.trim() !== '' ? (
                           <img
@@ -531,20 +631,31 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          {user.idverified ? (
+                          {!user.idbloburl || user.idbloburl.trim() === '' ? (
+                            <>
+                              <Shield className="h-4 w-4 text-red-500 mr-2" />
+                              <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-200 text-red-900">
+                                No ID
+                              </span>
+                            </>
+                          ) : user.idverified ? (
                             <>
                               <Shield className="h-4 w-4 text-green-500 mr-2" />
                               <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Verified
+                                ID Verified
                               </span>
                             </>
                           ) : (
-                            <>
-                              <Shield className="h-4 w-4 text-gray-400 mr-2" />
-                              <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                Not Verified
-                              </span>
-                            </>
+                            <button
+                              onClick={() => {
+                                setSelectedApiUserTab('id')
+                                setSelectedApiUser(user)
+                              }}
+                              className="flex items-center gap-2 px-2 py-1 text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
+                            >
+                              <Shield className="h-4 w-4 text-gray-400" />
+                              ID To be Verified
+                            </button>
                           )}
                         </div>
                       </td>
@@ -575,7 +686,10 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
-                          onClick={() => setSelectedApiUser(user)}
+                          onClick={() => {
+                            setSelectedApiUserTab('info')
+                            setSelectedApiUser(user)
+                          }}
                           className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg shadow-md hover:from-blue-600 hover:to-purple-700 hover:shadow-lg hover:scale-105 transition-all duration-200"
                         >
                           <Edit className="h-4 w-4" />
@@ -590,8 +704,8 @@ export default function AdminUsersPage() {
 
             {/* Mobile Card View - Hidden on Desktop */}
             <div className="lg:hidden space-y-4 mb-6">
-              {apiUsers.map((user) => (
-                <div key={user.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              {sortedUsers.map((user) => (
+                <div key={user.id} className={`rounded-lg shadow-sm border border-gray-200 overflow-hidden text-black ${user.idverified ? 'bg-green-200' : 'bg-orange-200'}`}>
                   <div className="p-4">
                     {/* Header with Photo and Name */}
                     <div className="flex items-start gap-4 mb-4 pb-4 border-b border-gray-200">
@@ -639,16 +753,31 @@ export default function AdminUsersPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <div className="flex items-center mb-1">
-                            <Shield className={`h-4 w-4 mr-1.5 ${user.idverified ? 'text-green-500' : 'text-gray-400'}`} />
+                            <Shield className={`h-4 w-4 mr-1.5 ${
+                              !user.idbloburl || user.idbloburl.trim() === '' ? 'text-red-500' :
+                              user.idverified ? 'text-green-500' : 'text-gray-400'
+                            }`} />
                             <span className="text-xs text-gray-500">ID Status</span>
                           </div>
-                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            user.idverified
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {user.idverified ? 'Verified' : 'Not Verified'}
-                          </span>
+                          {!user.idbloburl || user.idbloburl.trim() === '' ? (
+                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-200 text-red-900">
+                              No ID
+                            </span>
+                          ) : user.idverified ? (
+                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              ID Verified
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setSelectedApiUserTab('id')
+                                setSelectedApiUser(user)
+                              }}
+                              className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
+                            >
+                              ID To be Verified
+                            </button>
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center mb-1">
@@ -683,7 +812,10 @@ export default function AdminUsersPage() {
 
                     {/* Actions */}
                     <button
-                      onClick={() => setSelectedApiUser(user)}
+                      onClick={() => {
+                        setSelectedApiUserTab('info')
+                        setSelectedApiUser(user)
+                      }}
                       className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-medium rounded-lg shadow-md hover:from-blue-600 hover:to-purple-700 hover:shadow-lg transition-all duration-200"
                     >
                       <Edit className="h-4 w-4" />
@@ -749,9 +881,13 @@ export default function AdminUsersPage() {
         {selectedApiUser && (
           <UserDetailsModal
             selectedSeller={selectedApiUser}
-            setSelectedSeller={setSelectedApiUser}
+            setSelectedSeller={(user) => {
+              setSelectedApiUser(user)
+              setSelectedApiUserTab('info')
+            }}
             setUsers={setApiUsers}
             users={apiUsers}
+            initialTab={selectedApiUserTab}
           />
         )}
       </div>
