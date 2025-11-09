@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Send, AlertCircle } from 'lucide-react'
 import { Property } from '@/types/property'
+import { Message as ApiMessage } from '@/types/message'
 import { requestNotificationPermission, subscribeToPushNotifications } from '@/lib/push-notifications'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useUserData } from '@/hooks/useUserData'
@@ -10,7 +11,9 @@ import { useUserCache } from '@/hooks/useUserCache'
 import { useRouter } from 'next/navigation'
 import { getPhotoUrl } from '@/lib/azure-config'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
-interface Message {
+
+// UI Message interface for local state
+interface UIMessage {
   id: string
   content: string
   senderId: number
@@ -31,7 +34,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   const router = useRouter()
   const { userId, isProfileComplete, isLoading: userDataLoading } = useUserData()
   const { fetchUser } = useUserCache()
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<UIMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [sellerInfo, setSellerInfo] = useState<any>(null)
   const [buyerInfo, setBuyerInfo] = useState<any>(null)
@@ -229,7 +232,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
           // Mark unread messages as read
           await markMessagesAsRead(messages, initialConversationId)
 
-          setMessages(messages.map((msg: any) => ({
+          setMessages(messages.map((msg: ApiMessage) => ({
             id: msg.id.toString(),
             content: msg.content,
             senderId: msg.sender_id,
@@ -307,7 +310,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
             // Mark unread messages as read
             await markMessagesAsRead(messages, existingConv.id.toString())
 
-            setMessages(messages.map((msg: any) => ({
+            setMessages(messages.map((msg: ApiMessage) => ({
               id: msg.id.toString(), // Convert integer ID to string
               content: msg.content,
               senderId: msg.sender_id,
@@ -332,7 +335,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const markMessagesAsRead = async (messages: any[], conversationId?: string) => {
+  const markMessagesAsRead = async (messages: ApiMessage[], conversationId?: string) => {
     if (!userId || !conversationId) return
     
     try {
@@ -384,13 +387,13 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
         if (response.ok) {
           const fetchedMessages = await response.json()
 
-          // Convert to our Message format
-          const formattedMessages: Message[] = fetchedMessages.map((msg: any) => ({
+          // Convert to our UIMessage format
+          const formattedMessages: UIMessage[] = fetchedMessages.map((msg: ApiMessage) => ({
             id: msg.id.toString(),
             content: msg.content,
             senderId: msg.sender_id,
             timestamp: correctDateForTimezone(new Date(msg.created_at)),
-            read: msg.read || false
+            read: !!msg.read_at
           }))
 
           // Only update if we have new messages
@@ -428,7 +431,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   const sendMessage = async () => {
     if (!newMessage.trim() || !property || !userId) return
 
-    const tempMessage: Message = {
+    const tempMessage: UIMessage = {
       id: 'temp-' + Date.now().toString(), // Temporary ID for optimistic update
       content: newMessage,
       senderId: userId,

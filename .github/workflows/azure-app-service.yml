@@ -41,7 +41,7 @@ jobs:
           NEXTAUTH_URL: https://buysel-webapp.azurewebsites.net
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip .next node_modules public package.json package-lock.json
+        run: zip -r release.zip .next node_modules public package.json package-lock.json next.config.ts tsconfig.json
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -71,8 +71,21 @@ jobs:
           zip -r deploy.zip .
 
           # Deploy using Kudu API with basic auth
-          curl -X POST \
+          echo "Deploying to Azure App Service..."
+          HTTP_CODE=$(curl -X POST \
             -u '$buysel-webapp:kC34GC6czcDEk5r0YxnupCBdv9kp2fWV5k5qHbqy1LRpqfgsjBhxhLxvH0Bu' \
             --data-binary @deploy.zip \
             -H "Content-Type: application/zip" \
-            https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy
+            -w "%{http_code}" \
+            -o deployment-response.txt \
+            https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy)
+
+          echo "Deployment response code: $HTTP_CODE"
+          cat deployment-response.txt
+
+          if [ "$HTTP_CODE" -ne 200 ] && [ "$HTTP_CODE" -ne 202 ]; then
+            echo "Deployment failed with HTTP code: $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "Deployment initiated successfully!"
