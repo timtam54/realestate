@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // For Azure Static Web Apps, don't use 'standalone' or 'export'
-  // Leave output unset for hybrid rendering (static + API routes)
-  // output: 'standalone',
+  // For Azure App Service deployment
+  output: 'standalone',
   compress: true,
   poweredByHeader: false,
   reactStrictMode: false, // Disabled: causes duplicate OAuth callbacks in dev mode

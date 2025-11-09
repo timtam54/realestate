@@ -711,6 +711,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                         </div>
                       )}
                       <div className="flex justify-center">
+                        {user.photoazurebloburl}
                         <img 
                           src={photoPreview} 
                           alt="Profile Photo" 
