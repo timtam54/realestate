@@ -64,10 +64,14 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          publish-profile: PHB1Ymxpc2hEYXRhPjxwdWJsaXNoUHJvZmlsZSBwcm9maWxlTmFtZT0iYnV5c2VsLXdlYmFwcCAtIFdlYiBEZXBsb3kiIHB1Ymxpc2hNZXRob2Q9Ik1TRGVwbG95IiBwdWJsaXNoVXJsPSJidXlzZWwtd2ViYXBwLnNjbS5henVyZXdlYnNpdGVzLm5ldDo0NDMiIG1zZGVwbG95U2l0ZT0iYnV5c2VsLXdlYmFwcCIgdXNlck5hbWU9IiRidXlzZWwtd2ViYXBwIiB1c2VyUFdEPSJrQzM0R0M2Y3pjREVrNXIwWXhudXBDQmR2OWtwMmZXVjVrNXFIYnF5MUxScHFmZ3NqQmh4aEx4dkgwQnUiIGRlc3RpbmF0aW9uQXBwVXJsPSJodHRwOi8vYnV5c2VsLXdlYmFwcC5henVyZXdlYnNpdGVzLm5ldCIgU1FMU2VydmVyREJDb25uZWN0aW9uU3RyaW5nPSIiIG15U1FMREJDb25uZWN0aW9uU3RyaW5nPSIiIGhvc3RpbmdQcm92aWRlckZvcnVtTGluaz0iIiBjb250cm9sUGFuZWxMaW5rPSJodHRwczovL3BvcnRhbC5henVyZS5jb20iIHdlYlN5c3RlbT0iV2ViU2l0ZXMiPjxkYXRhYmFzZXMgLz48L3B1Ymxpc2hQcm9maWxlPjxwdWJsaXNoUHJvZmlsZSBwcm9maWxlTmFtZT0iYnV5c2VsLXdlYmFwcCAtIEZUUCIgcHVibGlzaE1ldGhvZD0iRlRQIiBwdWJsaXNoVXJsPSJmdHBzOi8vd2F3cy1wcm9kLXN5My0wOTcuZnRwLmF6dXJld2Vic2l0ZXMud2luZG93cy5uZXQvc2l0ZS93d3dyb290IiBmdHBQYXNzaXZlTW9kZT0iVHJ1ZSIgdXNlck5hbWU9ImJ1eXNlbC13ZWJhcHBcJGJ1eXNlbC13ZWJhcHAiIHVzZXJQV0Q9ImtDMzRHQzZjemNERWs1cjBZeG51cENCZHY5a3AyZldWNWs1cUhicXkxTFJwcWZnc2pCaHhoTHh2SDBCdSIgZGVzdGluYXRpb25BcHBVcmw9Imh0dHA6Ly9idXlzZWwtd2ViYXBwLmF6dXJld2Vic2l0ZXMubmV0IiBTUUxTZXJ2ZXJEQkNvbm5lY3Rpb25TdHJpbmc9IiIgbXlTUUxEQkNvbm5lY3Rpb25TdHJpbmc9IiIgaG9zdGluZ1Byb3ZpZGVyRm9ydW1MaW5rPSIiIGNvbnRyb2xQYW5lbExpbms9Imh0dHBzOi8vcG9ydGFsLmF6dXJlLmNvbSIgd2ViU3lzdGVtPSJXZWJTaXRlcyI+PGRhdGFiYXNlcyAvPjwvcHVibGlzaFByb2ZpbGU+PHB1Ymxpc2hQcm9maWxlIHByb2ZpbGVOYW1lPSJidXlzZWwtd2ViYXBwIC0gWmlwIERlcGxveSIgcHVibGlzaE1ldGhvZD0iWmlwRGVwbG95IiBwdWJsaXNoVXJsPSJidXlzZWwtd2ViYXBwLnNjbS5henVyZXdlYnNpdGVzLm5ldDo0NDMiIHVzZXJOYW1lPSIkYnV5c2VsLXdlYmFwcCIgdXNlclBXRD0ia0MzNEdDNmN6Y0RFazVyMFl4bnVwQ0JkdjlrcDJmV1Y1azVxSGJxeTFMUnBxZmdzakJoeGhMeHZIMEJ1IiBkZXN0aW5hdGlvbkFwcFVybD0iaHR0cDovL2J1eXNlbC13ZWJhcHAuYXp1cmV3ZWJzaXRlcy5uZXQiIFNRTFNlcnZlckRCQ29ubmVjdGlvblN0cmluZz0iIiBteVNRTERCQ29ubmVjdGlvblN0cmluZz0iIiBob3N0aW5nUHJvdmlkZXJGb3J1bUxpbms9IiIgY29udHJvbFBhbmVsTGluaz0iaHR0cHM6Ly9wb3J0YWwuYXp1cmUuY29tIiB3ZWJTeXN0ZW09IldlYlNpdGVzIj48ZGF0YWJhc2VzIC8+PC9wdWJsaXNoUHJvZmlsZT48L3B1Ymxpc2hEYXRhPgo=
-          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      - name: 'Deploy to Azure Web App using Kudu API'
+        run: |
+          # Zip the deployment
+          zip -r deploy.zip .
+
+          # Deploy using Kudu API with basic auth
+          curl -X POST \
+            -u '$buysel-webapp:kC34GC6czcDEk5r0YxnupCBdv9kp2fWV5k5qHbqy1LRpqfgsjBhxhLxvH0Bu' \
+            --data-binary @deploy.zip \
+            -H "Content-Type: application/zip" \
+            https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy
