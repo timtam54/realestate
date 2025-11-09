@@ -31,6 +31,8 @@ jobs:
           NEXT_PUBLIC_AZUREBLOB_SASURL_BASE: https://buyselstore.blob.core.windows.net
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: BIh49CHmmuAuHOPGiZdzVj-_3_dZXIEv57JNWeOibt2agftbQWpcC_kngiLQEzRKZ3T7ptb1bvGqxzu3PRkdGec
           NEXT_PUBLIC_API_URL: https://buysel.azurewebsites.net
+          VAPID_PRIVATE_KEY: EKIzkxo_icPeY9CDXb5tcnAPUZl_O3lFG6J27Cu4fIA
+          VAPID_EMAIL: mailto:admin@buysel.com
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v2

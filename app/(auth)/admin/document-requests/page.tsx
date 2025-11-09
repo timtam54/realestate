@@ -97,6 +97,85 @@ export default function AdminDocumentRequestsPage() {
       if (response.ok) {
         // Update local state
         setDocuments(documents.map(d => d.id === doc.id ? updatedDoc : d))
+
+        // Get property details for the message
+        const property = properties.find(p => p.id === doc.propertyid)
+        const propertyTitle = property?.title || `Property #${doc.propertyid}`
+
+        // Get current user (admin/seller) details from session
+        const sessionResponse = await fetch('/api/auth/session')
+        if (!sessionResponse.ok) {
+          console.error('Failed to get session')
+          return
+        }
+        const sessionData = await sessionResponse.json()
+        const currentUserEmail = sessionData.user?.email
+
+        if (!currentUserEmail) {
+          console.error('No user email in session')
+          return
+        }
+
+        // Get current user's numeric ID from email
+        const userResponse = await fetch(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(currentUserEmail)}`)
+        if (!userResponse.ok) {
+          console.error('Failed to get user by email')
+          return
+        }
+        const userData = await userResponse.json()
+        const sellerId = userData.id
+
+        // Create conversation (buyer_id = doc.buyerid, seller_id = current user)
+        const conversationPayload = {
+          id: 0, // New conversation
+          property_id: doc.propertyid,
+          buyer_id: doc.buyerid,
+          seller_id: sellerId
+        }
+
+        const conversationResponse = await fetch('https://buysel.azurewebsites.net/api/conversation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(conversationPayload)
+        })
+
+        if (!conversationResponse.ok) {
+          console.error('Failed to create conversation')
+          return
+        }
+
+        const conversationData = await conversationResponse.json()
+        const conversationId = conversationData.id
+
+        // Create message
+        const messageContent = action === 'Approve'
+          ? `Your document request for "${doc.requestdoc}" has been approved for property: ${propertyTitle}`
+          : `Your document request for "${doc.requestdoc}" has been rejected for property: ${propertyTitle}`
+
+        const messagePayload = {
+          id: 0, // New message
+          conversation_id: conversationId,
+          sender_id: sellerId,
+          content: messageContent
+        }
+
+        const messageResponse = await fetch('https://buysel.azurewebsites.net/api/message', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(messagePayload)
+        })
+
+        if (messageResponse.ok) {
+          console.log('Message sent to buyer successfully')
+        } else {
+          const errorText = await messageResponse.text()
+          console.error('Failed to send message to buyer:', errorText)
+        }
+
       } else {
         console.error('Failed to update document request')
         alert('Failed to update document request')
