@@ -38,6 +38,7 @@ jobs:
           NEXT_PUBLIC_API_URL: https://buysel.azurewebsites.net
           VAPID_PRIVATE_KEY: EKIzkxo_icPeY9CDXb5tcnAPUZl_O3lFG6J27Cu4fIA
           VAPID_EMAIL: mailto:admin@buysel.com
+          NEXTAUTH_URL: https://buysel-webapp.azurewebsites.net
 
       - name: Zip artifact for deployment
         run: zip -r release.zip .next node_modules public package.json package-lock.json
