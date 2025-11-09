@@ -156,16 +156,37 @@ export default function AdminDocumentRequestsPage() {
         const messageContent = action === 'Approve'
           ? `Your document request for "${doc.requestdoc}" has been approved for property: ${propertyTitle}`
           : `Your document request for "${doc.requestdoc}" has been rejected for property: ${propertyTitle}`
-        const bloburl=null
+
+        // Fetch property to get blob URL if approving
+        let bloburl: string | null = null
+        if (action === 'Approve') {
+          try {
+            const propertyResponse = await fetch(`https://buysel.azurewebsites.net/api/property/${doc.propertyid}`)
+            if (propertyResponse.ok) {
+              const propertyData = await propertyResponse.json()
+
+              // Set bloburl based on document type
+              if (doc.requestdoc === 'Building') {
+                bloburl = propertyData.BuildingInspAzureBlob || null
+              } else if (doc.requestdoc === 'Pest') {
+                bloburl = propertyData.PestInspAzureBlob || null
+              } else if (doc.requestdoc === 'Title' || doc.requestdoc === 'Council') {
+                bloburl = propertyData.TitleSrchCouncilRateAzureBlob || null
+              }
+            }
+          } catch (error) {
+            console.error('Failed to fetch property for blob URL:', error)
+          }
+        }
+
         const messagePayload: Message = {
           id: 0, // New message
           conversation_id: conversationId,
           sender_id: sellerId,
           content: messageContent,
-          read_at:null,
-          created_at:null,
-          bloburl:bloburl
-
+          read_at: null,
+          created_at: null,
+          bloburl: bloburl
         }
 
         const messageResponse = await fetch('https://buysel.azurewebsites.net/api/message', {
