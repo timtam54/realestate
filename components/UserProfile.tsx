@@ -1022,8 +1022,12 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                         <div className="flex justify-center gap-2">
                           <button
                             onClick={() => fileInputRef.current?.click()}
-                            disabled={uploading}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                            disabled={uploading || !user.idtype || user.idtype === 'none'}
+                            className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                              !user.idtype || user.idtype === 'none'
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                : 'bg-gray-600 text-white hover:bg-gray-700'
+                            }`}
                           >
                             <Camera className="w-4 h-4" />
                             Replace
@@ -1032,13 +1036,21 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                       </div>
                     ) : (
                       <div className="text-center">
-                        <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
+                        <Upload className={`w-12 h-12 mx-auto mb-3 ${!user.idtype || user.idtype === 'none' ? 'text-gray-300' : 'text-gray-400'}`} />
+                        <p className={`mb-2 ${!user.idtype || user.idtype === 'none' ? 'text-gray-400' : 'text-gray-600'}`}>
+                          {!user.idtype || user.idtype === 'none'
+                            ? 'Please select an ID type first'
+                            : 'Click to upload or drag and drop'}
+                        </p>
                         <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
                         <button
                           onClick={() => fileInputRef.current?.click()}
-                          disabled={uploading}
-                          className="mt-4 px-4 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
+                          disabled={uploading || !user.idtype || user.idtype === 'none'}
+                          className={`mt-4 px-4 py-2 rounded-lg transition-colors ${
+                            !user.idtype || user.idtype === 'none'
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-[#FF6600] text-white hover:bg-[#FF5500]'
+                          }`}
                         >
                           Select File
                         </button>
@@ -1050,6 +1062,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                       accept="image/*,application/pdf"
                       onChange={(e) => handleFileSelect(e, 'id')}
                       className="hidden"
+                      disabled={!user.idtype || user.idtype === 'none'}
                     />
                   </div>
                 </div>

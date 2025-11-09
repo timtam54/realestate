@@ -594,7 +594,7 @@ export default function AdminUsersPage() {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {sortedUsers.map((user) => (
-                    <tr key={user.id} className={`hover:bg-gray-50 transition-colors text-black ${user.idverified ? 'bg-green-200' : 'bg-orange-200'}`}>
+                    <tr key={user.id} className={`hover:bg-gray-50 transition-colors text-black ${!user.idbloburl || user.idbloburl.trim() === '' ? 'bg-red-200' : user.idverified ? 'bg-green-200' : 'bg-orange-200'}`}>
                       <td className="px-6 py-4">
                         {user.photoazurebloburl && user.photoazurebloburl.trim() !== '' ? (
                           <img
@@ -705,7 +705,7 @@ export default function AdminUsersPage() {
             {/* Mobile Card View - Hidden on Desktop */}
             <div className="lg:hidden space-y-4 mb-6">
               {sortedUsers.map((user) => (
-                <div key={user.id} className={`rounded-lg shadow-sm border border-gray-200 overflow-hidden text-black ${user.idverified ? 'bg-green-200' : 'bg-orange-200'}`}>
+                <div key={user.id} className={`rounded-lg shadow-sm border border-gray-200 overflow-hidden text-black ${!user.idbloburl || user.idbloburl.trim() === '' ? 'bg-red-200' : user.idverified ? 'bg-green-200' : 'bg-orange-200'}`}>
                   <div className="p-4">
                     {/* Header with Photo and Name */}
                     <div className="flex items-start gap-4 mb-4 pb-4 border-b border-gray-200">
