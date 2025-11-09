@@ -1,6 +1,7 @@
 using buyselwebapi.data;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using Azure.Storage.Blobs;
 
 namespace IncidentWebAPI.endpoint
 {
@@ -24,12 +25,46 @@ namespace IncidentWebAPI.endpoint
 
     public static class UserEndpoints
     {
+        private static async Task<string?> DownloadAndUploadOAuthPhoto(string pictureUrl, string email, IConfiguration configuration)
+        {
+            try
+            {
+                using var httpClient = new HttpClient();
+                var imageBytes = await httpClient.GetByteArrayAsync(pictureUrl);
+
+                var blobSasUrlBase = configuration["NEXT_PUBLIC_AZUREBLOB_SASURL_BASE"];
+                var blobSasToken = configuration["NEXT_PUBLIC_AZUREBLOB_SASTOKEN"];
+                var blobContainer = configuration["NEXT_PUBLIC_AZUREBLOB_CONTAINER"];
+
+                if (string.IsNullOrEmpty(blobSasUrlBase) || string.IsNullOrEmpty(blobSasToken) || string.IsNullOrEmpty(blobContainer))
+                {
+                    return null;
+                }
+
+                var blobName = $"photo-{email.Replace("@", "-")}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.jpg";
+
+                var blobServiceClient = new BlobServiceClient(new Uri($"{blobSasUrlBase}?{blobSasToken}"));
+                var containerClient = blobServiceClient.GetBlobContainerClient(blobContainer);
+                var blobClient = containerClient.GetBlobClient(blobName);
+
+                using var stream = new MemoryStream(imageBytes);
+                await blobClient.UploadAsync(stream, overwrite: true);
+
+                return blobName;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error downloading/uploading OAuth photo: {ex.Message}");
+                return null;
+            }
+        }
+
         public static void MapUserEndpoints(this IEndpointRouteBuilder routes)
         {
             var group = routes.MapGroup("/api/user").WithTags(nameof(UserEndpoints));
 
             // POST: /api/users/oauth - Create or update user from OAuth provider
-            routes.MapPost("/api/users/oauth", async (OAuthUserRequest request, dbcontext db) =>
+            routes.MapPost("/api/users/oauth", async (OAuthUserRequest request, dbcontext db, IConfiguration configuration) =>
             {
                 try
                 {
@@ -40,6 +75,13 @@ namespace IncidentWebAPI.endpoint
                         string.IsNullOrWhiteSpace(request.ProviderId))
                     {
                         return Results.BadRequest(new { error = "Email, Name, Provider, and ProviderId are required" });
+                    }
+
+                    // Download and upload OAuth photo to Azure if provided
+                    string? photoFilename = null;
+                    if (!string.IsNullOrEmpty(request.Picture))
+                    {
+                        photoFilename = await DownloadAndUploadOAuthPhoto(request.Picture, request.Email, configuration);
                     }
 
                     // Check if user already exists
@@ -53,9 +95,9 @@ namespace IncidentWebAPI.endpoint
                         existingUser.lastname = request.Name.Split(' ').Skip(1).FirstOrDefault() ?? "";
 
                         // Only set photo from OAuth if user doesn't already have one (don't overwrite uploaded photos)
-                        if (!string.IsNullOrEmpty(request.Picture) && string.IsNullOrEmpty(existingUser.photoazurebloburl))
+                        if (photoFilename != null && string.IsNullOrEmpty(existingUser.photoazurebloburl))
                         {
-                            existingUser.photoazurebloburl = request.Picture;
+                            existingUser.photoazurebloburl = photoFilename;
                         }
 
                         await db.SaveChangesAsync();
@@ -79,7 +121,7 @@ namespace IncidentWebAPI.endpoint
                             email = request.Email,
                             firstname = nameParts.FirstOrDefault() ?? request.Name,
                             lastname = nameParts.Length > 1 ? nameParts[1] : "",
-                            photoazurebloburl = request.Picture ?? "",
+                            photoazurebloburl = photoFilename ?? "",
                             mobile = "", // Will be filled in profile completion
                             address = "",
                             residencystatus = "",
