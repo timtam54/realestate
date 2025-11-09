@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Home, User, Search, Briefcase, Settings, LogOut, Menu, X, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useState } from 'react'
@@ -40,13 +39,11 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center group">
-            <div className="relative h-16 w-16 sm:h-24 sm:w-24 mr-2 transition-transform group-hover:scale-105">
-              <Image 
-                src="/logo.png" 
-                alt="BuySel Logo" 
-                fill
-                className="object-contain"
-                priority
+            <div className="h-16 w-16 sm:h-24 sm:w-24 mr-2 transition-transform group-hover:scale-105">
+              <img
+                src="/logo.png"
+                alt="BuySel Logo"
+                className="h-full w-full object-contain"
               />
             </div>
           </Link>

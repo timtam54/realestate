@@ -73,7 +73,7 @@ export default function AdminDocumentRequestsPage() {
 
       if (response.ok) {
         const data: Buyer[] = await response.json()
-        alert(JSON.stringify(data))
+       // alert(JSON.stringify(data))
         setBuyers(data)
       } else {
         alert('Failed to fetch buyers')

@@ -69,6 +69,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
   const [ratesNoticePreview, setRatesNoticePreview] = useState<string | null>(null)
   const [titleSearchPreview, setTitleSearchPreview] = useState<string | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [showCameraModal, setShowCameraModal] = useState(false)
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
   const correctDateForTimezone = useTimezoneCorrection()
   const addressInputRef = useRef<HTMLInputElement>(null)
   const autocompleteRef = useRef<GoogleAutocomplete | null>(null)
@@ -76,6 +78,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
   const ratesNoticeInputRef = useRef<HTMLInputElement>(null)
   const titleSearchInputRef = useRef<HTMLInputElement>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const formatDateForInput = (date: Date | string | null | undefined): string => {
     if (!date) return ''
@@ -191,6 +195,22 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
       fetchUser()
     }
   }, [isOpen, email, fetchUser])
+
+  // Cleanup camera stream on unmount or modal close
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [cameraStream])
+
+  // Set video source when camera stream is available and video element is mounted
+  useEffect(() => {
+    if (cameraStream && videoRef.current && showCameraModal) {
+      videoRef.current.srcObject = cameraStream
+    }
+  }, [cameraStream, showCameraModal])
 
   useEffect(() => {
     if (isOpen && addressInputRef.current && !autocompleteRef.current && activeTab === 'personal') {
@@ -313,6 +333,70 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     setPhotoPreview(null)
     setUser({ ...user, photoazurebloburl: null })
     toast.success('Photo removed')
+  }
+
+  const startCamera = async () => {
+    try {
+      // Try with facingMode first (works on mobile), fallback to basic constraints (works on PC)
+      let stream: MediaStream | null = null
+
+      try {
+        // Try mobile-friendly constraints first
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        })
+      } catch (err) {
+        // Fallback for PC/desktop - just request video without facingMode
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false
+        })
+      }
+
+      setCameraStream(stream)
+      setShowCameraModal(true)
+    } catch (error) {
+      console.error('Error accessing camera:', error)
+      toast.error('Unable to access camera. Please check permissions and ensure your camera is not in use by another application.')
+    }
+  }
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop())
+      setCameraStream(null)
+    }
+    setShowCameraModal(false)
+  }
+
+  const capturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    const context = canvas.getContext('2d')
+    if (!context) return
+
+    context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return
+
+      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' })
+      const dataTransfer = new DataTransfer()
+      dataTransfer.items.add(file)
+
+      const event = {
+        target: { files: dataTransfer.files }
+      } as unknown as React.ChangeEvent<HTMLInputElement>
+
+      stopCamera()
+      await handleFileSelect(event, 'photo')
+    }, 'image/jpeg', 0.9)
   }
 
   const handleSave = async () => {
@@ -655,16 +739,24 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                   ) : (
                     <div className="text-center">
                       <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-2 font-medium">Upload your profile photo</p>
+                      <p className="text-gray-600 mb-2 font-medium">Add your profile photo</p>
                       <p className="text-xs text-gray-500 mb-6">PNG or JPG up to 10MB</p>
                       <div className="flex flex-col gap-3">
                         <button
-                          onClick={() => photoInputRef.current?.click()}
+                          onClick={startCamera}
                           disabled={uploading}
-                          className="w-full px-6 py-3 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors flex items-center justify-center gap-2"
+                          className="w-full px-6 py-3 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Camera className="w-5 h-5" />
-                          Take Photo or Upload
+                          Take Photo with Camera
+                        </button>
+                        <button
+                          onClick={() => photoInputRef.current?.click()}
+                          disabled={uploading}
+                          className="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Upload className="w-5 h-5" />
+                          Upload from Device
                         </button>
                       </div>
                     </div>
@@ -673,7 +765,6 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
                     ref={photoInputRef}
                     type="file"
                     accept="image/*"
-                    capture="user"
                     onChange={(e) => handleFileSelect(e, 'photo')}
                     className="hidden"
                   />
@@ -1273,20 +1364,68 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
             </button>
           </div>
 
-          <button
-            onClick={goToNextTab}
-            disabled={getCurrentTabIndex() === tabs.length - 1 || saving}
-            className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Save / Next
-            {saving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <ChevronRight className="w-4 h-4" />
-            )}
-          </button>
+          {getCurrentTabIndex() < tabs.length - 1 && (
+            <button
+              onClick={goToNextTab}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Save / Next
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </button>
+          )}
+          {getCurrentTabIndex() === tabs.length - 1 && <div />}
         </div>
       </div>
+
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Take Photo</h3>
+              <button
+                onClick={stopCamera}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="relative bg-gray-900 rounded-lg overflow-hidden mb-4">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-auto"
+              />
+            </div>
+
+            <canvas ref={canvasRef} className="hidden" />
+
+            <div className="flex gap-3">
+              <button
+                onClick={capturePhoto}
+                className="flex-1 px-6 py-3 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors flex items-center justify-center gap-2 font-medium"
+              >
+                <Camera className="w-5 h-5" />
+                Capture Photo
+              </button>
+              <button
+                onClick={stopCamera}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
