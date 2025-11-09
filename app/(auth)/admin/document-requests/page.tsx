@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { FileText, Search, Calendar, Home, ShoppingCart, CheckCircle, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { Property } from '@/types/property'
+import { Conversation } from '@/types/conversation'
+import { Message } from '@/types/message'
 
 interface PropertyBuyerDoc {
   id: number
@@ -126,7 +128,7 @@ export default function AdminDocumentRequestsPage() {
         const sellerId = userData.id
 
         // Create conversation (buyer_id = doc.buyerid, seller_id = current user)
-        const conversationPayload = {
+        const conversationPayload: Omit<Conversation, 'created_at' | 'updated_at'> = {
           id: 0, // New conversation
           property_id: doc.propertyid,
           buyer_id: doc.buyerid,
@@ -149,16 +151,21 @@ export default function AdminDocumentRequestsPage() {
         const conversationData = await conversationResponse.json()
         const conversationId = conversationData.id
 
+        
         // Create message
         const messageContent = action === 'Approve'
           ? `Your document request for "${doc.requestdoc}" has been approved for property: ${propertyTitle}`
           : `Your document request for "${doc.requestdoc}" has been rejected for property: ${propertyTitle}`
-
-        const messagePayload = {
+        const bloburl=null
+        const messagePayload: Message = {
           id: 0, // New message
           conversation_id: conversationId,
           sender_id: sellerId,
-          content: messageContent
+          content: messageContent,
+          read_at:null,
+          created_at:null,
+          bloburl:bloburl
+
         }
 
         const messageResponse = await fetch('https://buysel.azurewebsites.net/api/message', {
