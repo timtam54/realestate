@@ -54,11 +54,23 @@ export default function UnreadMessagesIndicator({ onOpenChat }: UnreadMessagesIn
   }, [])
 
   const fetchUnreadMessages = async () => {
+    // Don't fetch if user is not authenticated or email is missing
+    if (!user?.email || !isAuthenticated) {
+      console.log('UnreadMessagesIndicator: Skipping fetch - user not authenticated')
+      return
+    }
+
     try {
       console.log('UnreadMessagesIndicator: Fetching unread messages for email:', user?.email)
-      const response = await fetch('/api/chat/unread')
+      const response = await fetch('/api/chat/unread', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+      })
       console.log('UnreadMessagesIndicator: Response status:', response.status)
-      
+
       if (response.ok) {
         const data = await response.json()
         console.log('UnreadMessagesIndicator: Received data:', JSON.stringify(data, null, 2))
@@ -68,9 +80,15 @@ export default function UnreadMessagesIndicator({ onOpenChat }: UnreadMessagesIn
       } else {
         const errorText = await response.text()
         console.error('UnreadMessagesIndicator: Failed to fetch. Status:', response.status, 'Error:', errorText)
+        // Reset state on error
+        setUnreadConversations([])
+        setTotalUnread(0)
       }
     } catch (error) {
       console.error('Failed to fetch unread messages:', error)
+      // Reset state on error to prevent showing stale data
+      setUnreadConversations([])
+      setTotalUnread(0)
     }
   }
 
