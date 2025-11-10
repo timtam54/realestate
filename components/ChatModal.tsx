@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, Send, AlertCircle } from 'lucide-react'
 import { Property } from '@/types/property'
-import { Message as ApiMessage } from '@/types/message'
+import { Message } from '@/types/message'
 import { requestNotificationPermission, subscribeToPushNotifications } from '@/lib/push-notifications'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useUserData } from '@/hooks/useUserData'
@@ -11,15 +11,6 @@ import { useUserCache } from '@/hooks/useUserCache'
 import { useRouter } from 'next/navigation'
 import { getPhotoUrl } from '@/lib/azure-config'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
-
-// UI Message interface for local state
-interface UIMessage {
-  id: string
-  content: string
-  senderId: number
-  timestamp: Date
-  read: boolean
-}
 
 interface ChatModalProps {
   isOpen: boolean
@@ -34,7 +25,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   const router = useRouter()
   const { userId, isProfileComplete, isLoading: userDataLoading } = useUserData()
   const { fetchUser } = useUserCache()
-  const [messages, setMessages] = useState<UIMessage[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [sellerInfo, setSellerInfo] = useState<any>(null)
   const [buyerInfo, setBuyerInfo] = useState<any>(null)
@@ -232,12 +223,10 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
           // Mark unread messages as read
           await markMessagesAsRead(messages, initialConversationId)
 
-          setMessages(messages.map((msg: ApiMessage) => ({
-            id: msg.id.toString(),
-            content: msg.content,
-            senderId: msg.sender_id,
-            timestamp: correctDateForTimezone(new Date(msg.created_at)),
-            read: !!msg.read_at
+          setMessages(messages.map((msg: Message) => ({
+            ...msg,
+            created_at: msg.created_at ? correctDateForTimezone(new Date(msg.created_at)).toISOString() : null,
+            read_at: msg.read_at ? correctDateForTimezone(new Date(msg.read_at)).toISOString() : null
           })))
         }
         return
@@ -310,12 +299,10 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
             // Mark unread messages as read
             await markMessagesAsRead(messages, existingConv.id.toString())
 
-            setMessages(messages.map((msg: ApiMessage) => ({
-              id: msg.id.toString(), // Convert integer ID to string
-              content: msg.content,
-              senderId: msg.sender_id,
-              timestamp: correctDateForTimezone(new Date(msg.created_at)),
-              read: !!msg.read_at
+            setMessages(messages.map((msg: Message) => ({
+              ...msg,
+              created_at: msg.created_at ? correctDateForTimezone(new Date(msg.created_at)).toISOString() : null,
+              read_at: msg.read_at ? correctDateForTimezone(new Date(msg.read_at)).toISOString() : null
             })))
           }
         } else {
@@ -335,7 +322,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const markMessagesAsRead = async (messages: ApiMessage[], conversationId?: string) => {
+  const markMessagesAsRead = async (messages: Message[], conversationId?: string) => {
     if (!userId || !conversationId) return
     
     try {
@@ -387,13 +374,11 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
         if (response.ok) {
           const fetchedMessages = await response.json()
 
-          // Convert to our UIMessage format
-          const formattedMessages: UIMessage[] = fetchedMessages.map((msg: ApiMessage) => ({
-            id: msg.id.toString(),
-            content: msg.content,
-            senderId: msg.sender_id,
-            timestamp: correctDateForTimezone(new Date(msg.created_at)),
-            read: !!msg.read_at
+          // Convert to our Message format
+          const formattedMessages: Message[] = fetchedMessages.map((msg: Message) => ({
+            ...msg,
+            created_at: msg.created_at ? correctDateForTimezone(new Date(msg.created_at)).toISOString() : null,
+            read_at: msg.read_at ? correctDateForTimezone(new Date(msg.read_at)).toISOString() : null
           }))
 
           // Only update if we have new messages
@@ -431,12 +416,14 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   const sendMessage = async () => {
     if (!newMessage.trim() || !property || !userId) return
 
-    const tempMessage: UIMessage = {
-      id: 'temp-' + Date.now().toString(), // Temporary ID for optimistic update
+    const tempMessage: Message = {
+      id: 0, // Temporary ID for optimistic update
+      conversation_id: parseInt(conversationId || '0'),
+      sender_id: userId,
       content: newMessage,
-      senderId: userId,
-      timestamp: correctDateForTimezone(new Date()),
-      read: false
+      created_at: new Date().toISOString(),
+      read_at: null,
+      bloburl: null
     }
 
     setMessages([...messages, tempMessage])
@@ -470,11 +457,9 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
       // Update with server response
       setMessages(prev => prev.map(msg =>
         msg.id === tempMessage.id ? {
-          id: savedMessage.id.toString(), // Convert integer ID to string
-          content: savedMessage.content,
-          senderId: savedMessage.sender_id || currentUserId,
-          timestamp: savedMessage.created_at ? correctDateForTimezone(new Date(savedMessage.created_at)) : correctDateForTimezone(new Date()),
-          read: false
+          ...savedMessage,
+          created_at: savedMessage.created_at ? correctDateForTimezone(new Date(savedMessage.created_at)).toISOString() : null,
+          read_at: null
         } : msg
       ))
     } catch (error) {
@@ -597,26 +582,72 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
               </div>
 
               {messages.map((message) => {
-            // Removed verbose logging
+            const isSender = message.sender_id === userId
+            const fileExtension = message.bloburl ? message.bloburl.split('.').pop()?.toLowerCase() : null
+            const isImage = fileExtension && ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExtension)
+            const isPdf = fileExtension === 'pdf'
+
             return (
               <div
                 key={message.id}
-                className={`flex ${message.senderId === userId ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
               >
                 <div
                   className={`max-w-[75%] rounded-lg px-4 py-2 ${
-                    message.senderId === userId
+                    isSender
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-900'
                   }`}
                 >
                 <p className="break-words">{message.content}</p>
+
+                {message.bloburl && (
+                  <div className="mt-2">
+                    {isImage ? (
+                      <img
+                        src={getPhotoUrl(message.bloburl) || ''}
+                        alt="Attachment"
+                        className="max-w-full rounded border border-gray-300"
+                        style={{ maxHeight: '300px' }}
+                      />
+                    ) : isPdf ? (
+                      <a
+                        href={getPhotoUrl(message.bloburl) || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded ${
+                          isSender ? 'bg-blue-700 hover:bg-blue-800' : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                        </svg>
+                        View PDF Document
+                      </a>
+                    ) : (
+                      <a
+                        href={getPhotoUrl(message.bloburl) || '#'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`inline-flex items-center gap-2 px-3 py-2 rounded ${
+                          isSender ? 'bg-blue-700 hover:bg-blue-800' : 'bg-gray-200 hover:bg-gray-300'
+                        }`}
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
+                        </svg>
+                        Download Attachment
+                      </a>
+                    )}
+                  </div>
+                )}
+
                 <p
                   className={`text-xs mt-1 ${
-                    message.senderId === userId ? 'text-blue-100' : 'text-gray-500'
+                    isSender ? 'text-blue-100' : 'text-gray-500'
                   }`}
                 >
-                  {new Date(message.timestamp).toLocaleTimeString([], {
+                  {message.created_at && new Date(message.created_at).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}

@@ -163,16 +163,22 @@ export default function AdminDocumentRequestsPage() {
           try {
             const propertyResponse = await fetch(`https://buysel.azurewebsites.net/api/property/${doc.propertyid}`)
             if (propertyResponse.ok) {
-              const propertyData = await propertyResponse.json()
+              const propertyData:Property = await propertyResponse.json()
 
-              // Set bloburl based on document type
-              if (doc.requestdoc === 'Building') {
-                bloburl = propertyData.BuildingInspAzureBlob || null
-              } else if (doc.requestdoc === 'Pest') {
-                bloburl = propertyData.PestInspAzureBlob || null
-              } else if (doc.requestdoc === 'Title' || doc.requestdoc === 'Council') {
-                bloburl = propertyData.TitleSrchCouncilRateAzureBlob || null
+              if (propertyData) {
+                // Set bloburl based on document type
+                if (doc.requestdoc === 'Building') {
+                  bloburl = propertyData.buildinginspazureblob || null
+                } else if (doc.requestdoc === 'Pest') {
+                  bloburl = propertyData.pestinspazureblob || null
+                } else if (doc.requestdoc === 'Title or Council' ||doc.requestdoc === 'Title' || doc.requestdoc === 'Council') {
+                  bloburl = propertyData.titlesrchcouncilrateazureblob || null
+                }
+              } else {
+                console.error('Property data is null for propertyid:', doc.propertyid)
               }
+            } else {
+              console.error('Failed to fetch property, status:', propertyResponse.status)
             }
           } catch (error) {
             console.error('Failed to fetch property for blob URL:', error)
@@ -184,17 +190,18 @@ export default function AdminDocumentRequestsPage() {
           conversation_id: conversationId,
           sender_id: sellerId,
           content: messageContent,
-          read_at: null,
-          created_at: null,
+          read_at: new Date(),
+          created_at: new Date(),
           bloburl: bloburl
         }
-
+        const jsn=JSON.stringify(messagePayload)
+       // alert(jsn)
         const messageResponse = await fetch('https://buysel.azurewebsites.net/api/message', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(messagePayload)
+          body: jsn
         })
 
         if (messageResponse.ok) {

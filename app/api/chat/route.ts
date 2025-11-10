@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
+import { Property } from '@/types/property'
 
 export async function GET(req: NextRequest) {
   const session = await getSession()
@@ -243,7 +244,7 @@ export async function POST(req: NextRequest) {
 
     // Get property info for notification
     const propertyResponse = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
-    const propertyData = await propertyResponse.json()
+    const propertyData:Property = await propertyResponse.json()
 
     // Send Web Push notification to recipient
     console.log('🔔 NOTIFICATION SUMMARY:')
