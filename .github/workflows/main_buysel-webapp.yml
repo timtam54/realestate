@@ -84,45 +84,8 @@ jobs:
         ls -lh deploy.zip
 
     - name: Deploy to Azure Web App
-      env:
-        AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-      run: |
-        # Extract credentials from publish profile using more compatible regex
-        USERNAME=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -o 'userName="[^"]*"' | head -1 | sed 's/userName="//;s/"//')
-        PASSWORD=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -o 'userPWD="[^"]*"' | head -1 | sed 's/userPWD="//;s/"//')
-
-        # Debug: Check if credentials were extracted (without showing actual values)
-        if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
-          echo "ERROR: Failed to extract credentials from publish profile"
-          echo "Username empty: $([ -z "$USERNAME" ] && echo 'yes' || echo 'no')"
-          echo "Password empty: $([ -z "$PASSWORD" ] && echo 'yes' || echo 'no')"
-          exit 1
-        fi
-
-        echo "Credentials extracted successfully"
-        echo "Deploying to Azure Web App (this will take 2-3 minutes)..."
-
-        # Use synchronous deployment (isAsync=false) and show progress
-        HTTP_CODE=$(curl -X POST \
-          -u "$USERNAME:$PASSWORD" \
-          --data-binary @deploy.zip \
-          -H "Content-Type: application/zip" \
-          -w "%{http_code}" \
-          -o deployment_response.txt \
-          --max-time 600 \
-          "https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy?isAsync=false")
-
-        echo "HTTP Status Code: $HTTP_CODE"
-
-        if [ -f deployment_response.txt ]; then
-          echo "Response:"
-          cat deployment_response.txt
-        fi
-
-        if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 202 ]; then
-          echo "Deployment completed successfully!"
-          exit 0
-        else
-          echo "Deployment failed with HTTP code: $HTTP_CODE"
-          exit 1
-        fi
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'buysel-webapp'
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+        package: ./deploy.zip
