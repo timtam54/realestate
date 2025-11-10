@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
+import path from 'path';
 
 const nextConfig: NextConfig = {
   // For Azure App Service deployment
   output: 'standalone',
+  outputFileTracingRoot: path.join(__dirname),
   compress: true,
   poweredByHeader: false,
   reactStrictMode: false, // Disabled: causes duplicate OAuth callbacks in dev mode
