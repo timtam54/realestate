@@ -50,8 +50,8 @@ export default function HowToSellPage() {
               <span className="font-bold text-xl">BuySel</span>
             </Link>
             <nav className="flex items-center space-x-4">
-              <Link href="/seller/dashboard" className="text-gray-700 hover:text-blue-600">
-                My Dashboard
+              <Link href="/seller/properties" className="text-gray-700 hover:text-blue-600">
+                My Properties
               </Link>
               <Link href="/seller/list-property" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
                 List Property

@@ -80,8 +80,8 @@ export default function ListPropertyPage() {
               <Home className="h-6 w-6 text-blue-600 mr-2" />
               <span className="font-semibold">BuySel</span>
             </Link>
-            <Link href="/seller/dashboard" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
-              Back to Dashboard
+            <Link href="/seller/properties" className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">
+              Back to Properties
             </Link>
           </div>
         </div>
