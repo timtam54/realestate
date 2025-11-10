@@ -365,7 +365,7 @@ export default function HomePage() {
           <p className="text-xl mb-8">
             Free to list during early access. No hidden costs, no percentage commissions.
           </p>
-          <Link href="/seller/list-property" className="inline-block bg-white text-[#FF6600] px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+          <Link href="/seller" className="inline-block bg-white text-[#FF6600] px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
             Start Listing Now
           </Link>
         </div>
