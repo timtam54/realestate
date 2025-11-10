@@ -15,6 +15,7 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
   const { userId, isLoading: userDataLoading } = useUserData()
   const [showPermissionBanner, setShowPermissionBanner] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
+  const [isEnabling, setIsEnabling] = useState(false)
 
   useEffect(() => {
     console.log('[NotificationHeader] Effect running, userId:', userId, 'loading:', userDataLoading)
@@ -38,16 +39,27 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
 
   const handleEnableNotifications = async () => {
     console.log('[NotificationHeader] Requesting notification permission')
+    setIsEnabling(true)
 
-    const permissionGranted = await requestNotificationPermission()
+    try {
+      const permissionGranted = await requestNotificationPermission()
 
-    if (permissionGranted) {
-      console.log('[NotificationHeader] Permission granted, subscribing to push')
-      const subscribed = await subscribeToPushNotifications()
-      setIsSubscribed(subscribed)
-      setShowPermissionBanner(false)
-    } else {
-      console.warn('[NotificationHeader] Permission denied')
+      if (permissionGranted) {
+        console.log('[NotificationHeader] Permission granted, subscribing to push')
+        const subscribed = await subscribeToPushNotifications()
+        setIsSubscribed(subscribed)
+        if (subscribed) {
+          setShowPermissionBanner(false)
+        }
+      } else {
+        console.warn('[NotificationHeader] Permission denied')
+        alert('Notification permission was denied. To enable notifications, please allow them in your browser settings.')
+      }
+    } catch (error) {
+      console.error('[NotificationHeader] Error enabling notifications:', error)
+      alert('Failed to enable notifications. Please try again or check your browser settings.')
+    } finally {
+      setIsEnabling(false)
     }
   }
 
@@ -91,9 +103,10 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={handleEnableNotifications}
-                className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors"
+                disabled={isEnabling}
+                className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Enable
+                {isEnabling ? 'Enabling...' : 'Enable'}
               </button>
               <button
                 onClick={handleDismissBanner}

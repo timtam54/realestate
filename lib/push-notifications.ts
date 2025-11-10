@@ -4,21 +4,37 @@ import { config } from './config'
 import toast from 'react-hot-toast'
 
 export async function requestNotificationPermission() {
+  console.log('[Push] Checking notification support');
+
   if (!('Notification' in window)) {
-    console.log('This browser does not support notifications');
+    console.log('[Push] This browser does not support notifications');
+    toast.error('Your browser does not support push notifications');
     return false;
   }
 
+  console.log('[Push] Current permission:', Notification.permission);
+
   if (Notification.permission === 'granted') {
+    console.log('[Push] Permission already granted');
     return true;
   }
 
-  if (Notification.permission !== 'denied') {
-    const permission = await Notification.requestPermission();
-    return permission === 'granted';
+  if (Notification.permission === 'denied') {
+    console.log('[Push] Permission was previously denied');
+    toast.error('Notifications are blocked. Please enable them in your browser settings.');
+    return false;
   }
 
-  return false;
+  console.log('[Push] Requesting permission from user');
+  try {
+    const permission = await Notification.requestPermission();
+    console.log('[Push] Permission response:', permission);
+    return permission === 'granted';
+  } catch (error) {
+    console.error('[Push] Error requesting permission:', error);
+    toast.error('Failed to request notification permission');
+    return false;
+  }
 }
 
 export async function subscribeToPushNotifications() {
