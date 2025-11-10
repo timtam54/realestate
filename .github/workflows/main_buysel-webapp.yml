@@ -91,11 +91,29 @@ jobs:
         USERNAME=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -oP 'userName="[^"]*"' | head -1 | cut -d'"' -f2)
         PASSWORD=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -oP 'userPWD="[^"]*"' | head -1 | cut -d'"' -f2)
 
-        echo "Deploying to Azure Web App..."
-        curl -X POST \
+        echo "Deploying to Azure Web App (this will take 2-3 minutes)..."
+
+        # Use synchronous deployment (isAsync=false) and show progress
+        HTTP_CODE=$(curl -X POST \
           -u "$USERNAME:$PASSWORD" \
           --data-binary @deploy.zip \
           -H "Content-Type: application/zip" \
-          https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy
+          -w "%{http_code}" \
+          -o deployment_response.txt \
+          --max-time 600 \
+          "https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy?isAsync=false")
 
-        echo "Deployment complete!"
+        echo "HTTP Status Code: $HTTP_CODE"
+
+        if [ -f deployment_response.txt ]; then
+          echo "Response:"
+          cat deployment_response.txt
+        fi
+
+        if [ "$HTTP_CODE" -eq 200 ] || [ "$HTTP_CODE" -eq 202 ]; then
+          echo "Deployment completed successfully!"
+          exit 0
+        else
+          echo "Deployment failed with HTTP code: $HTTP_CODE"
+          exit 1
+        fi
