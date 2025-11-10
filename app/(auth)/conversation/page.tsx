@@ -8,7 +8,7 @@ import { useUserData } from '@/hooks/useUserData'
 import { useRouter } from 'next/navigation'
 import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { ArrowUp, ArrowDown, MessageCircle, User, Calendar, Home, DollarSign, Filter } from 'lucide-react'
 import { getPhotoUrl } from '@/lib/azure-config'
 
 interface Conversation {
@@ -288,203 +288,243 @@ export default function ConversationPage() {
             </button>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gradient-to-r from-orange-50 to-orange-100">
-                  <tr>
-                    <th className="px-6 py-4 text-left">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Property
-                        </span>
-                        <button
-                          onClick={() => handleSort('property_id')}
-                          className="p-1 hover:bg-orange-200 rounded transition-colors"
-                          title="Sort by Property"
-                        >
-                          {sortField === 'property_id' ? (
-                            sortDirection === 'asc' ? (
-                              <ArrowUp className="w-4 h-4 text-[#FF6600]" />
-                            ) : (
-                              <ArrowDown className="w-4 h-4 text-[#FF6600]" />
-                            )
-                          ) : (
-                            <ArrowUpDown className="w-4 h-4 text-gray-500" />
-                          )}
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Filter..."
-                        value={filters.property}
-                        onChange={(e) => handleFilterChange('property', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </th>
-                    <th className="px-6 py-4 text-left">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Buyer
-                        </span>
-                        <button
-                          onClick={() => handleSort('buyer')}
-                          className="p-1 hover:bg-orange-200 rounded transition-colors"
-                          title="Sort by Buyer"
-                        >
-                          {sortField === 'buyer' ? (
-                            sortDirection === 'asc' ? (
-                              <ArrowUp className="w-4 h-4 text-[#FF6600]" />
-                            ) : (
-                              <ArrowDown className="w-4 h-4 text-[#FF6600]" />
-                            )
-                          ) : (
-                            <ArrowUpDown className="w-4 h-4 text-gray-500" />
-                          )}
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Filter..."
-                        value={filters.buyer}
-                        onChange={(e) => handleFilterChange('buyer', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </th>
-                    <th className="px-6 py-4 text-left">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Seller
-                        </span>
-                        <button
-                          onClick={() => handleSort('seller')}
-                          className="p-1 hover:bg-orange-200 rounded transition-colors"
-                          title="Sort by Seller"
-                        >
-                          {sortField === 'seller' ? (
-                            sortDirection === 'asc' ? (
-                              <ArrowUp className="w-4 h-4 text-[#FF6600]" />
-                            ) : (
-                              <ArrowDown className="w-4 h-4 text-[#FF6600]" />
-                            )
-                          ) : (
-                            <ArrowUpDown className="w-4 h-4 text-gray-500" />
-                          )}
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Filter..."
-                        value={filters.seller}
-                        onChange={(e) => handleFilterChange('seller', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </th>
-                    <th className="px-6 py-4 text-left">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                          Created At
-                        </span>
-                        <button
-                          onClick={() => handleSort('created_at')}
-                          className="p-1 hover:bg-orange-200 rounded transition-colors"
-                          title="Sort by Created At"
-                        >
-                          {sortField === 'created_at' ? (
-                            sortDirection === 'asc' ? (
-                              <ArrowUp className="w-4 h-4 text-[#FF6600]" />
-                            ) : (
-                              <ArrowDown className="w-4 h-4 text-[#FF6600]" />
-                            )
-                          ) : (
-                            <ArrowUpDown className="w-4 h-4 text-gray-500" />
-                          )}
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Filter..."
-                        value={filters.created_at}
-                        onChange={(e) => handleFilterChange('created_at', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredAndSortedConversations.map((conversation) => (
-                    <tr
-                      key={conversation.id}
-                      className="hover:bg-orange-50 transition-colors cursor-pointer"
-                      onClick={() => handleConversationClick(conversation)}
-                    >
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {(() => {
-                          const property = properties.find(p => p.id === conversation.property_id)
-                          if (!property) {
-                            return <span className="text-gray-400">Property not found</span>
-                          }
-                          return (
-                            <div className="flex items-center gap-3">
-                              {property.photobloburl && getPhotoUrl(property.photobloburl) && (
-                                <img
-                                  src={getPhotoUrl(property.photobloburl) || ''}
-                                  alt={property.title}
-                                  className="w-16 h-16 object-cover rounded"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none'
-                                  }}
-                                />
-                              )}
-                              <div>
-                                <div className="font-semibold text-gray-900">{property.title}</div>
-                                <div className="text-[#FF6600] font-bold">
-                                  ${property.price.toLocaleString()}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
-                            <span className="text-blue-600 font-semibold text-xs">
-                              {conversation.buyer?.charAt(0) || 'U'}
-                            </span>
-                          </div>
-                          {conversation.buyer}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center mr-2">
-                            <span className="text-orange-600 font-semibold text-xs">
-                              {conversation.seller?.charAt(0) || 'U'}
-                            </span>
-                          </div>
-                          {conversation.seller}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(conversation.created_at).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <>
+            {/* Filters and Sort Controls */}
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-4 border border-gray-200">
+              {/* Filter Section Header */}
+              <div className="flex items-center gap-2 mb-4">
+                <Filter className="w-5 h-5 text-[#FF6600]" />
+                <h2 className="text-lg font-semibold text-gray-900">Filters & Sort</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Property Filter */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 mb-2">
+                    <Home className="w-4 h-4" />
+                    Property
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Search property..."
+                    value={filters.property}
+                    onChange={(e) => handleFilterChange('property', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent transition-all"
+                  />
+                </div>
+
+                {/* Buyer Filter */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 mb-2">
+                    <User className="w-4 h-4 text-blue-600" />
+                    Buyer
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Search buyer..."
+                    value={filters.buyer}
+                    onChange={(e) => handleFilterChange('buyer', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent transition-all"
+                  />
+                </div>
+
+                {/* Seller Filter */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 mb-2">
+                    <User className="w-4 h-4 text-orange-600" />
+                    Seller
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Search seller..."
+                    value={filters.seller}
+                    onChange={(e) => handleFilterChange('seller', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent transition-all"
+                  />
+                </div>
+
+                {/* Date Filter */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 mb-2">
+                    <Calendar className="w-4 h-4" />
+                    Created Date
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Search date..."
+                    value={filters.created_at}
+                    onChange={(e) => handleFilterChange('created_at', e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6600] focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Sort Controls */}
+              <div className="flex flex-wrap items-center gap-2 mt-5 pt-5 border-t border-gray-200">
+                <span className="text-sm font-medium text-gray-700 mr-2">Sort by:</span>
+                <button
+                  onClick={() => handleSort('created_at')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-1.5 ${
+                    sortField === 'created_at'
+                      ? 'bg-[#FF6600] text-white shadow-sm'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Date
+                  {sortField === 'created_at' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSort('property_id')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-1.5 ${
+                    sortField === 'property_id'
+                      ? 'bg-[#FF6600] text-white shadow-sm'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  <Home className="w-4 h-4" />
+                  Property
+                  {sortField === 'property_id' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSort('buyer')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-1.5 ${
+                    sortField === 'buyer'
+                      ? 'bg-[#FF6600] text-white shadow-sm'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  Buyer
+                  {sortField === 'buyer' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSort('seller')}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-1.5 ${
+                    sortField === 'seller'
+                      ? 'bg-[#FF6600] text-white shadow-sm'
+                      : 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                  }`}
+                >
+                  <User className="w-4 h-4" />
+                  Seller
+                  {sortField === 'seller' && (
+                    sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
+
+            {/* Conversation Cards */}
+            <div className="space-y-4">
+              {filteredAndSortedConversations.map((conversation) => {
+                const property = properties.find(p => p.id === conversation.property_id)
+                return (
+                  <div
+                    key={conversation.id}
+                    onClick={() => handleConversationClick(conversation)}
+                    className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden border border-gray-200 hover:border-[#FF6600]"
+                  >
+                    <div className="p-4 sm:p-5">
+                      {/* Property Info */}
+                      <div className="flex gap-3 sm:gap-4 mb-4">
+                        {property?.photobloburl && getPhotoUrl(property.photobloburl) && (
+                          <div className="relative flex-shrink-0">
+                            <img
+                              src={getPhotoUrl(property.photobloburl) || ''}
+                              alt={property.title}
+                              className="w-20 h-20 sm:w-28 sm:h-28 object-cover rounded-xl shadow-sm"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                            <div className="absolute top-1 right-1 bg-white/90 backdrop-blur-sm rounded-full p-1.5">
+                              <Home className="w-3.5 h-3.5 text-[#FF6600]" />
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-1.5 line-clamp-2">
+                            {property?.title || 'Property not found'}
+                          </h3>
+                          {property && (
+                            <div className="flex items-center gap-1.5 text-[#FF6600] font-bold text-lg sm:text-xl mb-2">
+                              <DollarSign className="w-5 h-5" />
+                              {property.price.toLocaleString()}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>
+                              {new Date(conversation.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Participants */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <User className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Buyer</div>
+                            <div className="font-semibold text-gray-900 truncate text-sm">
+                              {conversation.buyer}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center flex-shrink-0 shadow-sm">
+                            <User className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">Seller</div>
+                            <div className="font-semibold text-gray-900 truncate text-sm">
+                              {conversation.seller}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Indicator */}
+                    <div className="bg-gradient-to-r from-orange-50 to-orange-100 px-4 sm:px-5 py-3 flex items-center justify-between hover:from-orange-100 hover:to-orange-150 transition-colors">
+                      <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <MessageCircle className="w-4 h-4 text-[#FF6600]" />
+                        View Conversation
+                      </span>
+                      <svg
+                        className="w-5 h-5 text-[#FF6600] transform group-hover:translate-x-1 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </div>
 
