@@ -71,15 +71,15 @@ jobs:
         # Copy public files
         cp -r public deploy/public
 
-        # Create zip
-        cd deploy
-        zip -r ../deploy.zip .
+        echo "Deployment package contents:"
+        ls -la deploy/
+        echo "Checking for server.js:"
+        ls -la deploy/server.js || echo "ERROR: server.js not found!"
 
-    - name: 'Deploy to Azure Web App via ZipDeploy'
-      run: |
-        curl -X POST \
-          -u '$buysel-webapp:ttzJHzfT51BLvwk14y9kCrAGqgZxd6RFnHn3ywQ6x3AjpB0bxRg1T0L2x8zC' \
-          --data-binary @deploy.zip \
-          -H "Content-Type: application/zip" \
-          -w "\nHTTP Status: %{http_code}\n" \
-          https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'buysel-webapp'
+        slot-name: 'Production'
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+        package: './deploy'

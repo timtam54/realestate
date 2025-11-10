@@ -486,8 +486,8 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   // 4. Not checking profile
   if (isOpen && user?.email && userId === null && !loading && !userDataLoading && !initialConversationId) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 mx-auto">
           <h3 className="text-xl font-semibold mb-4">Complete Your Profile</h3>
           <p className="text-gray-600 mb-6">
             Before you can send messages, you need to complete your profile with your name and contact details.
@@ -512,8 +512,8 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md h-[600px] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md h-[600px] max-h-[90vh] flex flex-col mx-auto">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
             {isBuyer && sellerInfo?.photoazurebloburl && (

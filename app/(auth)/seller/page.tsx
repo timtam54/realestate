@@ -209,35 +209,11 @@ export default function SellerPage() {
 
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex gap-2">
-              <button
-                onClick={() => setActiveTab('list')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'list'
-                    ? 'bg-[#FF6600] text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                }`}
-              >
-                <List className="w-4 h-4" />
-                List View
-              </button>
-              <button
-                onClick={() => setActiveTab('map')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  activeTab === 'map'
-                    ? 'bg-[#FF6600] text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
-                }`}
-              >
-                <Map className="w-4 h-4" />
-                Map View
-              </button>
-            </div>
-
+        {/* Mobile Layout: Two rows */}
+        <div className="lg:hidden mb-8 space-y-3">
+          {/* Row 1: Title + List Button */}
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-gray-900">My Properties</h1>
             <button
               onClick={() => {
                 if (!dateofbirth) {
@@ -250,18 +226,18 @@ export default function SellerPage() {
                 const age = today.getFullYear() - birthDate.getFullYear()
                 const monthDiff = today.getMonth() - birthDate.getMonth()
                 const isOver18 = age > 18 || (age === 18 && monthDiff >= 0 && today.getDate() >= birthDate.getDate())
-                
+
                 if (!isOver18) {
                   toast.error('You must be 18 years or older to list properties')
                   return
                 }
-                
+
                 if (!idbloburl) {
                   toast.error('Please upload your ID document in your profile')
                   setShowProfileDialog(true)
                   return
                 }
-                
+
                 if (!idverified) {
                   toast.error('Your ID needs to be verified before you can list properties')
                   return
@@ -302,11 +278,139 @@ export default function SellerPage() {
                   }
                 )
               }}
-              className="flex items-center gap-2 bg-[#FF6600] text-white px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors"
+              className="flex items-center gap-2 bg-[#FF6600] text-gray-900 px-3 py-2 rounded-lg hover:bg-[#FF5500] transition-colors font-bold"
+            >
+              <ListPlus className="w-4 h-4" />
+              <span>List</span>
+            </button>
+          </div>
+
+          {/* Row 2: View toggles */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('list')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeTab === 'list'
+                  ? 'bg-[#FF6600] text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              List View
+            </button>
+            <button
+              onClick={() => setActiveTab('map')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                activeTab === 'map'
+                  ? 'bg-[#FF6600] text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+              }`}
+            >
+              <Map className="w-4 h-4" />
+              Map View
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop Layout: Single row */}
+        <div className="hidden lg:flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                if (!dateofbirth) {
+                  toast.error('Please complete your profile with your date of birth')
+                  setShowProfileDialog(true)
+                  return
+                }
+                const today = correctDateForTimezone(new Date())
+                const birthDate = new Date(dateofbirth)
+                const age = today.getFullYear() - birthDate.getFullYear()
+                const monthDiff = today.getMonth() - birthDate.getMonth()
+                const isOver18 = age > 18 || (age === 18 && monthDiff >= 0 && today.getDate() >= birthDate.getDate())
+
+                if (!isOver18) {
+                  toast.error('You must be 18 years or older to list properties')
+                  return
+                }
+
+                if (!idbloburl) {
+                  toast.error('Please upload your ID document in your profile')
+                  setShowProfileDialog(true)
+                  return
+                }
+
+                if (!idverified) {
+                  toast.error('Your ID needs to be verified before you can list properties')
+                  return
+                }
+
+                setNewProperty(
+                  {
+                    id: 0,
+                    title: '',
+                    address: '',
+                    dte: correctDateForTimezone(new Date()),
+                    sellerid: userId || 0,
+                    price: 0,
+                    lat: 0,
+                    lon: 0,
+                    photobloburl: null,
+                    typeofprop: null,
+                    suburb: null,
+                    postcode: null,
+                    beds: null,
+                    baths: null,
+                    carspaces: null,
+                    landsize: null,
+                    buildyear: null,
+                    state:null,
+                    country:null,
+                    buildinginspazureblob: null,
+                    buildinginspverified: null,
+                    pestinspazureblob: null,
+                    pestinspverified: null,
+                    titlesrchcouncilrateazureblob: null,
+                    titlesrchcouncilrateverified: null,
+                    titlesrchcouncilratepublic:null,
+                    pestinsppublic:null,
+                    buildinginsppublic:null,
+                    status:'draft',
+                    rejecvtedreason: null
+                  }
+                )
+              }}
+              className="flex items-center gap-2 bg-[#FF6600] text-gray-900 px-4 py-2 rounded-lg hover:bg-[#FF5500] transition-colors font-bold"
             >
               <ListPlus className="w-4 h-4" />
               <span>List Property</span>
             </button>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab('list')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'list'
+                    ? 'bg-[#FF6600] text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                <List className="w-4 h-4" />
+                List View
+              </button>
+              <button
+                onClick={() => setActiveTab('map')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  activeTab === 'map'
+                    ? 'bg-[#FF6600] text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                }`}
+              >
+                <Map className="w-4 h-4" />
+                Map View
+              </button>
+            </div>
           </div>
         </div>
 
