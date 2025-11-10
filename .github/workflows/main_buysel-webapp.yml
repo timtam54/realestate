@@ -87,10 +87,19 @@ jobs:
       env:
         AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
       run: |
-        # Extract credentials from publish profile
-        USERNAME=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -oP 'userName="[^"]*"' | head -1 | cut -d'"' -f2)
-        PASSWORD=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -oP 'userPWD="[^"]*"' | head -1 | cut -d'"' -f2)
+        # Extract credentials from publish profile using more compatible regex
+        USERNAME=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -o 'userName="[^"]*"' | head -1 | sed 's/userName="//;s/"//')
+        PASSWORD=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -o 'userPWD="[^"]*"' | head -1 | sed 's/userPWD="//;s/"//')
 
+        # Debug: Check if credentials were extracted (without showing actual values)
+        if [ -z "$USERNAME" ] || [ -z "$PASSWORD" ]; then
+          echo "ERROR: Failed to extract credentials from publish profile"
+          echo "Username empty: $([ -z "$USERNAME" ] && echo 'yes' || echo 'no')"
+          echo "Password empty: $([ -z "$PASSWORD" ] && echo 'yes' || echo 'no')"
+          exit 1
+        fi
+
+        echo "Credentials extracted successfully"
         echo "Deploying to Azure Web App (this will take 2-3 minutes)..."
 
         # Use synchronous deployment (isAsync=false) and show progress
