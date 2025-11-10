@@ -421,8 +421,98 @@ export default function ConversationPage() {
               </div>
             </div>
 
-            {/* Conversation Cards */}
-            <div className="space-y-4">
+            {/* Desktop Table View - Hidden on mobile */}
+            <div className="hidden lg:block bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Property
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Buyer
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Seller
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredAndSortedConversations.map((conversation) => {
+                      const property = properties.find(p => p.id === conversation.property_id)
+                      return (
+                        <tr
+                          key={conversation.id}
+                          className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          onClick={() => handleConversationClick(conversation)}
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              {property?.photobloburl && getPhotoUrl(property.photobloburl) && (
+                                <img
+                                  src={getPhotoUrl(property.photobloburl) || ''}
+                                  alt={property.title}
+                                  className="h-12 w-12 rounded-lg object-cover mr-3"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none'
+                                  }}
+                                />
+                              )}
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {property?.title || 'Property not found'}
+                                </div>
+                                {property && (
+                                  <div className="text-sm text-gray-500">
+                                    ${property.price.toLocaleString()}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{conversation.buyer}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{conversation.seller}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {new Date(conversation.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleConversationClick(conversation)
+                              }}
+                              className="text-[#FF6600] hover:text-[#FF5500] font-semibold"
+                            >
+                              Open Chat
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Mobile Card View - Hidden on desktop */}
+            <div className="lg:hidden space-y-4">
               {filteredAndSortedConversations.map((conversation) => {
                 const property = properties.find(p => p.id === conversation.property_id)
                 return (
