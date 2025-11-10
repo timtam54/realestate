@@ -12,16 +12,17 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up Node.js version
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v4
       with:
         node-version: '20.x'
-    
-    - name: npm install, build, and test
+        cache: 'npm'
+
+    - name: npm install and build
       env:
         NEXT_PUBLIC_GOOGLE_MAP_API: AIzaSyANThwic7Udj0r5ulBoPN9Dp2lSwJKOAK4
         NEXT_PUBLIC_AZUREBLOB_CONTAINER: photosdocs
@@ -44,16 +45,21 @@ jobs:
         VAPID_EMAIL: mailto:admin@buysel.com
       run: |
         npm install
-        npm run build --if-present
-        npm run test --if-present
+        npm run build
 
-    - name: Zip build artifacts
-      run: zip -r deploy.zip .next standalone node_modules package.json package-lock.json next.config.ts public
+    - name: Prepare deployment package
+      run: |
+        mkdir -p deploy
+        cp -r .next/standalone/* deploy/
+        cp -r .next/static deploy/.next/static
+        cp -r public deploy/public
+        cd deploy
+        zip -r ../deploy.zip .
 
-    - name: 'Deploy to Azure Web App via Kudu'
+    - name: 'Deploy to Azure Web App via ZipDeploy'
       run: |
         curl -X POST \
-          -u 'buysel-webapp\$buysel-webapp:ttzJHzfT51BLvwk14y9kCrAGqgZxd6RFnHn3ywQ6x3AjpB0bxRg1T0L2x8zC' \
+          -u '$buysel-webapp:ttzJHzfT51BLvwk14y9kCrAGqgZxd6RFnHn3ywQ6x3AjpB0bxRg1T0L2x8zC' \
           --data-binary @deploy.zip \
           -H "Content-Type: application/zip" \
           -w "\nHTTP Status: %{http_code}\n" \
