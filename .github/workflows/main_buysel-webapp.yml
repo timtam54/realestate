@@ -49,10 +49,29 @@ jobs:
 
     - name: Prepare deployment package
       run: |
+        echo "Checking build output..."
+        ls -la .next/
+        echo "Checking standalone folder..."
+        ls -la .next/standalone/ || echo "No standalone folder"
+
         mkdir -p deploy
-        cp -r .next/standalone/* deploy/
+
+        # Copy standalone output
+        if [ -d ".next/standalone" ]; then
+          cp -r .next/standalone/. deploy/
+        else
+          echo "ERROR: .next/standalone not found!"
+          exit 1
+        fi
+
+        # Copy static files
+        mkdir -p deploy/.next
         cp -r .next/static deploy/.next/static
+
+        # Copy public files
         cp -r public deploy/public
+
+        # Create zip
         cd deploy
         zip -r ../deploy.zip .
 
