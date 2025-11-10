@@ -76,10 +76,26 @@ jobs:
         echo "Checking for server.js:"
         ls -la deploy/server.js || echo "ERROR: server.js not found!"
 
-    - name: 'Deploy to Azure Web App'
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: 'buysel-webapp'
-        slot-name: 'Production'
-        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
-        package: './deploy'
+    - name: Create deployment zip
+      run: |
+        cd deploy
+        zip -r ../deploy.zip .
+        cd ..
+        ls -lh deploy.zip
+
+    - name: Deploy to Azure Web App
+      env:
+        AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+      run: |
+        # Extract credentials from publish profile
+        USERNAME=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -oP 'userName="[^"]*"' | head -1 | cut -d'"' -f2)
+        PASSWORD=$(echo "$AZURE_WEBAPP_PUBLISH_PROFILE" | grep -oP 'userPWD="[^"]*"' | head -1 | cut -d'"' -f2)
+
+        echo "Deploying to Azure Web App..."
+        curl -X POST \
+          -u "$USERNAME:$PASSWORD" \
+          --data-binary @deploy.zip \
+          -H "Content-Type: application/zip" \
+          https://buysel-webapp.scm.azurewebsites.net/api/zipdeploy
+
+        echo "Deployment complete!"
