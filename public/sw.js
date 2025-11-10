@@ -1,6 +1,6 @@
 // Service Worker Version - Auto-generated at build time
 // To force cache update, run a new build/deployment
-const SW_VERSION = '1762725420663'; // Will be replaced by build script
+const SW_VERSION = '__SW_VERSION__'; // Will be replaced by build script
 const CACHE_NAME = `buysel-v${SW_VERSION}`;
 const urlsToCache = [
   '/',
