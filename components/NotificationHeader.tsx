@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, X } from 'lucide-react'
+import { Bell, X, CheckCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useUserData } from '@/hooks/useUserData'
 import { requestNotificationPermission, subscribeToPushNotifications } from '@/lib/push-notifications'
@@ -16,12 +16,22 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
   const [showPermissionBanner, setShowPermissionBanner] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
   const [isEnabling, setIsEnabling] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
     console.log('[NotificationHeader] Effect running, userId:', userId, 'loading:', userDataLoading)
 
     if (userDataLoading || !userId) {
       console.log('[NotificationHeader] Waiting for user data')
+      return
+    }
+
+    // Check if already subscribed (stored in localStorage)
+    const alreadySubscribed = localStorage.getItem('push-notifications-enabled')
+    if (alreadySubscribed === 'true') {
+      console.log('[NotificationHeader] Already subscribed, hiding banner')
+      setShowPermissionBanner(false)
+      setIsSubscribed(true)
       return
     }
 
@@ -49,7 +59,19 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
         const subscribed = await subscribeToPushNotifications()
         setIsSubscribed(subscribed)
         if (subscribed) {
-          setShowPermissionBanner(false)
+          // Store subscription status
+          localStorage.setItem('push-notifications-enabled', 'true')
+          console.log('[NotificationHeader] Successfully subscribed! Showing success message')
+
+          // Show success message for 3 seconds
+          setShowSuccess(true)
+          setTimeout(() => {
+            setShowSuccess(false)
+            setShowPermissionBanner(false)
+          }, 3000)
+        } else {
+          console.error('[NotificationHeader] Subscription failed')
+          alert('Failed to subscribe to push notifications. Please try again.')
         }
       } else {
         console.warn('[NotificationHeader] Permission denied')
@@ -81,44 +103,62 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
     }
   }, [])
 
-  if (!showPermissionBanner) return null
+  if (!showPermissionBanner && !showSuccess) return null
 
   return (
     <>
       {/* Spacer to push content down */}
       <div className="h-14" />
 
-      <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Bell className="h-5 w-5 flex-shrink-0" />
+      {showSuccess ? (
+        // Success Banner
+        <div className="fixed top-0 left-0 right-0 z-50 bg-green-600 text-white shadow-md animate-in slide-in-from-top">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-center gap-3">
+              <CheckCircle className="h-6 w-6 flex-shrink-0" />
               <div>
-                <p className="font-medium">Enable Push Notifications</p>
-                <p className="text-sm text-blue-100">
-                  Get notified instantly when you receive messages, even when the app is closed
+                <p className="font-semibold text-lg">Push Notifications Enabled!</p>
+                <p className="text-sm text-green-100">
+                  You'll now receive notifications for new messages
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={handleEnableNotifications}
-                disabled={isEnabling}
-                className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isEnabling ? 'Enabling...' : 'Enable'}
-              </button>
-              <button
-                onClick={handleDismissBanner}
-                className="p-2 hover:bg-blue-700 rounded transition-colors"
-                title="Dismiss"
-              >
-                <X className="h-5 w-5" />
-              </button>
+          </div>
+        </div>
+      ) : (
+        // Permission Request Banner
+        <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600 text-white shadow-md">
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Bell className="h-5 w-5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium">Enable Push Notifications</p>
+                  <p className="text-sm text-blue-100">
+                    Get notified instantly when you receive messages, even when the app is closed
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={handleEnableNotifications}
+                  disabled={isEnabling}
+                  className="px-4 py-2 bg-white text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isEnabling ? 'Enabling...' : 'Enable'}
+                </button>
+                <button
+                  onClick={handleDismissBanner}
+                  className="p-2 hover:bg-blue-700 rounded transition-colors"
+                  title="Dismiss"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   )
 }

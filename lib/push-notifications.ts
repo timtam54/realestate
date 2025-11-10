@@ -113,15 +113,7 @@ export async function subscribeToPushNotifications() {
 
     console.log('[Push] Subscription saved successfully');
 
-    // Only show the toast once per user
-    const hasShownNotification = localStorage.getItem('push_notification_shown');
-    if (!hasShownNotification) {
-      toast.success('Push notifications enabled! You will now receive notifications for new messages.', {
-        duration: 4000,
-      });
-      localStorage.setItem('push_notification_shown', 'true');
-    }
-
+    // Don't show toast here - the NotificationHeader component will show a success banner
     return true;
   } catch (error) {
     console.error('[Push] Error subscribing to push notifications:', error);
