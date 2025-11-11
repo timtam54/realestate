@@ -48,7 +48,13 @@ export async function subscribeToPushNotifications() {
       return false;
     }
 
-    const registration = await navigator.serviceWorker.ready;
+    // Add timeout to service worker ready check (20 seconds max)
+    const registration = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Service worker registration timed out after 20 seconds')), 20000)
+      )
+    ]);
     console.log('[Push] Service worker is ready');
 
     // Check if push is supported

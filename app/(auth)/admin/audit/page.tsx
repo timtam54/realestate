@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Activity, Search, Download, User, Globe, Zap, FileText, Calendar, Hash, RefreshCw, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import type { ApiAuditLog } from '@/types/audit'
+import PushNotificationTestPanel from '@/components/PushNotificationTestPanel'
 
 
 export default function AdminAuditLogPage() {
@@ -289,6 +290,9 @@ export default function AdminAuditLogPage() {
         )}
 
       </div>
+
+      {/* Push Notification Test Panel */}
+      <PushNotificationTestPanel />
     </div>
   )
 }

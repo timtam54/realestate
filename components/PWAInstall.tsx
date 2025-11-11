@@ -15,24 +15,40 @@ export default function PWAInstall() {
   const [isStandalone, setIsStandalone] = useState(false)
 
   useEffect(() => {
-    // DISABLED: Service worker functionality is completely disabled
-    // Service workers were causing infinite reload loops and OAuth issues
-    console.log('✅ [PWAInstall] Service worker functionality is disabled')
-
+    // Register service worker for push notifications
     if ('serviceWorker' in navigator) {
-      // Only unregister existing service workers, don't register new ones
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        if (registrations.length > 0) {
-          console.log('🧹 [PWAInstall] Unregistering ' + registrations.length + ' existing service worker(s)')
-          registrations.forEach(function(registration) {
-            registration.unregister().then(function() {
-              console.log('🧹 [PWAInstall] Unregistered service worker:', registration.scope)
-            })
+      console.log('🔧 [PWAInstall] Registering service worker...')
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('✅ [PWAInstall] Service worker registered successfully:', registration.scope)
+
+          // Check for updates every hour
+          setInterval(() => {
+            registration.update()
+              .then(() => console.log('🔄 [PWAInstall] Checked for service worker updates'))
+              .catch((err) => console.error('❌ [PWAInstall] Update check failed:', err))
+          }, 60 * 60 * 1000) // 1 hour
+
+          // Listen for service worker updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing
+            console.log('🆕 [PWAInstall] New service worker found, installing...')
+
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('✨ [PWAInstall] New service worker installed, will activate on next page load')
+                }
+              })
+            }
           })
-        } else {
-          console.log('✅ [PWAInstall] No service workers to clean up')
-        }
-      })
+        })
+        .catch((error) => {
+          console.error('❌ [PWAInstall] Service worker registration failed:', error)
+        })
+    } else {
+      console.log('⚠️ [PWAInstall] Service workers not supported in this browser')
     }
 
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window)
