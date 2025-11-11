@@ -1,26 +1,19 @@
 #!/usr/bin/env node
 
-/**
- * Restores service worker version placeholder after build
- * This keeps the source file clean for version control
- */
-
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
-// Path to service worker
+// Read the service worker file
 const swPath = path.join(__dirname, '../public/sw.js');
-
-// Read service worker file
 let swContent = fs.readFileSync(swPath, 'utf8');
 
-// Replace any version number with placeholder
-swContent = swContent.replace(
-  /const SW_VERSION = '[^']*';/,
-  "const SW_VERSION = '__SW_VERSION__';"
-);
+// Restore the version placeholder
+// This regex will match any version string that was inserted
+swContent = swContent.replace(/const SW_VERSION = '[^']+';/, "const SW_VERSION = '__SW_VERSION__';");
 
-// Write back
-fs.writeFileSync(swPath, swContent, 'utf8');
+// Write back to the file
+fs.writeFileSync(swPath, swContent);
 
-console.log('✅ Service worker version placeholder restored');
+console.log(`✅ Service Worker version placeholder restored`);
+console.log(`   File: ${swPath}`);

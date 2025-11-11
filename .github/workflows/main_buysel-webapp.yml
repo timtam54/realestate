@@ -45,7 +45,9 @@ jobs:
         VAPID_EMAIL: mailto:admin@buysel.com
       run: |
         npm install
+        node scripts/update-sw-version.js
         npm run build
+        node scripts/restore-sw-version.js
 
     - name: Prepare deployment package
       run: |

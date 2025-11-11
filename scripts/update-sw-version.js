@@ -1,27 +1,29 @@
 #!/usr/bin/env node
 
-/**
- * Updates service worker version with current timestamp
- * This ensures cache is cleared on every deployment
- */
-
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
-// Generate version from current timestamp
-const version = Date.now().toString();
+// Generate version based on git commit hash and timestamp
+let version = Date.now().toString();
 
-// Path to service worker
+try {
+  const gitHash = execSync('git rev-parse --short HEAD').toString().trim();
+  version = `${gitHash}-${Date.now()}`;
+  console.log(`✅ Generated SW version from git: ${version}`);
+} catch (error) {
+  console.log('⚠️  Could not get git commit hash, using timestamp only:', version);
+}
+
+// Read the service worker file
 const swPath = path.join(__dirname, '../public/sw.js');
-
-// Read service worker file
 let swContent = fs.readFileSync(swPath, 'utf8');
 
-// Replace version placeholder
-swContent = swContent.replace('__SW_VERSION__', version);
+// Replace the version placeholder
+swContent = swContent.replace(/__SW_VERSION__/g, version);
 
-// Write back
-fs.writeFileSync(swPath, swContent, 'utf8');
+// Write back to the file
+fs.writeFileSync(swPath, swContent);
 
-console.log(`✅ Service worker version updated to: ${version}`);
-console.log(`   Cache name will be: buysel-v${version}`);
+console.log(`✅ Service Worker version updated to: ${version}`);
+console.log(`   File: ${swPath}`);

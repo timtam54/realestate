@@ -51,12 +51,23 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
     console.log('[NotificationHeader] Requesting notification permission')
     setIsEnabling(true)
 
+    // Set a safety timeout to ensure button doesn't get stuck (30 seconds for service worker registration)
+    const safetyTimeout = setTimeout(() => {
+      console.error('[NotificationHeader] Operation timed out after 30 seconds')
+      setIsEnabling(false)
+      alert('The operation took too long. This may be due to a slow service worker registration. Please refresh the page and try again.')
+    }, 30000)
+
     try {
       const permissionGranted = await requestNotificationPermission()
 
       if (permissionGranted) {
         console.log('[NotificationHeader] Permission granted, subscribing to push')
         const subscribed = await subscribeToPushNotifications()
+
+        // Clear timeout immediately after successful subscription
+        clearTimeout(safetyTimeout)
+
         setIsSubscribed(subscribed)
         if (subscribed) {
           // Store subscription status
@@ -75,12 +86,15 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
         }
       } else {
         console.warn('[NotificationHeader] Permission denied')
+        clearTimeout(safetyTimeout)
         alert('Notification permission was denied. To enable notifications, please allow them in your browser settings.')
       }
     } catch (error) {
       console.error('[NotificationHeader] Error enabling notifications:', error)
+      clearTimeout(safetyTimeout)
       alert('Failed to enable notifications. Please try again or check your browser settings.')
     } finally {
+      clearTimeout(safetyTimeout)
       setIsEnabling(false)
     }
   }

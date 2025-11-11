@@ -121,7 +121,7 @@ export default function UnreadMessagesIndicator({ onOpenChat }: UnreadMessagesIn
 
       {/* Dropdown list of unread conversations */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
+        <div className="fixed md:absolute left-4 right-4 md:left-auto md:right-0 mt-2 w-auto md:w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-hidden">
           <div className="p-3 border-b border-gray-200">
             <h3 className="font-semibold flex items-center justify-between">
               Unread Messages
