@@ -278,7 +278,7 @@ export default function SellerPage() {
                   }
                 )
               }}
-              className="flex items-center gap-2 bg-[#FF6600] text-gray-900 px-3 py-2 rounded-lg hover:bg-[#FF5500] transition-colors font-bold"
+              className="flex items-center gap-2 bg-gray-900 text-white  px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors font-bold"
             >
               <ListPlus className="w-4 h-4" />
               <span>List</span>

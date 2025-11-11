@@ -22,6 +22,7 @@ interface BuySelHeaderProps {
 export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProps) {
   const { signOut: handleSignOut } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
+  const [loginCallbackUrl, setLoginCallbackUrl] = useState('/')
   const [showProfile, setShowProfile] = useState(false)
   const [chatProperty, setChatProperty] = useState<Property | null>(null)
   const [chatConversationId, setChatConversationId] = useState<string | null>(null)
@@ -54,10 +55,24 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
               <Search className="w-4 h-4" />
               <span><u>Buy</u></span>
             </Link>
-            <Link href="/seller" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
-              <Home className="w-4 h-4" />
-              <span><u>Sell</u></span>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/seller" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
+                <Home className="w-4 h-4" />
+                <span><u>Sell</u></span>
+              </Link>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  setLoginCallbackUrl('/seller')
+                  setShowLogin(true)
+                }}
+                className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50"
+              >
+                <Home className="w-4 h-4" />
+                <span><u>Sell</u></span>
+              </button>
+            )}
             <Link href="/how-it-works" className="flex items-center gap-2 text-[#000000] hover:text-[#FF6600] transition-all font-semibold px-4 py-2 rounded-lg hover:bg-orange-50">
               <Briefcase className="w-4 h-4" />
               <span><u>How it Works</u></span>
@@ -225,24 +240,39 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 pb-4">
             <nav className="flex flex-col space-y-1 mt-4">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-3 rounded-lg hover:bg-orange-50"
               >
                 <Search className="w-4 h-4" />
                 <span>Buy</span>
               </Link>
-              <Link 
-                href="/seller" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-3 rounded-lg hover:bg-orange-50"
-              >
-                <Home className="w-4 h-4" />
-                <span>Sell</span>
-              </Link>
-              <Link 
-                href="/how-it-works" 
+              {isAuthenticated ? (
+                <Link
+                  href="/seller"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-3 rounded-lg hover:bg-orange-50"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Sell</span>
+                </Link>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setMobileMenuOpen(false)
+                    setLoginCallbackUrl('/seller')
+                    setShowLogin(true)
+                  }}
+                  className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-3 rounded-lg hover:bg-orange-50 w-full text-left"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Sell</span>
+                </button>
+              )}
+              <Link
+                href="/how-it-works"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 text-[#000000] hover:text-[#FF6600] transition-all font-semibold px-4 py-3 rounded-lg hover:bg-orange-50"
               >
@@ -330,7 +360,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
         )}
       </div>
     </header>
-      {showLogin && <Login onClose={() => setShowLogin(false)} />}
+      {showLogin && <Login onClose={() => setShowLogin(false)} callbackUrl={loginCallbackUrl} />}
       {showProfile && user?.email && (
         <UserProfile
           email={user.email}

@@ -242,7 +242,7 @@ export default function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Featured Properties</h2>
+            <h2 className="text-3xl font-bold">Properties</h2>
             <div className="flex items-center gap-4">
               <div className="flex gap-2">
                 <button
@@ -254,7 +254,8 @@ export default function HomePage() {
                   }`}
                 >
                   <List className="w-4 h-4" />
-                  List View
+                  <span className="hidden sm:inline">List View</span>
+                  <span className="sm:hidden">List</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('map')}
@@ -265,7 +266,8 @@ export default function HomePage() {
                   }`}
                 >
                   <MapIcon className="w-4 h-4" />
-                  Map View
+                  <span className="hidden sm:inline">Map View</span>
+                  <span className="sm:hidden">Map</span>
                 </button>
               </div>
             </div>
