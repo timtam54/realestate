@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
 import AdminHeader from '@/components/AdminHeader'
+import Footer from '@/components/Footer'
 import { getAzureBlobUrl } from '@/lib/config'
 import type { Seller } from '@/types/seller'
 import UserDetailsModal from '@/components/UserDetailsModal'
@@ -881,6 +882,9 @@ export default function AdminUsersPage() {
           />
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

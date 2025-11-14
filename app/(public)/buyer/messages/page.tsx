@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { MessageSquare, Send, Lock, Unlock, AlertCircle, Home } from 'lucide-react'
 import Link from 'next/link'
+import Footer from '@/components/Footer'
 import { usePageView } from '@/hooks/useAudit'
 
 interface Message {
@@ -445,6 +446,9 @@ export default function BuyerMessagesPage() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

@@ -11,6 +11,7 @@ import UserProfile from '@/components/UserProfile'
 import { usePageView } from '@/hooks/useAudit'
 import { useAuth } from '@/lib/auth/auth-context'
 import AdminHeader from '@/components/AdminHeader'
+import Footer from '@/components/Footer'
 
 interface User {
   id: number
@@ -1062,6 +1063,9 @@ export default function AdminListingsPage() {
           }}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

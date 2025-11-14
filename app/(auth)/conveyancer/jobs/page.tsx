@@ -5,6 +5,7 @@ import { FileText, DollarSign, Clock, CheckCircle, AlertCircle, Filter, Search, 
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import ConveyancerHeader from '@/components/ConveyancerHeader'
+import Footer from '@/components/Footer'
 import { usePageView } from '@/hooks/useAudit'
 
 interface Job {
@@ -425,6 +426,9 @@ export default function ConveyancerJobs() {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

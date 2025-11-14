@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import BuySelHeader from '@/components/BuySelHeader'
+import Footer from '@/components/Footer'
 import ChatModal from '@/components/ChatModal'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useUserData } from '@/hooks/useUserData'
@@ -633,6 +634,9 @@ export default function ConversationPage() {
           initialConversationId={selectedConversationId}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

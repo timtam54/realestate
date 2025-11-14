@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
 import AdminHeader from '@/components/AdminHeader'
+import Footer from '@/components/Footer'
 import { Property } from '@/types/property'
 import { Conversation } from '@/types/conversation'
 import { Message } from '@/types/message'
@@ -637,6 +638,9 @@ export default function AdminDocumentRequestsPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

@@ -8,6 +8,7 @@ import PushNotificationTestPanel from '@/components/PushNotificationTestPanel'
 import { usePageView } from '@/hooks/useAudit'
 import { useAuth } from '@/lib/auth/auth-context'
 import AdminHeader from '@/components/AdminHeader'
+import Footer from '@/components/Footer'
 
 
 export default function AdminAuditLogPage() {
@@ -281,6 +282,9 @@ export default function AdminAuditLogPage() {
 
       {/* Push Notification Test Panel */}
       <PushNotificationTestPanel />
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

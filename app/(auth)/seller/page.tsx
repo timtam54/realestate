@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { MapPin, List, Map, ListPlus } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
+import Footer from '@/components/Footer'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
@@ -647,6 +648,9 @@ export default function SellerPage() {
           }}
         />
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

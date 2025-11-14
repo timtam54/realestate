@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { useRouter } from 'next/navigation'
 import UserProfile from '@/components/UserProfile'
 import BuySelHeader from '@/components/BuySelHeader'
+import Footer from '@/components/Footer'
 import { usePageView } from '@/hooks/useAudit'
 
 export default function CompleteProfilePage() {
@@ -91,6 +92,9 @@ export default function CompleteProfilePage() {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

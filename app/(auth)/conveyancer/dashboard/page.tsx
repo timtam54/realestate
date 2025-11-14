@@ -5,6 +5,7 @@ import { FileText, DollarSign, Clock, CheckCircle, AlertCircle, TrendingUp, Cale
 import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import ConveyancerHeader from '@/components/ConveyancerHeader'
+import Footer from '@/components/Footer'
 import { usePageView } from '@/hooks/useAudit'
 
 interface JobRequest {
@@ -304,6 +305,9 @@ export default function ConveyancerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

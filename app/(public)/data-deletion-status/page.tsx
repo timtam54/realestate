@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import Footer from '@/components/Footer'
 import { usePageView } from '@/hooks/useAudit'
 
 function DataDeletionContent() {
@@ -59,6 +60,9 @@ function DataDeletionContent() {
           </div>
         )}
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }
