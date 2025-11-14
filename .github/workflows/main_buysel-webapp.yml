@@ -42,7 +42,7 @@ jobs:
         NEXTAUTH_URL: https://buysel-webapp.azurewebsites.net
         VAPID_PRIVATE_KEY: EKIzkxo_icPeY9CDXb5tcnAPUZl_O3lFG6J27Cu4fIA
         VAPID_PUBLIC_KEY: BIh49CHmmuAuHOPGiZdzVj-_3_dZXIEv57JNWeOibt2agftbQWpcC_kngiLQEzRKZ3T7ptb1bvGqxzu3PRkdGec
-        VAPID_EMAIL: mailto:admin@buysel.com
+        VAPID_EMAIL: mailto:admin@buysel.com.au
       run: |
         npm install
         node scripts/update-sw-version.js

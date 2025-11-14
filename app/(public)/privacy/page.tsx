@@ -146,7 +146,7 @@ export default function PrivacyPolicy() {
             If you have any questions about this privacy policy or your personal data, please contact us at:
           </p>
           <p className="text-gray-700">
-            Email: <a href="mailto:privacy@buysel.com" className="text-[#FF6600] hover:underline">privacy@buysel.com</a>
+            Email: <a href="mailto:privacy@buysel.com.au" className="text-[#FF6600] hover:underline">privacy@buysel.com.au</a>
           </p>
         </section>
       </div>

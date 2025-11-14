@@ -43,8 +43,8 @@ function DataDeletionContent() {
             <div className="pt-4 text-sm text-gray-600">
               <p>
                 If you have any questions or concerns, please contact us at{' '}
-                <a href="mailto:privacy@buysel.com" className="text-[#FF6600] hover:underline">
-                  privacy@buysel.com
+                <a href="mailto:privacy@buysel.com.au" className="text-[#FF6600] hover:underline">
+                  privacy@buysel.com.au
                 </a>
               </p>
             </div>

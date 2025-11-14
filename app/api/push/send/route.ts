@@ -3,7 +3,7 @@ import webpush from 'web-push';
 
 // Configure web-push with VAPID details
 webpush.setVapidDetails(
-  process.env.VAPID_EMAIL || 'mailto:admin@buysel.com',
+  process.env.VAPID_EMAIL || 'mailto:admin@buysel.com.au',
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );

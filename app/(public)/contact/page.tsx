@@ -92,8 +92,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">Email</h3>
-                      <a href="mailto:support@buysel.com" className="text-gray-600 hover:text-[#FF6600]">
-                        support@buysel.com
+                      <a href="mailto:support@buysel.com.au" className="text-gray-600 hover:text-[#FF6600]">
+                        support@buysel.com.au
                       </a>
                     </div>
                   </div>
@@ -131,26 +131,13 @@ export default function ContactPage() {
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h3 className="font-semibold mb-4">Quick Links</h3>
                 <ul className="space-y-2 text-sm">
-                  <li>
-                    <a href="/faqs" className="text-gray-600 hover:text-[#FF6600]">
-                      Frequently Asked Questions
-                    </a>
-                  </li>
+                 
                   <li>
                     <a href="/how-it-works" className="text-gray-600 hover:text-[#FF6600]">
                       How It Works
                     </a>
                   </li>
-                  <li>
-                    <a href="/pricing" className="text-gray-600 hover:text-[#FF6600]">
-                      Pricing
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/terms" className="text-gray-600 hover:text-[#FF6600]">
-                      Terms & Conditions
-                    </a>
-                  </li>
+                 
                   <li>
                     <a href="/privacy" className="text-gray-600 hover:text-[#FF6600]">
                       Privacy Policy
