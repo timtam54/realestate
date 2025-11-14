@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Home, User, Search, Briefcase, Settings, LogOut, Menu, X, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import Login from './Login'
 import UserProfile from './UserProfile'
 import UnreadMessagesIndicator from './UnreadMessagesIndicator'
@@ -21,6 +22,7 @@ interface BuySelHeaderProps {
 
 export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProps) {
   const { signOut: handleSignOut } = useAuth()
+  const pathname = usePathname()
   const [showLogin, setShowLogin] = useState(false)
   const [loginCallbackUrl, setLoginCallbackUrl] = useState('/')
   const [showProfile, setShowProfile] = useState(false)
@@ -28,7 +30,16 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
   const [chatConversationId, setChatConversationId] = useState<string | null>(null)
   const [showChatModal, setShowChatModal] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  
+
+  // Determine the current mode based on the pathname
+  const currentMode = pathname?.startsWith('/conveyancer')
+    ? 'conveyancer'
+    : pathname?.startsWith('/admin')
+    ? 'admin'
+    : pathname?.startsWith('/seller')
+    ? 'seller'
+    : 'buyer-seller'
+
   const handleNavigation = (url: string) => {
     setMobileMenuOpen(false)
     window.location.href = url
@@ -151,13 +162,14 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
             <div className="relative">
               <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-700 pointer-events-none" />
               <select
+                value={currentMode}
                 onChange={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   if (e.target.value === 'seller') {
                     window.location.href = '/seller'
                   } else if (e.target.value === 'conveyancer') {
-                    window.location.href = '/conveyancer/queue'
+                    window.location.href = '/conveyancer'
                   } else if (e.target.value === 'admin') {
                     window.location.href = '/admin/listings'
                   }
@@ -336,13 +348,14 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <div className="relative">
                   <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-red-700 pointer-events-none" />
                   <select
+                    value={currentMode}
                     onChange={(e) => {
                       e.preventDefault()
                       e.stopPropagation()
                       if (e.target.value === 'seller') {
                         handleNavigation('/seller')
                       } else if (e.target.value === 'conveyancer') {
-                        handleNavigation('/conveyancer/queue')
+                        handleNavigation('/conveyancer')
                       } else if (e.target.value === 'admin') {
                         handleNavigation('/admin/listings')
                       }

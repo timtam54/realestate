@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { MessageSquare, Send, Lock, Unlock, AlertCircle, Home } from 'lucide-react'
 import Link from 'next/link'
+import { usePageView } from '@/hooks/useAudit'
 
 interface Message {
   id: string
@@ -123,6 +124,7 @@ const mockThreads: MessageThread[] = [
 ]
 
 export default function BuyerMessagesPage() {
+  usePageView('buyer-messages')
   const [threads, setThreads] = useState(mockThreads)
   const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null)
   const [newMessage, setNewMessage] = useState('')

@@ -2,10 +2,13 @@
 
 import { CheckCircle } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
+import Footer from '@/components/Footer'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
+import { usePageView } from '@/hooks/useAudit'
 
 export default function HowItWorksPage() {
+  usePageView('how-it-works')
   const { user, isAuthenticated } = useAuth()
 
   return (
@@ -83,7 +86,7 @@ export default function HowItWorksPage() {
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-sm text-gray-700">Smoke Alarms Certified</span>
+                    <span className="text-sm text-gray-700">Title Search or Council Rates</span>
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
@@ -138,7 +141,7 @@ export default function HowItWorksPage() {
 
           {/* CTA Section */}
           <div className="mt-12 text-center">
-            <Link 
+            <Link
               href="/seller"
               className="inline-block bg-[#FF6600] text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#FF5500] transition-colors"
             >
@@ -147,6 +150,9 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

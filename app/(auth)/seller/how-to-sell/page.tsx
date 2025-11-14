@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Home, DollarSign, Camera, FileText, Shield, MessageSquare, ArrowRight, Users, Zap, Calculator } from 'lucide-react'
 import Link from 'next/link'
+import Footer from '@/components/Footer'
+import { usePageView } from '@/hooks/useAudit'
 
 interface FAQItem {
   question: string
@@ -37,6 +39,7 @@ const faqs: FAQItem[] = [
 ]
 
 export default function HowToSellPage() {
+  usePageView('seller-how-to-sell')
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null)
 
   return (
@@ -277,13 +280,7 @@ export default function HowToSellPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-gray-400">
-            © 2024 BuySel. Helping Queensland homeowners sell smarter.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

@@ -2,15 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import { Activity, Search, Download, User, Globe, Zap, FileText, Calendar, Hash, RefreshCw, Loader2 } from 'lucide-react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { ApiAuditLog } from '@/types/audit'
 import PushNotificationTestPanel from '@/components/PushNotificationTestPanel'
+import { usePageView } from '@/hooks/useAudit'
+import { useAuth } from '@/lib/auth/auth-context'
+import AdminHeader from '@/components/AdminHeader'
 
 
 export default function AdminAuditLogPage() {
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const router = useRouter()
+  usePageView('admin-audit')
   const [logs, setLogs] = useState<ApiAuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+
+  // Check authentication
+  useEffect(() => {
+    if (authLoading) return
+
+    if (!isAuthenticated) {
+      router.push('/')
+      return
+    }
+  }, [authLoading, isAuthenticated, router])
 
   useEffect(() => {
     fetchAuditLogs()
@@ -19,7 +35,7 @@ export default function AdminAuditLogPage() {
   const fetchAuditLogs = async () => {
     try {
       setLoading(true)
-      const response = await fetch('https://buysel.azurewebsites.net/api/audit/audit')
+      const response = await fetch('https://buysel.azurewebsites.net/api/audit')
       if (response.ok) {
         const data: ApiAuditLog[] = await response.json()
         setLogs(data)
@@ -34,61 +50,33 @@ export default function AdminAuditLogPage() {
   }
 
   const filteredLogs = logs.filter(log => {
-    if (searchQuery && 
+    if (searchQuery &&
         !log.username.toLowerCase().includes(searchQuery.toLowerCase()) &&
         !log.action.toLowerCase().includes(searchQuery.toLowerCase()) &&
         !log.page.toLowerCase().includes(searchQuery.toLowerCase())) return false
     return true
   })
 
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6600] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render the page content if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Admin Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="bg-red-600 p-2 rounded-lg mr-3">
-                <Activity className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <span className="font-bold text-lg sm:text-xl">Admin Console</span>
-                <span className="text-xs sm:text-sm text-gray-400 block hidden sm:block">Audit Log</span>
-              </div>
-            </div>
-            <Link
-              href="/"
-              className="px-3 py-2 sm:px-4 text-sm text-white border border-white/30 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              <span className="hidden sm:inline">Back to Buyer/Seller</span>
-              <span className="sm:hidden">Back</span>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Admin Navigation */}
-      <nav className="bg-gray-800 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap gap-1 sm:gap-2 lg:space-x-8 lg:flex-nowrap">
-            <Link href="/admin/listings" className="px-3 py-3 text-sm font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
-              Listings
-            </Link>
-            <Link href="/admin/users" className="px-3 py-3 text-sm font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
-              Users
-            </Link>
-            <Link href="/admin/document-requests" className="px-3 py-3 text-sm font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
-              <span className="hidden md:inline">Document Requests</span>
-              <span className="md:hidden">Requests</span>
-            </Link>
-            <Link href="/admin/audit" className="px-3 py-3 text-sm font-medium bg-gray-900 border-b-2 border-red-500 whitespace-nowrap">
-              <span className="hidden md:inline">Audit Log</span>
-              <span className="md:hidden">Audit</span>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <AdminHeader user={user} isAuthenticated={isAuthenticated} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
@@ -192,7 +180,7 @@ export default function AdminAuditLogPage() {
                           <Calendar className="h-4 w-4 text-gray-400 mr-2" />
                           <div>
                             <p className="text-sm font-medium text-gray-900">{new Date(log.dte).toLocaleString()}</p>
-                            <p className="text-xs text-gray-500">{new Date(log.dte).toLocaleDateString()}</p>
+                         
                           </div>
                         </div>
                       </td>

@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePageView } from '@/hooks/useAudit'
 
 export default function TestEnvPage() {
+  usePageView('test-env')
   const [runtimeEnv, setRuntimeEnv] = useState<Record<string, string>>({})
 
   useEffect(() => {

@@ -20,7 +20,7 @@ export default function AuditProperty({ propertyid, onClose }: AuditPropertyProp
   const fetchAudits = async () => {
     try {
       setLoading(true)
-      const response = await fetch('https://buysel.azurewebsites.net/api/audit/audit')
+      const response = await fetch('https://buysel.azurewebsites.net/api/audit')
       if (response.ok) {
         const data: ApiAuditLog[] = await response.json()
         // Filter by property ID in the page field

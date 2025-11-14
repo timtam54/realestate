@@ -1,12 +1,13 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X, MapPin, Bed, Bath, Car, Home, Maximize, Calendar, Building, ChevronLeft, ChevronRight, MessageCircle, Bug, FileText } from 'lucide-react'
+import { X, MapPin, Bed, Bath, Car, Home, Maximize, Calendar, Building, ChevronLeft, ChevronRight, MessageCircle, Bug, FileText, Loader2 } from 'lucide-react'
 import { Property } from '@/types/property'
 import { getPhotoUrl } from '@/lib/azure-config'
 import ChatModal from './ChatModal'
 import { useAuth } from '@/hooks/useAuth'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
+import { useUserData } from '@/hooks/useUserData'
 interface Photo {
   id: number
   propertyid: number
@@ -22,6 +23,8 @@ interface PropertyDetailsDialogProps {
 }
 
 export default function PropertyDetailsDialog({ property, onClose }: PropertyDetailsDialogProps) {
+  const { userId } = useUserData()
+
   const { isAuthenticated, user } = useAuth()
   const [photos, setPhotos] = useState<Photo[]>([])
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
@@ -31,6 +34,7 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
   const [showPestPdfDialog, setShowPestPdfDialog] = useState(false)
   const [showTitleSearchPdfDialog, setShowTitleSearchPdfDialog] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [requestingDoc, setRequestingDoc] = useState<string | null>(null)
   const correctDateForTimezone = useTimezoneCorrection()
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -53,6 +57,7 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
   }, [property.id])
 
   const handleRequestProperty = async (req:string) => {
+    setRequestingDoc(req)
     try {
       const ep=`https://buysel.azurewebsites.net/api/user/email/${user?.email}`
       //alert(ep)
@@ -99,6 +104,8 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
     } catch (error) {
       console.error('Error requesting '+req+' Inspection:', error)
       setToast(`Error requesting ${req} Inspection: ${error}`)
+    } finally {
+      setRequestingDoc(null)
     }
     setTimeout(() => setToast(null), 3000)
   }
@@ -323,15 +330,22 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
                 ) : (
                   <button
                     onClick={() => handleRequestProperty('Building')}
-                    className="flex flex-col items-center gap-3 p-6 bg-green-50 rounded-lg border-2 border-green-500 hover:bg-green-100 hover:shadow-lg transition-all w-full h-full"
+                    disabled={requestingDoc !== null}
+                    className="flex flex-col items-center gap-3 p-6 bg-green-50 rounded-lg border-2 border-green-500 hover:bg-green-100 hover:shadow-lg transition-all w-full h-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="bg-green-500 rounded-full p-4">
-                      <Building className="w-8 h-8 text-white" />
+                      {requestingDoc === 'Building' ? (
+                        <Loader2 className="w-8 h-8 text-white animate-spin" />
+                      ) : (
+                        <Building className="w-8 h-8 text-white" />
+                      )}
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-green-700 font-medium mb-1">Verified Document</p>
                       <p className="font-bold text-green-900 mb-2">Building Inspection</p>
-                      <p className="text-xs text-green-600">Click to request access</p>
+                      <p className="text-xs text-green-600">
+                        {requestingDoc === 'Building' ? 'Requesting...' : 'Click to request'}
+                      </p>
                     </div>
                   </button>
                 )}
@@ -358,15 +372,22 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
                 ) : (
                   <button
                     onClick={() => handleRequestProperty('Pest')}
-                    className="flex flex-col items-center gap-3 p-6 bg-amber-50 rounded-lg border-2 border-amber-500 hover:bg-amber-100 hover:shadow-lg transition-all w-full h-full"
+                    disabled={requestingDoc !== null}
+                    className="flex flex-col items-center gap-3 p-6 bg-amber-50 rounded-lg border-2 border-amber-500 hover:bg-amber-100 hover:shadow-lg transition-all w-full h-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="bg-amber-500 rounded-full p-4">
-                      <Bug className="w-8 h-8 text-white" />
+                      {requestingDoc === 'Pest' ? (
+                        <Loader2 className="w-8 h-8 text-white animate-spin" />
+                      ) : (
+                        <Bug className="w-8 h-8 text-white" />
+                      )}
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-amber-700 font-medium mb-1">Verified Document</p>
                       <p className="font-bold text-amber-900 mb-2">Pest Inspection</p>
-                      <p className="text-xs text-amber-600">Click to request access</p>
+                      <p className="text-xs text-amber-600">
+                        {requestingDoc === 'Pest' ? 'Requesting...' : 'Click to request'}
+                      </p>
                     </div>
                   </button>
                 )}
@@ -386,22 +407,32 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-blue-700 font-medium mb-1">Verified Document</p>
-                      <p className="font-bold text-blue-900 mb-2">Title Search Council Rates</p>
+                      <p className="font-bold text-blue-900 mb-2">Title Search / Council Rates</p>
                       <p className="text-xs text-blue-600">Click to view PDF</p>
                     </div>
                   </button>
                 ) : (
                   <button
                     onClick={() => handleRequestProperty('Title or Council')}
-                    className="flex flex-col items-center gap-3 p-6 bg-blue-50 rounded-lg border-2 border-blue-500 hover:bg-blue-100 hover:shadow-lg transition-all w-full h-full"
+                    disabled={requestingDoc !== null}
+                    className="flex flex-col items-center gap-3 p-6 bg-blue-50 rounded-lg border-2 border-blue-500 hover:bg-blue-100 hover:shadow-lg transition-all w-full h-full disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="bg-blue-500 rounded-full p-4">
-                      <FileText className="w-8 h-8 text-white" />
+                      {requestingDoc === 'Title or Council' ? (
+                        <Loader2 className="w-8 h-8 text-white animate-spin" />
+                      ) : (
+                        <FileText className="w-8 h-8 text-white" />
+                      )}
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-blue-700 font-medium mb-1">Verified Document</p>
-                      <p className="font-bold text-blue-900 mb-2">Title Search Council Rates</p>
-                      <p className="text-xs text-blue-600">Click to request access</p>
+                      <p className="font-bold text-blue-900 mb-2">Title Search / Council Rates</p>
+                      {userId !== property.sellerid &&
+
+                      <p className="text-xs text-blue-600">
+                        {requestingDoc === 'Title or Council' ? 'Requesting...' : 'Click to request access'}
+                      </p>
+}
                     </div>
                   </button>
                 )}

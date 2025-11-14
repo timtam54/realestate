@@ -1,6 +1,18 @@
+'use client'
+
+import BuySelHeader from '@/components/BuySelHeader'
+import Footer from '@/components/Footer'
+import { useAuth } from '@/hooks/useAuth'
+import { usePageView } from '@/hooks/useAudit'
+
 export default function PrivacyPolicy() {
+  usePageView('privacy')
+  const { user, isAuthenticated } = useAuth()
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <BuySelHeader user={user} isAuthenticated={isAuthenticated} />
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
         
@@ -138,6 +150,10 @@ export default function PrivacyPolicy() {
           </p>
         </section>
       </div>
+      </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

@@ -41,8 +41,20 @@ export default function NotificationHeader({ onOpenChat }: NotificationHeaderPro
         // Show banner to request permission
         setShowPermissionBanner(true)
       } else if (Notification.permission === 'granted' && !isSubscribed) {
-        // Auto-subscribe if permission already granted
-        handleEnableNotifications()
+        // Auto-subscribe if permission already granted, but wait for service worker to be ready
+        console.log('[NotificationHeader] Permission already granted, waiting for service worker to be ready...')
+
+        // Wait for service worker to be ready before subscribing
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.ready
+            .then(() => {
+              console.log('[NotificationHeader] Service worker ready, auto-subscribing...')
+              handleEnableNotifications()
+            })
+            .catch((error) => {
+              console.error('[NotificationHeader] Service worker ready check failed:', error)
+            })
+        }
       }
     }
   }, [userId, userDataLoading])

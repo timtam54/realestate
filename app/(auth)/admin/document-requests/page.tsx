@@ -3,9 +3,13 @@
 import { useState, useEffect } from 'react'
 import { FileText, Search, Calendar, Home, ShoppingCart, CheckCircle, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth/auth-context'
+import AdminHeader from '@/components/AdminHeader'
 import { Property } from '@/types/property'
 import { Conversation } from '@/types/conversation'
 import { Message } from '@/types/message'
+import { usePageView } from '@/hooks/useAudit'
 
 interface PropertyBuyerDoc {
   id: number
@@ -24,11 +28,25 @@ export interface Buyer {
 }
 
 export default function AdminDocumentRequestsPage() {
+  usePageView('admin-document-requests')
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const router = useRouter()
   const [documents, setDocuments] = useState<PropertyBuyerDoc[]>([])
   const [properties, setProperties] = useState<Property[]>([])
   const [buyers, setBuyers] = useState<Buyer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [processingDocId, setProcessingDocId] = useState<number | null>(null)
+
+  // Check authentication
+  useEffect(() => {
+    if (authLoading) return
+
+    if (!isAuthenticated) {
+      router.push('/')
+      return
+    }
+  }, [authLoading, isAuthenticated, router])
 
   useEffect(() => {
     fetchDocuments()
@@ -86,6 +104,7 @@ export default function AdminDocumentRequestsPage() {
   }
 
   const handleActionUpdate = async (doc: PropertyBuyerDoc, action: 'Approve' | 'Reject') => {
+    setProcessingDocId(doc.id)
     try {
       const updatedDoc = { ...doc, action }
       const response = await fetch('https://buysel.azurewebsites.net/api/propertybuyerdoc', {
@@ -190,7 +209,7 @@ export default function AdminDocumentRequestsPage() {
           conversation_id: conversationId,
           sender_id: sellerId,
           content: messageContent,
-          read_at: new Date(),
+          read_at: null, // Set to null so recipient sees it as unread
           created_at: new Date(),
           bloburl: bloburl
         }
@@ -206,6 +225,36 @@ export default function AdminDocumentRequestsPage() {
 
         if (messageResponse.ok) {
           console.log('Message sent to buyer successfully')
+
+          // Send push notification to buyer
+          try {
+            const pushResponse = await fetch('/api/push/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: doc.buyerid,
+                payload: {
+                  title: action === 'Approve'
+                    ? 'Document Request Approved'
+                    : 'Document Request Update',
+                  body: messageContent,
+                  url: `/buyer/messages?conversationId=${conversationId}`,
+                  conversationId: conversationId,
+                  propertyId: doc.propertyid
+                }
+              })
+            })
+
+            if (pushResponse.ok) {
+              console.log('Push notification sent successfully')
+            } else {
+              const errorText = await pushResponse.text()
+              console.error('Failed to send push notification:', errorText)
+            }
+          } catch (pushError) {
+            console.error('Error sending push notification:', pushError)
+            // Don't fail the whole request if push fails
+          }
         } else {
           const errorText = await messageResponse.text()
           console.error('Failed to send message to buyer:', errorText)
@@ -218,6 +267,8 @@ export default function AdminDocumentRequestsPage() {
     } catch (error) {
       console.error('Error updating document request:', error)
       alert('Error updating document request')
+    } finally {
+      setProcessingDocId(null)
     }
   }
 
@@ -229,53 +280,26 @@ export default function AdminDocumentRequestsPage() {
     return true
   })
 
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6600] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render the page content if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Admin Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <div className="bg-red-600 p-2 rounded-lg mr-3">
-                <FileText className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <span className="font-bold text-lg sm:text-xl">Admin Console</span>
-                <span className="text-xs sm:text-sm text-gray-400 block hidden sm:block">Document Requests</span>
-              </div>
-            </div>
-            <Link
-              href="/"
-              className="px-3 py-2 sm:px-4 text-sm text-white border border-white/30 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              <span className="hidden sm:inline">Back to Buyer/Seller</span>
-              <span className="sm:hidden">Back</span>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Admin Navigation */}
-      <nav className="bg-gray-800 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap gap-1 sm:gap-2 lg:space-x-8 lg:flex-nowrap">
-            <Link href="/admin/listings" className="px-3 py-3 text-sm font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
-              Listings
-            </Link>
-            <Link href="/admin/users" className="px-3 py-3 text-sm font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
-              Users
-            </Link>
-            <Link href="/admin/document-requests" className="px-3 py-3 text-sm font-medium bg-gray-900 border-b-2 border-red-500 whitespace-nowrap">
-              <span className="hidden md:inline">Document Requests</span>
-              <span className="md:hidden">Requests</span>
-            </Link>
-            <Link href="/admin/audit" className="px-3 py-3 text-sm font-medium hover:bg-gray-700 transition-colors whitespace-nowrap">
-              <span className="hidden md:inline">Audit Log</span>
-              <span className="md:hidden">Audit</span>
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <AdminHeader user={user} isAuthenticated={isAuthenticated} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Title */}
@@ -406,17 +430,37 @@ export default function AdminDocumentRequestsPage() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleActionUpdate(doc, 'Approve')}
-                              className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium inline-flex items-center gap-1"
+                              disabled={processingDocId === doc.id}
+                              className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <CheckCircle className="h-4 w-4" />
-                              Approve
+                              {processingDocId === doc.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-4 w-4" />
+                                  Approve
+                                </>
+                              )}
                             </button>
                             <button
                               onClick={() => handleActionUpdate(doc, 'Reject')}
-                              className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium inline-flex items-center gap-1"
+                              disabled={processingDocId === doc.id}
+                              className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium inline-flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              <XCircle className="h-4 w-4" />
-                              Reject
+                              {processingDocId === doc.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                  Processing...
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="h-4 w-4" />
+                                  Reject
+                                </>
+                              )}
                             </button>
                           </div>
                         )}
@@ -456,17 +500,37 @@ export default function AdminDocumentRequestsPage() {
                         <div className="flex flex-col gap-2">
                           <button
                             onClick={() => handleActionUpdate(doc, 'Approve')}
-                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-medium inline-flex items-center justify-center gap-1"
+                            disabled={processingDocId === doc.id}
+                            className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs font-medium inline-flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <CheckCircle className="h-3 w-3" />
-                            Approve
+                            {processingDocId === doc.id ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="h-3 w-3" />
+                                Approve
+                              </>
+                            )}
                           </button>
                           <button
                             onClick={() => handleActionUpdate(doc, 'Reject')}
-                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-medium inline-flex items-center justify-center gap-1"
+                            disabled={processingDocId === doc.id}
+                            className="px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-xs font-medium inline-flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <XCircle className="h-3 w-3" />
-                            Reject
+                            {processingDocId === doc.id ? (
+                              <>
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="h-3 w-3" />
+                                Reject
+                              </>
+                            )}
                           </button>
                         </div>
                       )}

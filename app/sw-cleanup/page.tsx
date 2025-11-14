@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
+import { usePageView } from '@/hooks/useAudit'
 
 export default function ServiceWorkerCleanup() {
+  usePageView('sw-cleanup')
   useEffect(() => {
     async function cleanup() {
       console.log('🧹 Starting service worker cleanup...')

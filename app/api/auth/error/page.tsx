@@ -2,8 +2,10 @@
 
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { usePageView } from '@/hooks/useAudit'
 
 function ErrorContent() {
+  usePageView('auth-error')
   const searchParams = useSearchParams()
   const error = searchParams.get('error')
 

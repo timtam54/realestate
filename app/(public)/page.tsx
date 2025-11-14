@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Search, Shield, CheckCircle, Camera, List, Map as MapIcon } from 'lucide-react'
 import Link from 'next/link'
 import BuySelHeader from '@/components/BuySelHeader'
+import Footer from '@/components/Footer'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
 import ChatModal from '@/components/ChatModal'
@@ -12,7 +13,11 @@ import { useAuth } from '@/hooks/useAuth'
 import { useUserData } from '@/hooks/useUserData'
 import { Property } from '@/types/property'
 import type { GoogleMap } from '@/types/google-maps'
+import { usePageView } from '@/hooks/useAudit'
+//const { userId } = useUserData()
+  
 export default function HomePage() {
+  usePageView('home')
   const [searchQuery, setSearchQuery] = useState('')
   const [beds, setBeds] = useState('')
   const [baths, setBaths] = useState('')
@@ -374,44 +379,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <h3 className="font-semibold mb-4">BuySel</h3>
-              <p className="text-gray-400 text-sm">
-                Verified property. No commission. Serving North Queensland.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">For Sellers</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/seller/how-to-sell" className="hover:text-white">How to Sell</Link></li>
-                <li><Link href="/pricing" className="hover:text-white">Pricing</Link></li>
-                <li><Link href="/faqs" className="hover:text-white">FAQs</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">For Buyers</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/" className="hover:text-white">Search Properties</Link></li>
-               
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/contact" className="hover:text-white">Contact Us</Link></li>
-                <li><Link href="/terms" className="hover:text-white">Terms & Conditions</Link></li>
-                <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-700 mt-8 pt-8 text-center text-sm text-gray-400">
-            © 2024 BuySel. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {selectedProperty && (
         <PropertyDetailsDialog

@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { usePageView } from '@/hooks/useAudit'
 
 export default function EnvCheckPage() {
+  usePageView('env-check')
   const [mounted, setMounted] = useState(false)
   
   useEffect(() => {

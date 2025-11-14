@@ -10,6 +10,7 @@ import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
 import { ArrowUp, ArrowDown, MessageCircle, User, Calendar, Home, DollarSign, Filter } from 'lucide-react'
 import { getPhotoUrl } from '@/lib/azure-config'
+import { usePageView } from '@/hooks/useAudit'
 
 interface Conversation {
   id: number
@@ -38,6 +39,7 @@ interface PropertySummary {
 }
 
 export default function ConversationPage() {
+  usePageView('conversation')
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const { userId, isLoading: userDataLoading } = useUserData()
   const router = useRouter()

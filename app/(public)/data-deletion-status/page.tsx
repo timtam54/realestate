@@ -2,8 +2,10 @@
 
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import { usePageView } from '@/hooks/useAudit'
 
 function DataDeletionContent() {
+  usePageView('data-deletion-status')
   const searchParams = useSearchParams()
   const code = searchParams.get('code')
 

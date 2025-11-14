@@ -5,8 +5,10 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { useRouter } from 'next/navigation'
 import UserProfile from '@/components/UserProfile'
 import BuySelHeader from '@/components/BuySelHeader'
+import { usePageView } from '@/hooks/useAudit'
 
 export default function CompleteProfilePage() {
+  usePageView('complete-profile')
   const { user, isAuthenticated, isLoading } = useAuth()
   const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)

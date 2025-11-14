@@ -17,8 +17,10 @@ import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
 import type { GoogleMap } from '@/types/google-maps'
 import { useRouter } from 'next/navigation'
+import { usePageView } from '@/hooks/useAudit'
 
 export default function SellerPage() {
+  usePageView('seller')
   const { user, isAuthenticated: authContextIsAuthenticated, isLoading: authLoading } = useAuth()
   const { isAuthenticated } = useAuthHook()
   const router = useRouter()
