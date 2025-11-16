@@ -96,16 +96,19 @@ export function useAudit() {
  * Call this at the top of any page component to track visits
  */
 export function usePageView(page: string, propertyid?: number) {
+  const { user, isLoading } = useAuth()
   const { logAudit } = useAudit()
   const hasLoggedRef = useRef(false)
 
   useEffect(() => {
-    // Only log once per page mount
-    if (!hasLoggedRef.current) {
+    // Wait for auth to finish loading before logging
+    // This ensures we capture the actual user email instead of 'anonymous'
+    // when the user is logged in but the session is still loading
+    if (!isLoading && !hasLoggedRef.current) {
       logAudit({ page, action: 'view', propertyid })
       hasLoggedRef.current = true
     }
-  }, [page, propertyid, logAudit])
+  }, [page, propertyid, logAudit, user, isLoading])
 
   return { logAudit }
 }

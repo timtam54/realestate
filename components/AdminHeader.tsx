@@ -39,7 +39,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
 
   return (
     <>
-      <header className="bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 text-white shadow-lg sticky top-0 z-50">
+      <header className="bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-white shadow-lg sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Title */}
@@ -49,7 +49,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
               </div>
               <div>
                 <span className="font-bold text-xl">Admin Console</span>
-                <span className="text-xs text-purple-200 block hidden sm:block">BuySel Platform</span>
+                <span className="text-xs text-blue-200 block hidden sm:block">BuySel Platform</span>
               </div>
             </Link>
 
@@ -65,7 +65,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                       isActive
                         ? 'bg-white/20 text-white border-b-2 border-yellow-400'
-                        : 'text-purple-200 hover:text-white hover:bg-white/10'
+                        : 'text-blue-200 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -115,7 +115,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
 
               {/* Mode Switcher - Far Right */}
               <div className="relative">
-                <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-700 pointer-events-none" />
+                <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-blue-700 pointer-events-none" />
                 <select
                   value={currentMode}
                   onChange={(e) => {
@@ -129,7 +129,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
                       handleNavigation('/')
                     }
                   }}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 font-medium cursor-pointer hover:from-purple-200 hover:to-purple-300 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium cursor-pointer hover:from-blue-200 hover:to-blue-300 transition-all"
                 >
                   <option value="buyer-seller">Buyer/Seller</option>
                
@@ -165,7 +165,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${
                       isActive
                         ? 'bg-white/20 text-white border-l-4 border-yellow-400'
-                        : 'text-purple-200 hover:text-white hover:bg-white/10'
+                        : 'text-blue-200 hover:text-white hover:bg-white/10'
                     }`}
                   >
                     <Icon className="w-5 h-5" />
@@ -198,7 +198,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
                       )}
                       <div>
                         <div className="font-medium text-white">{user.name || 'Admin'}</div>
-                        <div className="text-sm text-purple-200">{user.email}</div>
+                        <div className="text-sm text-blue-200">{user.email}</div>
                       </div>
                     </button>
                     <button
@@ -226,7 +226,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
               {/* Mobile Mode Switcher - At Bottom */}
               <div className="border-t border-white/10 pt-3 mt-3">
                 <div className="relative">
-                  <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-700 pointer-events-none" />
+                  <Settings className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-blue-700 pointer-events-none" />
                   <select
                     value={currentMode}
                     onChange={(e) => {
@@ -240,7 +240,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
                         handleNavigation('/')
                       }
                     }}
-                    className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-400 font-medium cursor-pointer hover:from-purple-200 hover:to-purple-300 transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium cursor-pointer hover:from-blue-200 hover:to-blue-300 transition-all"
                   >
                     <option value="buyer-seller">Buyer/Seller</option>
                     <option value="seller">Seller</option>

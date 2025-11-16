@@ -652,20 +652,31 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          {user.photoverified ? (
+                          {!user.photoazurebloburl || user.photoazurebloburl.trim() === '' ? (
                             <>
-                              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                              <Shield className="h-4 w-4 text-red-500 mr-2" />
+                              <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-200 text-red-900">
+                                No Photo
+                              </span>
+                            </>
+                          ) : user.photoverified ? (
+                            <>
+                              <Shield className="h-4 w-4 text-green-500 mr-2" />
                               <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Verified
+                                Photo Verified
                               </span>
                             </>
                           ) : (
-                            <>
-                              <XCircle className="h-4 w-4 text-gray-400 mr-2" />
-                              <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                                Not Verified
-                              </span>
-                            </>
+                            <button
+                              onClick={() => {
+                                setSelectedApiUserTab('photo')
+                                setSelectedApiUser(user)
+                              }}
+                              className="flex items-center gap-2 px-2 py-1 text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
+                            >
+                              <Shield className="h-4 w-4 text-gray-400" />
+                              Photo To be Verified
+                            </button>
                           )}
                         </div>
                       </td>
@@ -772,20 +783,31 @@ export default function AdminUsersPage() {
                         </div>
                         <div>
                           <div className="flex items-center mb-1">
-                            {user.photoverified ? (
-                              <CheckCircle className="h-4 w-4 text-green-500 mr-1.5" />
-                            ) : (
-                              <XCircle className="h-4 w-4 text-gray-400 mr-1.5" />
-                            )}
+                            <Shield className={`h-4 w-4 mr-1.5 ${
+                              !user.photoazurebloburl || user.photoazurebloburl.trim() === '' ? 'text-red-500' :
+                              user.photoverified ? 'text-green-500' : 'text-gray-400'
+                            }`} />
                             <span className="text-xs text-gray-500">Photo Status</span>
                           </div>
-                          <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            user.photoverified
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {user.photoverified ? 'Verified' : 'Not Verified'}
-                          </span>
+                          {!user.photoazurebloburl || user.photoazurebloburl.trim() === '' ? (
+                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-200 text-red-900">
+                              No Photo
+                            </span>
+                          ) : user.photoverified ? (
+                            <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              Photo Verified
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setSelectedApiUserTab('photo')
+                                setSelectedApiUser(user)
+                              }}
+                              className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200 transition-colors"
+                            >
+                              Photo To be Verified
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
