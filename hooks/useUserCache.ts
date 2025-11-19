@@ -1,8 +1,9 @@
 'use client'
 
+import { Seller } from '@/types/seller'
 import { useState, useEffect, useCallback } from 'react'
 
-interface UserData {
+/*interface UserData {
   id: number
   email: string
   firstname: string
@@ -12,16 +13,16 @@ interface UserData {
   address?: string
   mobile?: string
   [key: string]: any
-}
+}*/
 
 const USER_CACHE_KEY_PREFIX = 'buysel_user_cache_'
 const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours
 
 // Global in-memory cache for the current session
-const memoryCache = new Map<number, UserData>()
+const memoryCache = new Map<number, Seller>()
 
 export function useUserCache() {
-  const getCachedUser = useCallback((userId: number): UserData | null => {
+  const getCachedUser = useCallback((userId: number): Seller | null => {
     // Check memory cache first
     if (memoryCache.has(userId)) {
       console.log(`User ${userId} found in memory cache`)

@@ -101,13 +101,16 @@ export async function subscribeToPushNotifications() {
 
     // Send subscription to the backend (uses session email on server)
     console.log('[Push] Sending subscription to backend');
+    const subscriptionJSON = subscription.toJSON();
+    console.log('[Push] Subscription data:', JSON.stringify(subscriptionJSON, null, 2));
+
     const response = await fetch('/api/push/subscribe', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        subscription: subscription.toJSON()
+        subscription: subscriptionJSON
       }),
     });
 

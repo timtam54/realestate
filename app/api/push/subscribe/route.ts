@@ -20,6 +20,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[API] Saving push subscription for email:', session.user.email);
+    console.log('[API] Subscription object:', JSON.stringify(subscription, null, 2));
+
+    const requestBody = {
+      email: session.user.email,
+      subscription_data: subscription,
+      platform: 'web'
+    };
+    console.log('[API] Request body:', JSON.stringify(requestBody, null, 2));
 
     // Send subscription to Azure backend using email
     const response = await fetch(
@@ -29,17 +37,15 @@ export async function POST(request: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email: session.user.email,
-          subscription_data: subscription,
-          platform: 'web'
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[API] Failed to save subscription to backend:', errorText);
+      console.error('[API] Backend responded with status:', response.status);
+      console.error('[API] Backend error response:', errorText);
+      console.error('[API] Failed to save subscription to backend');
       throw new Error(`Backend error: ${response.status} ${errorText}`);
     }
 

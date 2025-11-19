@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { X, Send, AlertCircle } from 'lucide-react'
+import { X, Send, AlertCircle, Check } from 'lucide-react'
 import { Property } from '@/types/property'
 import { Message } from '@/types/message'
 import { requestNotificationPermission, subscribeToPushNotifications } from '@/lib/push-notifications'
@@ -11,6 +11,7 @@ import { useUserCache } from '@/hooks/useUserCache'
 import { useRouter } from 'next/navigation'
 import { getPhotoUrl } from '@/lib/azure-config'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
+import { Seller } from '@/types/seller'
 
 interface ChatModalProps {
   isOpen: boolean
@@ -27,8 +28,8 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
   const { fetchUser } = useUserCache()
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState('')
-  const [sellerInfo, setSellerInfo] = useState<any>(null)
-  const [buyerInfo, setBuyerInfo] = useState<any>(null)
+  const [sellerInfo, setSellerInfo] = useState<Seller|null>(null)
+  const [buyerInfo, setBuyerInfo] = useState<Seller|null>(null)
   const [loading, setLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [isBuyer, setIsBuyer] = useState<boolean>(true)
@@ -533,14 +534,44 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
             <div>
               <h3 className="font-semibold text-lg">{property.title}</h3>
               {isBuyer && sellerInfo && (
-                <p className="text-sm text-gray-600">
-                  Chat with {sellerInfo.firstname} {sellerInfo.lastname} ({sellerInfo.email})
-                </p>
+                <>
+                  <p className="text-sm text-gray-600">
+                    Chat with {sellerInfo.firstname} {sellerInfo.lastname} ({sellerInfo.email})
+                  </p>
+                  <p className="text-xs flex items-center gap-1">
+                    {sellerInfo.idverified ? (
+                      <>
+                        <Check className="h-3 w-3 text-green-600" />
+                        <span className="text-green-600">Seller ID verified</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-3 w-3 text-red-600" />
+                        <span className="text-red-600">Seller ID not verified</span>
+                      </>
+                    )}
+                  </p>
+                </>
               )}
               {!isBuyer && buyerInfo && (
-                <p className="text-sm text-gray-600">
-                  Chat with {buyerInfo.firstname} {buyerInfo.lastname} ({buyerInfo.email})
-                </p>
+                <>
+                  <p className="text-sm text-gray-600">
+                    Chat with {buyerInfo.firstname} {buyerInfo.lastname} ({buyerInfo.email})
+                  </p>
+                  <p className="text-xs flex items-center gap-1">
+                    {buyerInfo.idverified ? (
+                      <>
+                        <Check className="h-3 w-3 text-green-600" />
+                        <span className="text-green-600">Buyer ID verified</span>
+                      </>
+                    ) : (
+                      <>
+                        <X className="h-3 w-3 text-red-600" />
+                        <span className="text-red-600">Buyer ID not verified</span>
+                      </>
+                    )}
+                  </p>
+                </>
               )}
               {conversationId && (
                 <p className="text-xs text-gray-400">
