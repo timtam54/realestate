@@ -1,4 +1,5 @@
-import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, MessageCircle, Camera, FileText } from 'lucide-react'
+import { useState } from 'react'
+import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, MessageCircle, Camera, FileText, Loader2 } from 'lucide-react'
 import { Property } from '@/types/property'
 import { getPhotoUrl } from '@/lib/azure-config'
 
@@ -7,9 +8,25 @@ interface PropertyCardProps {
   onClick: (property: Property) => void
   onChatClick?: (property: Property) => void
   userId?: number | null
+  fav?: boolean
+  onFavToggle?: (propertyId: number, fav: boolean) => Promise<void>
 }
 
-export default function PropertyCard({ property, onClick, onChatClick, userId }: PropertyCardProps) {
+export default function PropertyCard({ property, onClick, onChatClick, userId, fav = false, onFavToggle }: PropertyCardProps) {
+  const [isFavLoading, setIsFavLoading] = useState(false)
+
+  const handleFavClick = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!onFavToggle || isFavLoading) return
+
+    setIsFavLoading(true)
+    try {
+      await onFavToggle(property.id, !fav)
+    } finally {
+      setIsFavLoading(false)
+    }
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       <div className="relative h-48">
@@ -37,9 +54,21 @@ export default function PropertyCard({ property, onClick, onChatClick, userId }:
           )}
           <button
             type="button"
-            className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
+            onClick={handleFavClick}
+            disabled={isFavLoading}
+            className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <Heart className="h-5 w-5 text-gray-600" />
+            {isFavLoading ? (
+              <Loader2 className="h-5 w-5 text-[#FF6600] animate-spin" />
+            ) : (
+              <Heart
+                className={`h-5 w-5 ${
+                  fav
+                    ? 'text-green-500 fill-green-500 animate-pulse'
+                    : 'text-gray-600'
+                }`}
+              />
+            )}
           </button>
         </div>
         <div className="absolute bottom-4 right-4 bg-white px-3 py-1 rounded-lg font-semibold">

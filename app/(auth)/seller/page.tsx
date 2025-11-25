@@ -20,6 +20,12 @@ import type { GoogleMap } from '@/types/google-maps'
 import { useRouter } from 'next/navigation'
 import { usePageView } from '@/hooks/useAudit'
 
+interface UserPropertyFav {
+  id: number
+  user_id: number
+  property_id: number
+}
+
 export default function SellerPage() {
   usePageView('seller')
   const { user, isAuthenticated: authContextIsAuthenticated, isLoading: authLoading } = useAuth()
@@ -38,6 +44,7 @@ export default function SellerPage() {
   const [chatProperty, setChatProperty] = useState<Property | null>(null)
   const [chatConversationId, setChatConversationId] = useState<string | null>(null)
   const [showChatModal, setShowChatModal] = useState(false)
+  const [favs, setFavs] = useState<UserPropertyFav[]>([])
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<GoogleMap | null>(null)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -144,6 +151,11 @@ export default function SellerPage() {
     }
   }, [activeTab, properties, initializeMap])
 
+  useEffect(() => {
+    if (userId) {
+      fetchFavorites()
+    }
+  }, [userId])
 
   const fetchProperties = async () => {
     try {
@@ -164,6 +176,56 @@ export default function SellerPage() {
       toast.error(`Failed to load properties: ${errorMessage}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchFavorites = async () => {
+    if (!userId) return
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/userpropertyfav/${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setFavs(data)
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error)
+    }
+  }
+
+  const handleFavToggle = async (propertyId: number, fav: boolean) => {
+    if (!userId) return
+
+    if (fav) {
+      // Add to favorites
+      try {
+        const newFav = { id: 0, user_id: userId, property_id: propertyId }
+        const response = await fetch('https://buysel.azurewebsites.net/api/userpropertyfav', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newFav)
+        })
+        if (response.ok) {
+          const createdFav = await response.json()
+          setFavs([...favs, createdFav])
+        }
+      } catch (error) {
+        console.error('Error adding favorite:', error)
+      }
+    } else {
+      // Remove from favorites
+      const favToRemove = favs.find(f => f.property_id === propertyId)
+      if (favToRemove) {
+        try {
+          const response = await fetch(`https://buysel.azurewebsites.net/api/userpropertyfav/${favToRemove.id}`, {
+            method: 'DELETE'
+          })
+          if (response.ok) {
+            setFavs(favs.filter(f => f.id !== favToRemove.id))
+          }
+        } catch (error) {
+          console.error('Error removing favorite:', error)
+        }
+      }
     }
   }
 
@@ -277,7 +339,9 @@ export default function SellerPage() {
                     pestinsppublic:null,
                     buildinginsppublic:null,
                     status:'draft',
-                    rejecvtedreason: null
+                    rejecvtedreason: null,
+                    contractsale:null,
+                    poolcert:null
                   }
                 )
               }}
@@ -380,7 +444,9 @@ export default function SellerPage() {
                     pestinsppublic:null,
                     buildinginsppublic:null,
                     status:'draft',
-                    rejecvtedreason: null
+                    rejecvtedreason: null,
+                    contractsale:null,
+                    poolcert:null
                   }
                 )
               }}
@@ -493,7 +559,9 @@ export default function SellerPage() {
                       pestinsppublic:null,
                       buildinginsppublic:null,
                       status:'draft',
-                      rejecvtedreason: null
+                      rejecvtedreason: null,
+                      contractsale:null,
+                      poolcert:null
                     }
                   )
                 }}
@@ -506,9 +574,9 @@ export default function SellerPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {properties.map((property) => (
-                <PropertyCard 
-                  key={property.id} 
-                  property={property} 
+                <PropertyCard
+                  key={property.id}
+                  property={property}
                   onClick={(prop) => {
                     setSelectedProperty(prop)
                     setShowViewOptionDialog(true)
@@ -518,6 +586,8 @@ export default function SellerPage() {
                     setShowChatModal(true)
                   }}
                   userId={userId}
+                  fav={favs.some(f => f.property_id === property.id)}
+                  onFavToggle={handleFavToggle}
                 />
               ))}
             </div>

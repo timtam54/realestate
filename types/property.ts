@@ -28,5 +28,7 @@ export interface Property {
   pestinsppublic:boolean|null,
   buildinginsppublic:boolean|null,
   status:string|null,
-  rejecvtedreason:string|null
+  rejecvtedreason:string|null,
+  poolcert:boolean|null,
+  contractsale:boolean|null,
 }

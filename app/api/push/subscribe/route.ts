@@ -22,9 +22,34 @@ export async function POST(request: NextRequest) {
     console.log('[API] Saving push subscription for email:', session.user.email);
     console.log('[API] Subscription object:', JSON.stringify(subscription, null, 2));
 
+    // Validate subscription structure
+    if (!subscription.endpoint) {
+      console.error('[API] Subscription missing endpoint field');
+      return NextResponse.json(
+        { error: 'Invalid subscription: missing endpoint' },
+        { status: 400 }
+      );
+    }
+
+    // Ensure keys object exists and has required fields
+    if (!subscription.keys || !subscription.keys.p256dh || !subscription.keys.auth) {
+      console.error('[API] Subscription missing or invalid keys');
+      return NextResponse.json(
+        { error: 'Invalid subscription: missing or invalid keys (p256dh, auth)' },
+        { status: 400 }
+      );
+    }
+
+    // Clean up the subscription data - remove null/undefined values
+    const cleanedSubscription = {
+      endpoint: subscription.endpoint,
+      keys: subscription.keys
+      // Omit expirationTime if it's null - C# backend may not handle it well
+    };
+
     const requestBody = {
       email: session.user.email,
-      subscription_data: subscription,
+      subscription_data: cleanedSubscription,
       platform: 'web'
     };
     console.log('[API] Request body:', JSON.stringify(requestBody, null, 2));

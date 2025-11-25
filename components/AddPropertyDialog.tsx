@@ -1044,7 +1044,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
               </div>
 
               <div className="border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">Pest Inspection Report</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Pest Inspection Report.</h3>
                 {property.pestinspazureblob && (
                   <div className="mb-4 p-4 bg-gray-50 rounded-lg space-y-3">
                     <div className="flex items-start gap-2">
@@ -1138,6 +1138,36 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                   onChange={handlePestInspUpload}
                   className="hidden"
                 />
+              </div>
+
+              <div className="border rounded-lg p-6">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="poolcert"
+                    checked={property.poolcert || false}
+                    onChange={(e) => setProperty({ ...property, poolcert: e.target.checked })}
+                    className="h-5 w-5 text-[#FF6600] border-gray-300 rounded focus:ring-2 focus:ring-[#FF6600]"
+                  />
+                  <label htmlFor="poolcert" className="text-lg font-semibold text-gray-800 cursor-pointer">
+                    Pool Certified
+                  </label>
+                </div>
+              </div>
+
+              <div className="border rounded-lg p-6">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="contractsale"
+                    checked={property.contractsale || false}
+                    onChange={(e) => setProperty({ ...property, contractsale: e.target.checked })}
+                    className="h-5 w-5 text-[#FF6600] border-gray-300 rounded focus:ring-2 focus:ring-[#FF6600]"
+                  />
+                  <label htmlFor="contractsale" className="text-lg font-semibold text-gray-800 cursor-pointer">
+                    Contract of Sale
+                  </label>
+                </div>
               </div>
             </div>
 

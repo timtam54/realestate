@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, Shield, CheckCircle, Camera, List, Map as MapIcon } from 'lucide-react'
+import { Search, Shield, CheckCircle, Camera, List, Map as MapIcon, X, Heart } from 'lucide-react'
 import Link from 'next/link'
 import BuySelHeader from '@/components/BuySelHeader'
 import Footer from '@/components/Footer'
@@ -14,8 +14,13 @@ import { useUserData } from '@/hooks/useUserData'
 import { Property } from '@/types/property'
 import type { GoogleMap } from '@/types/google-maps'
 import { usePageView } from '@/hooks/useAudit'
-//const { userId } = useUserData()
-  
+
+interface UserPropertyFav {
+  id: number
+  user_id: number
+  property_id: number
+}
+
 export default function HomePage() {
   usePageView('home')
   const [searchQuery, setSearchQuery] = useState('')
@@ -24,10 +29,12 @@ export default function HomePage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
+  const [viewMode, setViewMode] = useState<'search' | 'favourites'>('search')
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
   const [chatProperty, setChatProperty] = useState<Property | null>(null)
   const [showChatModal, setShowChatModal] = useState(false)
   const [chatConversationId, setChatConversationId] = useState<string | null>(null)
+  const [favs, setFavs] = useState<UserPropertyFav[]>([])
   const { user, isAuthenticated } = useAuth()
   const { userId } = useUserData()
   const mapRef = useRef<HTMLDivElement>(null)
@@ -35,7 +42,7 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchProperties()
-    
+
     // Check if we have a stored callback URL (workaround for Microsoft auth)
     if (isAuthenticated) {
       const storedCallbackUrl = sessionStorage.getItem('auth_callback_url')
@@ -47,17 +54,73 @@ export default function HomePage() {
     }
   }, [isAuthenticated])
 
+  useEffect(() => {
+    if (userId) {
+      fetchFavorites()
+    }
+  }, [userId])
+
   const fetchProperties = async () => {
     try {
       const response = await fetch('https://buysel.azurewebsites.net/api/property')
       if (response.ok) {
         const data = await response.json()
-        setProperties(data) 
+        setProperties(data)
       }
     } catch (error) {
       console.error('Error fetching properties:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchFavorites = async () => {
+    if (!userId) return
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/userpropertyfav/${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setFavs(data)
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error)
+    }
+  }
+
+  const handleFavToggle = async (propertyId: number, fav: boolean) => {
+    if (!userId) return
+
+    if (fav) {
+      // Add to favorites
+      try {
+        const newFav = { id: 0, user_id: userId, property_id: propertyId }
+        const response = await fetch('https://buysel.azurewebsites.net/api/userpropertyfav', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newFav)
+        })
+        if (response.ok) {
+          const createdFav = await response.json()
+          setFavs([...favs, createdFav])
+        }
+      } catch (error) {
+        console.error('Error adding favorite:', error)
+      }
+    } else {
+      // Remove from favorites
+      const favToRemove = favs.find(f => f.property_id === propertyId)
+      if (favToRemove) {
+        try {
+          const response = await fetch(`https://buysel.azurewebsites.net/api/userpropertyfav/${favToRemove.id}`, {
+            method: 'DELETE'
+          })
+          if (response.ok) {
+            setFavs(favs.filter(f => f.id !== favToRemove.id))
+          }
+        } catch (error) {
+          console.error('Error removing favorite:', error)
+        }
+      }
     }
   }
 
@@ -82,6 +145,29 @@ export default function HomePage() {
       }
     } catch (error) {
       alert('Error fetching properties:'+ error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleClearSearch = () => {
+    setSearchQuery('')
+    setBeds('')
+    setBaths('')
+    fetchProperties()
+  }
+
+  const fetchFavouriteProperties = async () => {
+    if (!user?.email) return
+    setLoading(true)
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/property/favs/${user.email}`)
+      if (response.ok) {
+        const data = await response.json()
+        setProperties(data)
+      }
+    } catch (error) {
+      console.error('Error fetching favourite properties:', error)
     } finally {
       setLoading(false)
     }
@@ -196,10 +282,55 @@ export default function HomePage() {
           <p className="text-xl mb-8">
             Verified property. No commission. Free to list during early access.
           </p>
-          
-          {/* Search Bar */}
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
-            <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-5 gap-4">
+
+          {/* Search/Favourites Toggle */}
+          <div className="flex justify-center mb-6">
+            <div className="flex gap-2 bg-white rounded-lg p-1 border border-gray-300">
+              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors ${
+                viewMode === 'search'
+                  ? 'bg-[#FF6600] text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}>
+                <input
+                  type="radio"
+                  name="viewMode"
+                  value="search"
+                  checked={viewMode === 'search'}
+                  onChange={() => {
+                    setViewMode('search')
+                    fetchProperties()
+                  }}
+                  className="sr-only"
+                />
+                <Search className="w-4 h-4" />
+                <span className="hidden sm:inline">Search</span>
+              </label>
+              <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors ${
+                viewMode === 'favourites'
+                  ? 'bg-[#FF6600] text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}>
+                <input
+                  type="radio"
+                  name="viewMode"
+                  value="favourites"
+                  checked={viewMode === 'favourites'}
+                  onChange={() => {
+                    setViewMode('favourites')
+                    fetchFavouriteProperties()
+                  }}
+                  className="sr-only"
+                />
+                <Heart className="w-4 h-4" />
+                <span className="hidden sm:inline">Favourites</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Search Bar - Only show in search mode */}
+          {viewMode === 'search' && (
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
+              <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="md:col-span-2">
                 <input
                   type="text"
@@ -231,15 +362,26 @@ export default function HomePage() {
                 <option value="2">2+</option>
                 <option value="3">3+</option>
               </select>
-              <button 
-                type="submit"
-                className="bg-[#FF6600] text-white px-6 py-2 rounded-lg hover:bg-orange-700 flex items-center justify-center"
-              >
-                <Search className="h-5 w-5 mr-2" />
-                Search
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  className="bg-[#FF6600] text-white px-6 py-2 rounded-lg hover:bg-orange-700 flex items-center justify-center flex-1"
+                >
+                  <Search className="h-5 w-5 mr-2" />
+                  Search
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 flex items-center justify-center"
+                  title="Clear search"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </form>
           </div>
+          )}
         </div>
       </section>
 
@@ -288,15 +430,17 @@ export default function HomePage() {
           ) : activeTab === 'list' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProperties.map((property) => (
-                <PropertyCard 
-                  key={property.id} 
-                  property={property} 
+                <PropertyCard
+                  key={property.id}
+                  property={property}
                   onClick={(prop) => setSelectedProperty(prop)}
                   onChatClick={isAuthenticated ? (prop) => {
                     setChatProperty(prop)
                     setShowChatModal(true)
                   } : undefined}
                   userId={userId}
+                  fav={favs.some(f => f.property_id === property.id)}
+                  onFavToggle={handleFavToggle}
                 />
               ))}
             </div>
