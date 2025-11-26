@@ -52,24 +52,26 @@ export default function PropertyCard({ property, onClick, onChatClick, userId, f
               <MessageCircle className="h-5 w-5 text-blue-600" />
             </button>
           )}
-          <button
-            type="button"
-            onClick={handleFavClick}
-            disabled={isFavLoading}
-            className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isFavLoading ? (
-              <Loader2 className="h-5 w-5 text-[#FF6600] animate-spin" />
-            ) : (
-              <Heart
-                className={`h-5 w-5 ${
-                  fav
-                    ? 'text-green-500 fill-green-500 animate-pulse'
-                    : 'text-gray-600'
-                }`}
-              />
-            )}
-          </button>
+          {userId && (
+            <button
+              type="button"
+              onClick={handleFavClick}
+              disabled={isFavLoading}
+              className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isFavLoading ? (
+                <Loader2 className="h-5 w-5 text-[#FF6600] animate-spin" />
+              ) : (
+                <Heart
+                  className={`h-5 w-5 ${
+                    fav
+                      ? 'text-green-500 fill-green-500 animate-pulse'
+                      : 'text-gray-600'
+                  }`}
+                />
+              )}
+            </button>
+          )}
         </div>
         <div className="absolute bottom-4 right-4 bg-white px-3 py-1 rounded-lg font-semibold">
           ${property.price.toLocaleString()}

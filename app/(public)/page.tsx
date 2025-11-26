@@ -283,9 +283,10 @@ export default function HomePage() {
             Verified property. No commission. Free to list during early access.
           </p>
 
-          {/* Search/Favourites Toggle */}
-          <div className="flex justify-center mb-6">
-            <div className="flex gap-2 bg-white rounded-lg p-1 border border-gray-300">
+          {/* Search/Favourites Toggle - Only show when logged in */}
+          {user && (
+            <div className="flex justify-center mb-6">
+              <div className="flex gap-2 bg-white rounded-lg p-1 border border-gray-300">
               <label className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-colors ${
                 viewMode === 'search'
                   ? 'bg-[#FF6600] text-white'
@@ -326,9 +327,10 @@ export default function HomePage() {
               </label>
             </div>
           </div>
+          )}
 
-          {/* Search Bar - Only show in search mode */}
-          {viewMode === 'search' && (
+          {/* Search Bar - Only show in search mode, or always show if not logged in */}
+          {(viewMode === 'search' || !user) && (
             <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto">
               <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="md:col-span-2">
