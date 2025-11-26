@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Shield, FileText, Users, FolderOpen, Activity, User, LogOut, Menu, X, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import UserProfile from './UserProfile'
 
 interface AdminHeaderProps {
@@ -19,6 +19,7 @@ interface AdminHeaderProps {
 export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps) {
   const { signOut: handleSignOut } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -34,7 +35,7 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
   const currentMode = 'admin'
 
   const handleNavigation = (url: string) => {
-    window.location.href = url
+    router.push(url)
   }
 
   return (

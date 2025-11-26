@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { User, LogOut, Menu, X, Briefcase, FileText, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Login from './Login'
 import UserProfile from './UserProfile'
 
@@ -18,13 +19,14 @@ interface ConveyancerHeaderProps {
 
 export default function ConveyancerHeader({ user, isAuthenticated }: ConveyancerHeaderProps) {
   const { signOut: handleSignOut } = useAuth()
+  const router = useRouter()
   const [showLogin, setShowLogin] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const handleNavigation = (url: string) => {
     setMobileMenuOpen(false)
-    window.location.href = url
+    router.push(url)
   }
 
   return (
@@ -114,14 +116,13 @@ export default function ConveyancerHeader({ user, isAuthenticated }: Conveyancer
                 <select
                   value="conveyancer"
                   onChange={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    if (e.target.value === 'buyer-seller') {
-                      window.location.href = '/'
-                    } else if (e.target.value === 'seller') {
-                      window.location.href = '/seller'
-                    } else if (e.target.value === 'admin') {
-                      window.location.href = '/admin/listings'
+                    const selectedValue = e.target.value
+                    if (selectedValue === 'conveyancer') return
+
+                    if (selectedValue === 'buyer-seller') {
+                      router.push('/')
+                    } else if (selectedValue === 'admin') {
+                      router.push('/admin/listings')
                     }
                   }}
                   className="pl-10 pr-4 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 text-white border border-orange-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 font-medium cursor-pointer hover:from-orange-700 hover:to-orange-800 transition-all appearance-none"
@@ -261,13 +262,12 @@ export default function ConveyancerHeader({ user, isAuthenticated }: Conveyancer
                     <select
                       value="conveyancer"
                       onChange={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        if (e.target.value === 'buyer-seller') {
+                        const selectedValue = e.target.value
+                        if (selectedValue === 'conveyancer') return
+
+                        if (selectedValue === 'buyer-seller') {
                           handleNavigation('/')
-                        } else if (e.target.value === 'seller') {
-                          handleNavigation('/seller')
-                        } else if (e.target.value === 'admin') {
+                        } else if (selectedValue === 'admin') {
                           handleNavigation('/admin/listings')
                         }
                       }}

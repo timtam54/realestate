@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Home, User, Search, Briefcase, Settings, LogOut, Menu, X, MessageCircle } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Login from './Login'
 import UserProfile from './UserProfile'
 import UnreadMessagesIndicator from './UnreadMessagesIndicator'
@@ -23,6 +23,7 @@ interface BuySelHeaderProps {
 export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProps) {
   const { signOut: handleSignOut } = useAuth()
   const pathname = usePathname()
+  const router = useRouter()
   const [showLogin, setShowLogin] = useState(false)
   const [loginCallbackUrl, setLoginCallbackUrl] = useState('/')
   const [showProfile, setShowProfile] = useState(false)
@@ -42,7 +43,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
 
   const handleNavigation = (url: string) => {
     setMobileMenuOpen(false)
-    window.location.href = url
+    router.push(url)
   }
   
   return (
@@ -164,14 +165,15 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
               <select
                 value={currentMode}
                 onChange={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  if (e.target.value === 'seller') {
-                    window.location.href = '/seller'
-                  } else if (e.target.value === 'conveyancer') {
-                    window.location.href = '/conveyancer'
-                  } else if (e.target.value === 'admin') {
-                    window.location.href = '/admin/listings'
+                  const selectedValue = e.target.value
+                  if (selectedValue === currentMode) return
+
+                  if (selectedValue === 'buyer-seller') {
+                    router.push('/')
+                  } else if (selectedValue === 'conveyancer') {
+                    router.push('/conveyancer')
+                  } else if (selectedValue === 'admin') {
+                    router.push('/admin/listings')
                   }
                 }}
                 className="pl-10 pr-4 py-2.5 bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 font-medium cursor-pointer hover:from-red-200 hover:to-red-300 transition-all appearance-none"
@@ -350,13 +352,14 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                   <select
                     value={currentMode}
                     onChange={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      if (e.target.value === 'seller') {
-                        handleNavigation('/seller')
-                      } else if (e.target.value === 'conveyancer') {
+                      const selectedValue = e.target.value
+                      if (selectedValue === currentMode) return
+
+                      if (selectedValue === 'buyer-seller') {
+                        handleNavigation('/')
+                      } else if (selectedValue === 'conveyancer') {
                         handleNavigation('/conveyancer')
-                      } else if (e.target.value === 'admin') {
+                      } else if (selectedValue === 'admin') {
                         handleNavigation('/admin/listings')
                       }
                     }}
