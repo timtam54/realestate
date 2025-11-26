@@ -120,20 +120,20 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
                 <select
                   value={currentMode}
                   onChange={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    if (e.target.value === 'seller') {
-                      handleNavigation('/seller')
-                    } else if (e.target.value === 'conveyancer') {
+                    const selectedValue = e.target.value
+                    if (selectedValue === currentMode) return
+
+                    if (selectedValue === 'conveyancer') {
                       handleNavigation('/conveyancer')
-                    } else if (e.target.value === 'buyer-seller') {
+                    } else if (selectedValue === 'buyer-seller') {
                       handleNavigation('/')
+                    } else if (selectedValue === 'admin') {
+                      handleNavigation('/admin/listings')
                     }
                   }}
                   className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium cursor-pointer hover:from-blue-200 hover:to-blue-300 transition-all"
                 >
                   <option value="buyer-seller">Buyer/Seller</option>
-               
                   <option value="conveyancer">Conveyancer</option>
                   <option value="admin">Admin</option>
                 </select>
@@ -231,20 +231,20 @@ export default function AdminHeader({ user, isAuthenticated }: AdminHeaderProps)
                   <select
                     value={currentMode}
                     onChange={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      if (e.target.value === 'seller') {
-                        handleNavigation('/seller')
-                      } else if (e.target.value === 'conveyancer') {
+                      const selectedValue = e.target.value
+                      if (selectedValue === currentMode) return
+
+                      if (selectedValue === 'conveyancer') {
                         handleNavigation('/conveyancer')
-                      } else if (e.target.value === 'buyer-seller') {
+                      } else if (selectedValue === 'buyer-seller') {
                         handleNavigation('/')
+                      } else if (selectedValue === 'admin') {
+                        handleNavigation('/admin/listings')
                       }
                     }}
                     className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 font-medium cursor-pointer hover:from-blue-200 hover:to-blue-300 transition-all"
                   >
                     <option value="buyer-seller">Buyer/Seller</option>
-                    <option value="seller">Seller</option>
                     <option value="conveyancer">Conveyancer</option>
                     <option value="admin">Admin</option>
                   </select>
