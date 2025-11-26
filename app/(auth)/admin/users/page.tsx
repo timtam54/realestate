@@ -317,10 +317,27 @@ export default function AdminUsersPage() {
     if (authLoading) return
 
     if (!isAuthenticated) {
-      router.push('/')
+      router.replace('/')
       return
     }
   }, [authLoading, isAuthenticated, router])
+
+  // Show loading state while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-blue-50">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render admin content if not authenticated
+  if (!isAuthenticated) {
+    return null
+  }
 
   useEffect(() => {
     fetchUsers()
