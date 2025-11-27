@@ -145,6 +145,14 @@ export default function AdminListingsPage() {
     }
   }, [authLoading, isAuthenticated, router])
 
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      fetchUsers()
+      fetchProperties()
+    }
+  }, [authLoading, isAuthenticated])
+
   // Show loading state while checking auth
   if (authLoading) {
     return (
@@ -161,11 +169,6 @@ export default function AdminListingsPage() {
   if (!isAuthenticated) {
     return null
   }
-
-  useEffect(() => {
-    fetchUsers()
-    fetchProperties()
-  }, [])
 
   const fetchUsers = async () => {
     try {
@@ -352,11 +355,6 @@ export default function AdminListingsPage() {
         </div>
       </div>
     )
-  }
-
-  // Don't render the page content if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null
   }
 
   return (

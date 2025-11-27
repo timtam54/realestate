@@ -49,6 +49,15 @@ export default function AdminDocumentRequestsPage() {
     }
   }, [authLoading, isAuthenticated, router])
 
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      fetchDocuments()
+      fetchProperties()
+      fetchBuyers()
+    }
+  }, [authLoading, isAuthenticated])
+
   // Show loading state while checking auth
   if (authLoading) {
     return (
@@ -65,12 +74,6 @@ export default function AdminDocumentRequestsPage() {
   if (!isAuthenticated) {
     return null
   }
-
-  useEffect(() => {
-    fetchDocuments()
-    fetchProperties()
-    fetchBuyers()
-  }, [])
 
   const fetchDocuments = async () => {
     try {
@@ -308,11 +311,6 @@ export default function AdminDocumentRequestsPage() {
         </div>
       </div>
     )
-  }
-
-  // Don't render the page content if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null
   }
 
   return (

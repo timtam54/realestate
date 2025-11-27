@@ -173,7 +173,12 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                   } else if (selectedValue === 'conveyancer') {
                     router.push('/conveyancer')
                   } else if (selectedValue === 'admin') {
-                    router.push('/admin/listings')
+                    if (!isAuthenticated) {
+                      setLoginCallbackUrl('/admin/listings')
+                      setShowLogin(true)
+                    } else {
+                      window.location.href = '/admin/listings'
+                    }
                   }
                 }}
                 className="pl-10 pr-4 py-2.5 bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 font-medium cursor-pointer hover:from-red-200 hover:to-red-300 transition-all appearance-none"
@@ -360,7 +365,14 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                       } else if (selectedValue === 'conveyancer') {
                         handleNavigation('/conveyancer')
                       } else if (selectedValue === 'admin') {
-                        handleNavigation('/admin/listings')
+                        if (!isAuthenticated) {
+                          setLoginCallbackUrl('/admin/listings')
+                          setShowLogin(true)
+                          setMobileMenuOpen(false)
+                        } else {
+                          setMobileMenuOpen(false)
+                          window.location.href = '/admin/listings'
+                        }
                       }
                     }}
                     className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 font-medium cursor-pointer hover:from-red-200 hover:to-red-300 transition-all"

@@ -21,6 +21,7 @@ export default function ConveyancerHeader({ user, isAuthenticated }: Conveyancer
   const { signOut: handleSignOut } = useAuth()
   const router = useRouter()
   const [showLogin, setShowLogin] = useState(false)
+  const [loginCallbackUrl, setLoginCallbackUrl] = useState('/conveyancer')
   const [showProfile, setShowProfile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -122,7 +123,12 @@ export default function ConveyancerHeader({ user, isAuthenticated }: Conveyancer
                     if (selectedValue === 'buyer-seller') {
                       router.push('/')
                     } else if (selectedValue === 'admin') {
-                      router.push('/admin/listings')
+                      if (!isAuthenticated) {
+                        setLoginCallbackUrl('/admin/listings')
+                        setShowLogin(true)
+                      } else {
+                        window.location.href = '/admin/listings'
+                      }
                     }
                   }}
                   className="pl-10 pr-4 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 text-white border border-orange-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 font-medium cursor-pointer hover:from-orange-700 hover:to-orange-800 transition-all appearance-none"
@@ -268,7 +274,14 @@ export default function ConveyancerHeader({ user, isAuthenticated }: Conveyancer
                         if (selectedValue === 'buyer-seller') {
                           handleNavigation('/')
                         } else if (selectedValue === 'admin') {
-                          handleNavigation('/admin/listings')
+                          if (!isAuthenticated) {
+                            setLoginCallbackUrl('/admin/listings')
+                            setShowLogin(true)
+                            setMobileMenuOpen(false)
+                          } else {
+                            setMobileMenuOpen(false)
+                            window.location.href = '/admin/listings'
+                          }
                         }
                       }}
                       className="w-full pl-10 pr-4 py-2.5 bg-gradient-to-r from-orange-600 to-orange-700 text-white border border-orange-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400 font-medium cursor-pointer hover:from-orange-700 hover:to-orange-800 transition-all"
@@ -284,7 +297,7 @@ export default function ConveyancerHeader({ user, isAuthenticated }: Conveyancer
           )}
         </div>
       </header>
-      {showLogin && <Login onClose={() => setShowLogin(false)} callbackUrl="/conveyancer" />}
+      {showLogin && <Login onClose={() => setShowLogin(false)} callbackUrl={loginCallbackUrl} />}
       {showProfile && user?.email && (
         <UserProfile
           email={user.email}

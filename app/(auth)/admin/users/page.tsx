@@ -322,6 +322,14 @@ export default function AdminUsersPage() {
     }
   }, [authLoading, isAuthenticated, router])
 
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      fetchUsers()
+      fetchSellersCount()
+    }
+  }, [authLoading, isAuthenticated])
+
   // Show loading state while checking auth
   if (authLoading) {
     return (
@@ -338,11 +346,6 @@ export default function AdminUsersPage() {
   if (!isAuthenticated) {
     return null
   }
-
-  useEffect(() => {
-    fetchUsers()
-    fetchSellersCount()
-  }, [])
 
   const fetchUsers = async () => {
     try {
@@ -455,11 +458,6 @@ export default function AdminUsersPage() {
         </div>
       </div>
     )
-  }
-
-  // Don't render the page content if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null
   }
 
   return (

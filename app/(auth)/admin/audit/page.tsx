@@ -29,6 +29,13 @@ export default function AdminAuditLogPage() {
     }
   }, [authLoading, isAuthenticated, router])
 
+  // Fetch data when authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      fetchAuditLogs()
+    }
+  }, [authLoading, isAuthenticated])
+
   // Show loading state while checking auth
   if (authLoading) {
     return (
@@ -45,10 +52,6 @@ export default function AdminAuditLogPage() {
   if (!isAuthenticated) {
     return null
   }
-
-  useEffect(() => {
-    fetchAuditLogs()
-  }, [])
 
   const fetchAuditLogs = async () => {
     try {
@@ -85,11 +88,6 @@ export default function AdminAuditLogPage() {
         </div>
       </div>
     )
-  }
-
-  // Don't render the page content if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null
   }
 
   return (
