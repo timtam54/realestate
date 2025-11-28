@@ -31,4 +31,5 @@ export interface Property {
   rejecvtedreason:string|null,
   poolcert:boolean|null,
   contractsale:boolean|null,
+  smokealarm:boolean|null,
 }

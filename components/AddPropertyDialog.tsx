@@ -1169,6 +1169,24 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
                   </label>
                 </div>
               </div>
+
+              <div className="border rounded-lg p-6">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="smokealarm"
+                    checked={property.smokealarm || false}
+                    onChange={(e) => setProperty({ ...property, smokealarm: e.target.checked })}
+                    className="h-5 w-5 text-[#FF6600] border-gray-300 rounded focus:ring-2 focus:ring-[#FF6600]"
+                  />
+                  <label htmlFor="smokealarm" className="text-lg font-semibold text-gray-800 cursor-pointer">
+                    Smoke Alarm Compliance
+                  </label>
+                </div>
+                <p className="text-sm text-gray-500 mt-2 ml-8">
+                  Confirms smoke alarms meet QLD requirements
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-between gap-3 mt-8">

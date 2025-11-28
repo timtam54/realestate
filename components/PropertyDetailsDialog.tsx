@@ -1,10 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { X, MapPin, Bed, Bath, Car, Home, Maximize, Calendar, Building, ChevronLeft, ChevronRight, MessageCircle, Bug, FileText, Loader2 } from 'lucide-react'
+import { X, MapPin, Bed, Bath, Car, Home, Maximize, Calendar, Building, ChevronLeft, ChevronRight, MessageCircle, Bug, FileText, Loader2, DollarSign } from 'lucide-react'
 import { Property } from '@/types/property'
 import { getPhotoUrl } from '@/lib/azure-config'
 import ChatModal from './ChatModal'
+import WatermarkedDocumentViewer from './WatermarkedDocumentViewer'
+import MakeOfferDialog from './MakeOfferDialog'
 import { useAuth } from '@/hooks/useAuth'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 import { useUserData } from '@/hooks/useUserData'
@@ -23,7 +25,7 @@ interface PropertyDetailsDialogProps {
 }
 
 export default function PropertyDetailsDialog({ property, onClose }: PropertyDetailsDialogProps) {
-  const { userId } = useUserData()
+  const { userId, userRole } = useUserData()
 
   const { isAuthenticated, user } = useAuth()
   const [photos, setPhotos] = useState<Photo[]>([])
@@ -33,9 +35,16 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
   const [showPdfDialog, setShowPdfDialog] = useState(false)
   const [showPestPdfDialog, setShowPestPdfDialog] = useState(false)
   const [showTitleSearchPdfDialog, setShowTitleSearchPdfDialog] = useState(false)
+  const [showOfferDialog, setShowOfferDialog] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
   const [requestingDoc, setRequestingDoc] = useState<string | null>(null)
   const correctDateForTimezone = useTimezoneCorrection()
+
+  // Determine if user can view original documents (seller, admin, or conveyancer)
+  const canViewOriginalDocs =
+    userId === property.sellerid ||
+    userRole === 'admin' ||
+    userRole === 'conveyancer'
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
@@ -448,14 +457,23 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
             >
               Close
             </button>
-            {isAuthenticated && (
-              <button
-                onClick={() => setShowChatModal(true)}
-                className="flex items-center gap-2 px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
-              >
-                <MessageCircle className="w-5 h-5" />
-                Contact Seller
-              </button>
+            {isAuthenticated && userId !== property.sellerid && (
+              <>
+                <button
+                  onClick={() => setShowChatModal(true)}
+                  className="flex items-center gap-2 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Message
+                </button>
+                <button
+                  onClick={() => setShowOfferDialog(true)}
+                  className="flex items-center gap-2 px-6 py-2 bg-[#FF6600] text-white rounded-lg hover:bg-[#FF5500] transition-colors"
+                >
+                  <DollarSign className="w-5 h-5" />
+                  Make Offer
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -475,83 +493,55 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
 
       {/* PDF Viewer Dialog - Building Inspection */}
       {showPdfDialog && property.buildinginspazureblob && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-xl font-bold text-gray-900">Building Inspection Report</h3>
-              <button
-                onClick={() => setShowPdfDialog(false)}
-                className="bg-gray-200 rounded-full p-2 hover:bg-gray-300 transition-colors"
-              >
-                <X className="w-6 h-6 text-gray-700" />
-              </button>
-            </div>
-
-            {/* PDF Viewer */}
-            <div className="flex-1 overflow-hidden">
-              <iframe
-                src={getPhotoUrl(property.buildinginspazureblob) || ''}
-                className="w-full h-full"
-                title="Building Inspection Report"
-              />
-            </div>
-          </div>
-        </div>
+        <WatermarkedDocumentViewer
+          isOpen={showPdfDialog}
+          onClose={() => setShowPdfDialog(false)}
+          documentUrl={property.buildinginspazureblob}
+          documentTitle="Building Inspection Report"
+          propertyAddress={property.address}
+          canViewOriginal={canViewOriginalDocs}
+          viewerEmail={user?.email}
+        />
       )}
 
       {/* PDF Viewer Dialog - Pest Inspection */}
       {showPestPdfDialog && property.pestinspazureblob && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-xl font-bold text-gray-900">Pest Inspection Report</h3>
-              <button
-                onClick={() => setShowPestPdfDialog(false)}
-                className="bg-gray-200 rounded-full p-2 hover:bg-gray-300 transition-colors"
-              >
-                <X className="w-6 h-6 text-gray-700" />
-              </button>
-            </div>
-
-            {/* PDF Viewer */}
-            <div className="flex-1 overflow-hidden">
-              <iframe
-                src={getPhotoUrl(property.pestinspazureblob) || ''}
-                className="w-full h-full"
-                title="Pest Inspection Report"
-              />
-            </div>
-          </div>
-        </div>
+        <WatermarkedDocumentViewer
+          isOpen={showPestPdfDialog}
+          onClose={() => setShowPestPdfDialog(false)}
+          documentUrl={property.pestinspazureblob}
+          documentTitle="Pest Inspection Report"
+          propertyAddress={property.address}
+          canViewOriginal={canViewOriginalDocs}
+          viewerEmail={user?.email}
+        />
       )}
 
       {/* PDF Viewer Dialog - Title Search Council Rates */}
       {showTitleSearchPdfDialog && property.titlesrchcouncilrateazureblob && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-xl font-bold text-gray-900">Title Search Council Rates</h3>
-              <button
-                onClick={() => setShowTitleSearchPdfDialog(false)}
-                className="bg-gray-200 rounded-full p-2 hover:bg-gray-300 transition-colors"
-              >
-                <X className="w-6 h-6 text-gray-700" />
-              </button>
-            </div>
+        <WatermarkedDocumentViewer
+          isOpen={showTitleSearchPdfDialog}
+          onClose={() => setShowTitleSearchPdfDialog(false)}
+          documentUrl={property.titlesrchcouncilrateazureblob}
+          documentTitle="Title Search / Council Rates"
+          propertyAddress={property.address}
+          canViewOriginal={canViewOriginalDocs}
+          viewerEmail={user?.email}
+        />
+      )}
 
-            {/* PDF Viewer */}
-            <div className="flex-1 overflow-hidden">
-              <iframe
-                src={getPhotoUrl(property.titlesrchcouncilrateazureblob) || ''}
-                className="w-full h-full"
-                title="Title Search Council Rates"
-              />
-            </div>
-          </div>
-        </div>
+      {/* Make Offer Dialog */}
+      {showOfferDialog && userId && (
+        <MakeOfferDialog
+          isOpen={showOfferDialog}
+          onClose={() => setShowOfferDialog(false)}
+          property={property}
+          buyerId={userId}
+          onOfferSubmitted={() => {
+            setToast('Offer submitted successfully!')
+            setTimeout(() => setToast(null), 3000)
+          }}
+        />
       )}
 
       {/* Toast Notification */}

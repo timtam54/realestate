@@ -14,11 +14,13 @@ interface UserData {
   idbloburl?: string
   phone?: string
   address?: string
+  role?: string
 }
 
 interface UseUserDataReturn {
   userData: UserData | null
   userId: number | null
+  userRole: string | null
   isLoading: boolean
   isProfileComplete: boolean
   dateofbirth: string | null
@@ -180,6 +182,7 @@ export function useUserData(): UseUserDataReturn {
   return {
     userData,
     userId: userData?.id || null,
+    userRole: userData?.role || null,
     isLoading,
     isProfileComplete,
     dateofbirth: userData?.dateofbirth || null,

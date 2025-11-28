@@ -8,6 +8,7 @@ import Footer from '@/components/Footer'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
 import ChatModal from '@/components/ChatModal'
+import MakeOfferDialog from '@/components/MakeOfferDialog'
 import NotificationHeader from '@/components/NotificationHeader'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserData } from '@/hooks/useUserData'
@@ -34,6 +35,8 @@ export default function HomePage() {
   const [chatProperty, setChatProperty] = useState<Property | null>(null)
   const [showChatModal, setShowChatModal] = useState(false)
   const [chatConversationId, setChatConversationId] = useState<string | null>(null)
+  const [offerProperty, setOfferProperty] = useState<Property | null>(null)
+  const [showOfferDialog, setShowOfferDialog] = useState(false)
   const [favs, setFavs] = useState<UserPropertyFav[]>([])
   const { user, isAuthenticated } = useAuth()
   const { userId } = useUserData()
@@ -440,6 +443,10 @@ export default function HomePage() {
                     setChatProperty(prop)
                     setShowChatModal(true)
                   } : undefined}
+                  onOfferClick={isAuthenticated ? (prop) => {
+                    setOfferProperty(prop)
+                    setShowOfferDialog(true)
+                  } : undefined}
                   userId={userId}
                   fav={favs.some(f => f.property_id === property.id)}
                   onFavToggle={handleFavToggle}
@@ -547,7 +554,19 @@ export default function HomePage() {
           initialConversationId={chatConversationId}
         />
       )}
-      
+
+      {showOfferDialog && offerProperty && userId && (
+        <MakeOfferDialog
+          isOpen={showOfferDialog}
+          onClose={() => {
+            setShowOfferDialog(false)
+            setOfferProperty(null)
+          }}
+          property={offerProperty}
+          buyerId={userId}
+        />
+      )}
+
       {isAuthenticated && (
         <NotificationHeader
           onOpenChat={async (propertyId, conversationId) => {

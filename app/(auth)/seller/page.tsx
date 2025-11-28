@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
-import { MapPin, List, Map, ListPlus } from 'lucide-react'
+import { MapPin, List, Map, ListPlus, DollarSign } from 'lucide-react'
 import BuySelHeader from '@/components/BuySelHeader'
 import Footer from '@/components/Footer'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
@@ -349,6 +349,13 @@ export default function SellerPage() {
             >
               <ListPlus className="w-4 h-4" />
               <span>List</span>
+            </button>
+            <button
+              onClick={() => router.push('/seller/offers')}
+              className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors font-bold"
+            >
+              <DollarSign className="w-4 h-4" />
+              <span>Offers</span>
             </button>
           </div>
 

@@ -1,18 +1,47 @@
 import { useState } from 'react'
-import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, MessageCircle, Camera, FileText, Loader2 } from 'lucide-react'
+import { MapPin, Heart, Bed, Bath, Car, Home, Shield, CheckCircle, MessageCircle, FileText, Loader2, AlertCircle, Flame, Waves, Bug, Search, DollarSign } from 'lucide-react'
 import { Property } from '@/types/property'
 import { getPhotoUrl } from '@/lib/azure-config'
+
+// Trust Badge Component
+interface TrustBadgeProps {
+  verified: boolean
+  label: string
+  icon: React.ReactNode
+}
+
+function TrustBadge({ verified, label, icon }: TrustBadgeProps) {
+  return (
+    <div
+      className={`flex items-center gap-1 text-xs px-2 py-1 rounded ${
+        verified
+          ? 'bg-green-50 text-green-700 border border-green-200'
+          : 'bg-gray-50 text-gray-400 border border-gray-200'
+      }`}
+      title={verified ? `${label} - Verified` : `${label} - Not verified`}
+    >
+      {icon}
+      <span className="hidden sm:inline">{label}</span>
+      {verified ? (
+        <CheckCircle className="h-3 w-3 text-green-600" />
+      ) : (
+        <AlertCircle className="h-3 w-3 text-gray-300" />
+      )}
+    </div>
+  )
+}
 
 interface PropertyCardProps {
   property: Property
   onClick: (property: Property) => void
   onChatClick?: (property: Property) => void
+  onOfferClick?: (property: Property) => void
   userId?: number | null
   fav?: boolean
   onFavToggle?: (propertyId: number, fav: boolean) => Promise<void>
 }
 
-export default function PropertyCard({ property, onClick, onChatClick, userId, fav = false, onFavToggle }: PropertyCardProps) {
+export default function PropertyCard({ property, onClick, onChatClick, onOfferClick, userId, fav = false, onFavToggle }: PropertyCardProps) {
   const [isFavLoading, setIsFavLoading] = useState(false)
 
   const handleFavClick = async (e: React.MouseEvent) => {
@@ -42,10 +71,26 @@ export default function PropertyCard({ property, onClick, onChatClick, userId, f
           </div>
         )}
         <div className="absolute top-4 right-4 flex gap-2">
+          {onOfferClick && userId && userId !== property.sellerid && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onOfferClick(property)
+              }}
+              className="p-2 bg-[#FF6600] rounded-full shadow-md hover:shadow-lg hover:bg-[#FF5500] transition-all"
+              title="Make an offer"
+            >
+              <DollarSign className="h-5 w-5 text-white" />
+            </button>
+          )}
           {onChatClick && userId !== property.sellerid && (
             <button
               type="button"
-              onClick={() => onChatClick(property)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onChatClick(property)
+              }}
               className="p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow"
               title="Chat with seller"
             >
@@ -109,63 +154,44 @@ export default function PropertyCard({ property, onClick, onChatClick, userId, f
             {property.landsize }m²
           </span>
         </div>
-        <div className="flex flex-wrap gap-1">
-          {/* Contract Ready badge - always shown */}
-          <span className="text-xs px-2 py-1 rounded-full flex items-center text-green-600 bg-green-100">
-            <Shield className="h-3 w-3 mr-1" />
-            Contract Ready
-          </span>
-          
-          {/* Smoke Alarm badge - shown if property listed more than 4 days ago */}
-          {(() => {
-            const listingDate = new Date(property.dte)
-            const fourDaysAgo = new Date()
-            fourDaysAgo.setDate(fourDaysAgo.getDate() - 6)
-            return listingDate < fourDaysAgo
-          })() && (
-            <span className="text-xs px-2 py-1 rounded-full flex items-center text-green-600 bg-green-100">
-              <Shield className="h-3 w-3 mr-1" />
-              Smoke Alarm
-            </span>
-          )}
-          
-          {/* Building Inspection badge - shown if report uploaded */}
-          {property.buildinginspazureblob && property.buildinginspverified==true && (
-            <span className="text-xs px-2 py-1 rounded-full flex items-center text-blue-600 bg-blue-100">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Building Inspect
-            </span>
-          )}
-          
-          {/* Pest Inspection badge - shown if report uploaded */}
-          {property.pestinspazureblob && property.pestinspverified==true && (
-            <span className="text-xs px-2 py-1 rounded-full flex items-center text-blue-600 bg-blue-100">
-              <CheckCircle className="h-3 w-3 mr-1" />
-              Pest Inspect
-            </span>
-          )}
-
-          {/* Rates/Title Doc badge - shown if document uploaded and verified */}
-          {property.titlesrchcouncilrateazureblob && property.titlesrchcouncilrateverified==true && (
-            <span className="text-xs px-2 py-1 rounded-full flex items-center text-orange-600 bg-orange-100">
-              <FileText className="h-3 w-3 mr-1" />
-              Rates/Title Proof
-            </span>
-          )}
-
-
-          {/* Pro Photos badge - shown if property listed more than 7 days ago */}
-          {(() => {
-            const listingDate = new Date(property.dte)
-            const sevenDaysAgo = new Date()
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-            return listingDate < sevenDaysAgo
-          })() && (
-            <span className="text-xs px-2 py-1 rounded-full flex items-center text-purple-600 bg-purple-100">
-              <Camera className="h-3 w-3 mr-1" />
-              Pro Photos
-            </span>
-          )}
+        {/* Trust Verification Badge Strip */}
+        <div className="border-t pt-3 mt-2">
+          <div className="flex items-center gap-1 mb-2">
+            <Shield className="h-3.5 w-3.5 text-[#FF6600]" />
+            <span className="text-xs font-medium text-gray-700">Trust & Verification</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <TrustBadge
+              verified={property.contractsale === true}
+              label="Contract"
+              icon={<FileText className="h-3 w-3" />}
+            />
+            <TrustBadge
+              verified={property.smokealarm === true}
+              label="Smoke Alarm"
+              icon={<Flame className="h-3 w-3" />}
+            />
+            <TrustBadge
+              verified={property.poolcert === true}
+              label="Pool Cert"
+              icon={<Waves className="h-3 w-3" />}
+            />
+            <TrustBadge
+              verified={property.buildinginspverified === true}
+              label="Building"
+              icon={<Home className="h-3 w-3" />}
+            />
+            <TrustBadge
+              verified={property.pestinspverified === true}
+              label="Pest"
+              icon={<Bug className="h-3 w-3" />}
+            />
+            <TrustBadge
+              verified={property.titlesrchcouncilrateverified === true}
+              label="Title"
+              icon={<Search className="h-3 w-3" />}
+            />
+          </div>
         </div>
       </div>
     </div>
