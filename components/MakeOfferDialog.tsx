@@ -244,6 +244,28 @@ export default function MakeOfferDialog({
         body: JSON.stringify(historyEntry)
       })
 
+      // Send push notification to seller
+      try {
+        await fetch('/api/push/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: property.sellerid,
+            payload: {
+              title: 'New Offer Received!',
+              body: `You have received an offer of $${amount.toLocaleString()} on ${property.address}`,
+              url: '/seller/offers',
+              propertyId: property.id
+            }
+          })
+        })
+      } catch (pushError) {
+        console.error('Failed to send push notification:', pushError)
+        // Don't fail the offer submission if push fails
+      }
+
       setSuccess(true)
       onOfferSubmitted?.()
 

@@ -133,6 +133,41 @@ export default function OffersList({
         actionMessages[newStatus] || `Status changed to ${newStatus}`
       )
 
+      // Send push notification to buyer when seller responds (not for buyer's own withdrawal)
+      if (mode === 'seller' && newStatus !== 'withdrawn') {
+        try {
+          const notificationTitles: Record<string, string> = {
+            'accepted': 'Offer Accepted!',
+            'rejected': 'Offer Rejected',
+            'countered': 'Counter Offer Received'
+          }
+          const notificationBodies: Record<string, string> = {
+            'accepted': `Your offer of $${offer.offer_amount.toLocaleString()} has been accepted${property ? ` for ${property.address}` : ''}!`,
+            'rejected': `Your offer of $${offer.offer_amount.toLocaleString()} has been rejected${property ? ` for ${property.address}` : ''}.`,
+            'countered': `The seller has made a counter offer${property ? ` for ${property.address}` : ''}.`
+          }
+
+          await fetch('/api/push/send', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: offer.buyer_id,
+              payload: {
+                title: notificationTitles[newStatus] || 'Offer Update',
+                body: notificationBodies[newStatus] || `Your offer status has been updated to ${newStatus}`,
+                url: '/buyer/offers',
+                propertyId: offer.property_id
+              }
+            })
+          })
+        } catch (pushError) {
+          console.error('Failed to send push notification:', pushError)
+          // Don't fail the status update if push fails
+        }
+      }
+
       // Refresh offers
       await fetchOffers()
     } catch (err) {

@@ -116,6 +116,25 @@ export default function SellerOffersPage() {
 
       if (!response.ok) throw new Error('Failed to create counter offer')
 
+      // Send push notification to buyer about the counter offer
+      try {
+        await fetch('/api/push/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: counterOfferTarget.buyer_id,
+            payload: {
+              title: 'Counter Offer Received!',
+              body: `The seller has made a counter offer of $${counterAmount.toLocaleString()} for ${selectedProperty.address}`,
+              url: '/buyer/offers',
+              propertyId: selectedProperty.id
+            }
+          })
+        })
+      } catch (pushError) {
+        console.error('Failed to send push notification:', pushError)
+      }
+
       setShowCounterDialog(false)
       setCounterOfferTarget(null)
       // Refresh will happen via OffersList component
