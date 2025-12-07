@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
-import { X, DollarSign, Calendar, FileText, AlertCircle, CheckCircle, Loader2, Info } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { X, DollarSign, Calendar, FileText, AlertCircle, CheckCircle, Loader2, Info, User } from 'lucide-react'
 import { Property } from '@/types/property'
-import { CreateOfferRequest, QLD_STANDARD_CONDITIONS, SETTLEMENT_OPTIONS, OfferConditions } from '@/types/offer'
+import { CreateOfferRequest, CreateOfferConditionRequest, CreateOfferHistoryRequest, QLD_STANDARD_CONDITIONS, SETTLEMENT_OPTIONS, OfferConditions } from '@/types/offer'
+import { useUserCache } from '@/hooks/useUserCache'
+import { Seller } from '@/types/seller'
 
 interface MakeOfferDialogProps {
   isOpen: boolean
@@ -20,6 +22,8 @@ export default function MakeOfferDialog({
   buyerId,
   onOfferSubmitted
 }: MakeOfferDialogProps) {
+  const { fetchUser } = useUserCache()
+  const [seller, setSeller] = useState<Seller | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -45,6 +49,17 @@ export default function MakeOfferDialog({
   })
 
   const [otherCondition, setOtherCondition] = useState<string>('')
+
+  // Fetch seller info when dialog opens
+  useEffect(() => {
+    if (isOpen && property.sellerid) {
+      fetchUser(property.sellerid).then((userData) => {
+        if (userData) {
+          setSeller(userData)
+        }
+      })
+    }
+  }, [isOpen, property.sellerid, fetchUser])
 
   if (!isOpen) return null
 
@@ -138,6 +153,97 @@ export default function MakeOfferDialog({
         throw new Error(`Failed to submit offer: ${errorText}`)
       }
 
+      // Get the created offer to get its ID
+      const createdOffer = await response.json()
+      const offerId = createdOffer.id
+
+      // Now POST each condition to the offercondition endpoint
+      const conditionsToCreate: CreateOfferConditionRequest[] = []
+
+      if (conditions.finance) {
+        conditionsToCreate.push({
+          offer_id: offerId,
+          condition_type: 'finance',
+          description: 'Subject to buyer obtaining satisfactory finance approval',
+          days_to_satisfy: conditions.financeDays || 14,
+          is_satisfied: false
+        })
+      }
+      if (conditions.buildingPest) {
+        conditionsToCreate.push({
+          offer_id: offerId,
+          condition_type: 'building_pest',
+          description: 'Subject to satisfactory building and pest inspection',
+          days_to_satisfy: conditions.buildingPestDays || 7,
+          is_satisfied: false
+        })
+      }
+      if (conditions.saleOfProperty) {
+        conditionsToCreate.push({
+          offer_id: offerId,
+          condition_type: 'sale_of_property',
+          description: 'Subject to the sale of buyer\'s existing property',
+          days_to_satisfy: conditions.saleOfPropertyDays || 30,
+          is_satisfied: false
+        })
+      }
+      if (conditions.valuation) {
+        conditionsToCreate.push({
+          offer_id: offerId,
+          condition_type: 'valuation',
+          description: 'Subject to property valuation meeting or exceeding offer price',
+          days_to_satisfy: conditions.valuationDays || 14,
+          is_satisfied: false
+        })
+      }
+      if (conditions.solicitorReview) {
+        conditionsToCreate.push({
+          offer_id: offerId,
+          condition_type: 'solicitor_review',
+          description: 'Subject to satisfactory review by buyer\'s solicitor',
+          days_to_satisfy: conditions.solicitorReviewDays || 5,
+          is_satisfied: false
+        })
+      }
+      if (otherCondition.trim()) {
+        conditionsToCreate.push({
+          offer_id: offerId,
+          condition_type: 'other',
+          description: otherCondition.trim(),
+          days_to_satisfy: 14,
+          is_satisfied: false
+        })
+      }
+
+      // POST all conditions
+      for (const condition of conditionsToCreate) {
+        await fetch('https://buysel.azurewebsites.net/api/offercondition', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(condition)
+        })
+      }
+
+      // POST offer history entry
+      const historyEntry: CreateOfferHistoryRequest = {
+        offer_id: offerId,
+        actor_id: buyerId,
+        action: 'created',
+        offer_amount: amount,
+        conditions_json: JSON.stringify(conditionsData),
+        message: 'Offer submitted'
+      }
+
+      await fetch('https://buysel.azurewebsites.net/api/offerhistory', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(historyEntry)
+      })
+
       setSuccess(true)
       onOfferSubmitted?.()
 
@@ -191,6 +297,14 @@ export default function MakeOfferDialog({
           <div>
             <h2 className="text-xl font-bold text-gray-900">Make an Offer</h2>
             <p className="text-sm text-gray-500 mt-1">{property.address}</p>
+            {seller && (
+              <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                <span>Seller: {seller.firstname} {seller.lastname}</span>
+                <span className="text-gray-400">|</span>
+                <span>{seller.email}</span>
+              </div>
+            )}
           </div>
           <button
             onClick={onClose}

@@ -46,6 +46,54 @@ export interface Offer {
   version: number
 }
 
+// Offer condition from the API
+export interface OfferConditionRecord {
+  id: number
+  offer_id: number
+  condition_type: string
+  description: string
+  days_to_satisfy: number
+  is_satisfied: boolean
+  satisfied_at: string | null
+  created_at: string
+}
+
+// For creating a new offer condition
+export interface CreateOfferConditionRequest {
+  id?: number
+  offer_id: number
+  condition_type: string
+  description: string
+  days_to_satisfy: number
+  is_satisfied: boolean
+  satisfied_at?: string | null
+  created_at?: string
+}
+
+// Offer history from the API
+export interface OfferHistoryRecord {
+  id: number
+  offer_id: number
+  actor_id: number
+  action: string
+  offer_amount: number
+  conditions_json: string | null
+  message: string | null
+  created_at: string
+}
+
+// For creating a new offer history entry
+export interface CreateOfferHistoryRequest {
+  id?: number
+  offer_id: number
+  actor_id: number
+  action: string
+  offer_amount: number
+  conditions_json?: string | null
+  message?: string | null
+  created_at?: string
+}
+
 // For creating a new offer
 export interface CreateOfferRequest {
   property_id: number

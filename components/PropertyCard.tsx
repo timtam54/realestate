@@ -36,12 +36,15 @@ interface PropertyCardProps {
   onClick: (property: Property) => void
   onChatClick?: (property: Property) => void
   onOfferClick?: (property: Property) => void
+  onViewOffersClick?: (property: Property) => void  // For sellers to view received offers
   userId?: number | null
   fav?: boolean
   onFavToggle?: (propertyId: number, fav: boolean) => Promise<void>
+  hasOffer?: boolean
+  hasReceivedOffer?: boolean  // For sellers - shows when they have pending offers
 }
 
-export default function PropertyCard({ property, onClick, onChatClick, onOfferClick, userId, fav = false, onFavToggle }: PropertyCardProps) {
+export default function PropertyCard({ property, onClick, onChatClick, onOfferClick, onViewOffersClick, userId, fav = false, onFavToggle, hasOffer = false, hasReceivedOffer = false }: PropertyCardProps) {
   const [isFavLoading, setIsFavLoading] = useState(false)
 
   const handleFavClick = async (e: React.MouseEvent) => {
@@ -71,6 +74,20 @@ export default function PropertyCard({ property, onClick, onChatClick, onOfferCl
           </div>
         )}
         <div className="absolute top-4 right-4 flex gap-2">
+          {/* Seller offer indicator - flashing red dollar sign */}
+          {hasReceivedOffer && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                onViewOffersClick?.(property)
+              }}
+              className="p-2 bg-red-500 rounded-full shadow-md animate-pulse hover:bg-red-600 transition-colors"
+              title="You have pending offers! Click to view"
+            >
+              <DollarSign className="h-5 w-5 text-white" />
+            </button>
+          )}
           {onOfferClick && userId && userId !== property.sellerid && (
             <button
               type="button"
@@ -78,10 +95,14 @@ export default function PropertyCard({ property, onClick, onChatClick, onOfferCl
                 e.stopPropagation()
                 onOfferClick(property)
               }}
-              className="p-2 bg-[#FF6600] rounded-full shadow-md hover:shadow-lg hover:bg-[#FF5500] transition-all"
-              title="Make an offer"
+              className={`p-2 rounded-full shadow-md hover:shadow-lg transition-all ${
+                hasOffer
+                  ? 'bg-green-500 hover:bg-green-600'
+                  : 'bg-white hover:bg-gray-100'
+              }`}
+              title={hasOffer ? "View your offer" : "Make an offer"}
             >
-              <DollarSign className="h-5 w-5 text-white" />
+              <DollarSign className={`h-5 w-5 ${hasOffer ? 'text-white' : 'text-gray-400'}`} />
             </button>
           )}
           {onChatClick && userId !== property.sellerid && (

@@ -16,7 +16,7 @@ import {
   FileText,
   History
 } from 'lucide-react'
-import { Offer, OfferConditions, OfferStatus } from '@/types/offer'
+import { Offer, OfferConditions, OfferStatus, OfferConditionRecord, OfferHistoryRecord, CreateOfferHistoryRequest } from '@/types/offer'
 import { Property } from '@/types/property'
 
 interface OffersListProps {
@@ -40,10 +40,21 @@ export default function OffersList({
   const [error, setError] = useState<string | null>(null)
   const [expandedOfferId, setExpandedOfferId] = useState<number | null>(null)
   const [processingOfferId, setProcessingOfferId] = useState<number | null>(null)
+  const [offerConditions, setOfferConditions] = useState<Record<number, OfferConditionRecord[]>>({})
+  const [processingConditionId, setProcessingConditionId] = useState<number | null>(null)
+  const [offerHistory, setOfferHistory] = useState<Record<number, OfferHistoryRecord[]>>({})
+  const [showHistoryForOffer, setShowHistoryForOffer] = useState<number | null>(null)
 
   useEffect(() => {
     fetchOffers()
   }, [propertyId, buyerId])
+
+  // Fetch conditions when an offer is expanded
+  useEffect(() => {
+    if (expandedOfferId && !offerConditions[expandedOfferId]) {
+      fetchConditions(expandedOfferId)
+    }
+  }, [expandedOfferId])
 
   const fetchOffers = async () => {
     setIsLoading(true)
@@ -102,6 +113,26 @@ export default function OffersList({
         throw new Error('Failed to update offer')
       }
 
+      // Post history entry for status change
+      const actionMessages: Record<string, string> = {
+        'accepted': 'Offer has been accepted',
+        'rejected': 'Offer has been rejected',
+        'countered': 'A counter offer has been made',
+        'withdrawn': 'Offer has been withdrawn',
+        'expired': 'Offer has expired'
+      }
+
+      // Use buyer_id for buyer actions, otherwise use 0 (will be the seller)
+      const actorId = newStatus === 'withdrawn' ? offer.buyer_id : (buyerId || 0)
+
+      await postHistoryEntry(
+        offerId,
+        actorId,
+        newStatus,
+        offer.offer_amount,
+        actionMessages[newStatus] || `Status changed to ${newStatus}`
+      )
+
       // Refresh offers
       await fetchOffers()
     } catch (err) {
@@ -109,6 +140,141 @@ export default function OffersList({
     } finally {
       setProcessingOfferId(null)
     }
+  }
+
+  const fetchConditions = async (offerId: number) => {
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/offercondition/${offerId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setOfferConditions(prev => ({
+          ...prev,
+          [offerId]: Array.isArray(data) ? data : []
+        }))
+      }
+    } catch (err) {
+      console.error('Failed to fetch conditions:', err)
+    }
+  }
+
+  const toggleConditionSatisfied = async (condition: OfferConditionRecord, offer: Offer) => {
+    setProcessingConditionId(condition.id)
+    try {
+      const updatedCondition = {
+        ...condition,
+        is_satisfied: !condition.is_satisfied,
+        satisfied_at: !condition.is_satisfied ? new Date().toISOString() : null
+      }
+
+      const response = await fetch('https://buysel.azurewebsites.net/api/offercondition', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedCondition)
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update condition')
+      }
+
+      // Post history entry for condition satisfaction
+      if (!condition.is_satisfied) {
+        await postHistoryEntry(
+          condition.offer_id,
+          buyerId || 0,
+          'condition_satisfied',
+          offer.offer_amount,
+          `${getConditionTypeLabel(condition.condition_type)} condition has been satisfied`
+        )
+      }
+
+      // Refresh conditions for this offer
+      await fetchConditions(condition.offer_id)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update condition')
+    } finally {
+      setProcessingConditionId(null)
+    }
+  }
+
+  const getConditionTypeLabel = (type: string): string => {
+    const labels: Record<string, string> = {
+      'finance': 'Finance Approval',
+      'building_pest': 'Building & Pest',
+      'sale_of_property': 'Sale of Property',
+      'valuation': 'Valuation',
+      'solicitor_review': 'Solicitor Review',
+      'other': 'Other'
+    }
+    return labels[type] || type
+  }
+
+  const fetchHistory = async (offerId: number) => {
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/offerhistory/${offerId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setOfferHistory(prev => ({
+          ...prev,
+          [offerId]: Array.isArray(data) ? data.sort((a: OfferHistoryRecord, b: OfferHistoryRecord) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          ) : []
+        }))
+      }
+    } catch (err) {
+      console.error('Failed to fetch history:', err)
+    }
+  }
+
+  const postHistoryEntry = async (
+    offerId: number,
+    actorId: number,
+    action: string,
+    offerAmount: number,
+    message: string
+  ) => {
+    const historyEntry: CreateOfferHistoryRequest = {
+      offer_id: offerId,
+      actor_id: actorId,
+      action: action,
+      offer_amount: offerAmount,
+      message: message
+    }
+
+    await fetch('https://buysel.azurewebsites.net/api/offerhistory', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(historyEntry)
+    })
+  }
+
+  const getActionLabel = (action: string): string => {
+    const labels: Record<string, string> = {
+      'created': 'Offer Created',
+      'accepted': 'Offer Accepted',
+      'rejected': 'Offer Rejected',
+      'countered': 'Counter Offer Made',
+      'withdrawn': 'Offer Withdrawn',
+      'expired': 'Offer Expired',
+      'condition_satisfied': 'Condition Satisfied'
+    }
+    return labels[action] || action
+  }
+
+  const getActionColor = (action: string): string => {
+    const colors: Record<string, string> = {
+      'created': 'bg-blue-100 text-blue-800',
+      'accepted': 'bg-green-100 text-green-800',
+      'rejected': 'bg-red-100 text-red-800',
+      'countered': 'bg-purple-100 text-purple-800',
+      'withdrawn': 'bg-gray-100 text-gray-800',
+      'expired': 'bg-gray-100 text-gray-600',
+      'condition_satisfied': 'bg-green-100 text-green-700'
+    }
+    return colors[action] || 'bg-gray-100 text-gray-800'
   }
 
   const getStatusBadge = (status: OfferStatus) => {
@@ -338,8 +504,74 @@ export default function OffersList({
               {/* Expanded Details */}
               {isExpand && (
                 <div className="border-t bg-white px-4 py-4 space-y-4">
-                  {/* Full Conditions */}
-                  {conditions && Object.keys(conditions).length > 0 && (
+                  {/* Conditions from API */}
+                  {offerConditions[offer.id] && offerConditions[offer.id].length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Conditions</h4>
+                      <ul className="space-y-2">
+                        {offerConditions[offer.id].map((condition) => (
+                          <li
+                            key={condition.id}
+                            className={`flex items-center justify-between p-2 rounded-lg border ${
+                              condition.is_satisfied
+                                ? 'bg-green-50 border-green-200'
+                                : 'bg-gray-50 border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {condition.is_satisfied ? (
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                              ) : (
+                                <Clock className="w-4 h-4 text-amber-500" />
+                              )}
+                              <div>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {getConditionTypeLabel(condition.condition_type)}
+                                </span>
+                                <span className="text-xs text-gray-500 ml-2">
+                                  ({condition.days_to_satisfy} days)
+                                </span>
+                                {condition.description && condition.condition_type === 'other' && (
+                                  <p className="text-xs text-gray-600 mt-0.5">{condition.description}</p>
+                                )}
+                              </div>
+                            </div>
+                            {mode === 'seller' && offer.status === 'accepted' && (
+                              <button
+                                onClick={() => toggleConditionSatisfied(condition, offer)}
+                                disabled={processingConditionId === condition.id}
+                                className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
+                                  condition.is_satisfied
+                                    ? 'bg-green-600 text-white hover:bg-green-700'
+                                    : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                                } disabled:opacity-50`}
+                              >
+                                {processingConditionId === condition.id ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : condition.is_satisfied ? (
+                                  'Satisfied'
+                                ) : (
+                                  'Mark Satisfied'
+                                )}
+                              </button>
+                            )}
+                            {mode === 'buyer' && (
+                              <span className={`px-2 py-1 text-xs font-medium rounded ${
+                                condition.is_satisfied
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-amber-100 text-amber-700'
+                              }`}>
+                                {condition.is_satisfied ? 'Satisfied' : 'Pending'}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Fallback: Show conditions from JSON if no API conditions */}
+                  {(!offerConditions[offer.id] || offerConditions[offer.id].length === 0) && conditions && Object.keys(conditions).length > 0 && (
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2">Conditions</h4>
                       <ul className="space-y-1 text-sm text-gray-600">
@@ -358,7 +590,7 @@ export default function OffersList({
                         {conditions.saleOfProperty && (
                           <li className="flex items-center gap-2">
                             <CheckCircle className="w-4 h-4 text-green-500" />
-                            Subject to sale of buyer's property ({conditions.saleOfPropertyDays} days)
+                            Subject to sale of buyer&apos;s property ({conditions.saleOfPropertyDays} days)
                           </li>
                         )}
                         {conditions.valuation && (
@@ -400,6 +632,77 @@ export default function OffersList({
                       <span>This is a counter-offer (version {offer.version})</span>
                     </div>
                   )}
+
+                  {/* Offer History Section */}
+                  <div className="border-t pt-3">
+                    <button
+                      onClick={() => {
+                        if (showHistoryForOffer === offer.id) {
+                          setShowHistoryForOffer(null)
+                        } else {
+                          setShowHistoryForOffer(offer.id)
+                          if (!offerHistory[offer.id]) {
+                            fetchHistory(offer.id)
+                          }
+                        }
+                      }}
+                      className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                    >
+                      <History className="w-4 h-4" />
+                      <span>{showHistoryForOffer === offer.id ? 'Hide' : 'View'} Activity History</span>
+                      {showHistoryForOffer === offer.id ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    {showHistoryForOffer === offer.id && (
+                      <div className="mt-3 space-y-2">
+                        {!offerHistory[offer.id] ? (
+                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Loading history...
+                          </div>
+                        ) : offerHistory[offer.id].length === 0 ? (
+                          <p className="text-sm text-gray-500">No history available</p>
+                        ) : (
+                          <div className="relative">
+                            {/* Timeline line */}
+                            <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-gray-200" />
+
+                            {offerHistory[offer.id].map((historyItem, index) => (
+                              <div key={historyItem.id} className="relative pl-6 pb-3">
+                                {/* Timeline dot */}
+                                <div className={`absolute left-0 w-4 h-4 rounded-full border-2 border-white ${
+                                  index === 0 ? 'bg-[#FF6600]' : 'bg-gray-300'
+                                }`} />
+
+                                <div className="bg-gray-50 rounded-lg p-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${getActionColor(historyItem.action)}`}>
+                                      {getActionLabel(historyItem.action)}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                      {formatDate(historyItem.created_at)}
+                                    </span>
+                                  </div>
+                                  {historyItem.message && (
+                                    <p className="text-sm text-gray-700">{historyItem.message}</p>
+                                  )}
+                                  {historyItem.offer_amount > 0 && (
+                                    <p className="text-sm font-medium text-gray-900 mt-1">
+                                      Amount: ${historyItem.offer_amount.toLocaleString()}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Action Buttons (Seller Mode) */}
                   {mode === 'seller' && offer.status === 'pending' && !expired && (

@@ -13,6 +13,7 @@ import NotificationHeader from '@/components/NotificationHeader'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserData } from '@/hooks/useUserData'
 import { Property } from '@/types/property'
+import { Offer } from '@/types/offer'
 import type { GoogleMap } from '@/types/google-maps'
 import { usePageView } from '@/hooks/useAudit'
 
@@ -38,6 +39,7 @@ export default function HomePage() {
   const [offerProperty, setOfferProperty] = useState<Property | null>(null)
   const [showOfferDialog, setShowOfferDialog] = useState(false)
   const [favs, setFavs] = useState<UserPropertyFav[]>([])
+  const [offers, setOffers] = useState<Offer[]>([])
   const { user, isAuthenticated } = useAuth()
   const { userId } = useUserData()
   const mapRef = useRef<HTMLDivElement>(null)
@@ -60,6 +62,7 @@ export default function HomePage() {
   useEffect(() => {
     if (userId) {
       fetchFavorites()
+      fetchOffers()
     }
   }, [userId])
 
@@ -87,6 +90,19 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error('Error fetching favorites:', error)
+    }
+  }
+
+  const fetchOffers = async () => {
+    if (!userId) return
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/offer/buyer/${userId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setOffers(Array.isArray(data) ? data : [])
+      }
+    } catch (error) {
+      console.error('Error fetching offers:', error)
     }
   }
 
@@ -450,6 +466,7 @@ export default function HomePage() {
                   userId={userId}
                   fav={favs.some(f => f.property_id === property.id)}
                   onFavToggle={handleFavToggle}
+                  hasOffer={offers.some(o => o.property_id === property.id)}
                 />
               ))}
             </div>
@@ -561,6 +578,7 @@ export default function HomePage() {
           onClose={() => {
             setShowOfferDialog(false)
             setOfferProperty(null)
+            fetchOffers()
           }}
           property={offerProperty}
           buyerId={userId}

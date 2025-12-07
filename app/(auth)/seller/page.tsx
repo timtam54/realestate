@@ -8,6 +8,7 @@ import AddPropertyDialog from '@/components/AddPropertyDialog'
 import PropertyCard from '@/components/PropertyCard'
 import PropertyDetailsDialog from '@/components/PropertyDetailsDialog'
 import ChatModal from '@/components/ChatModal'
+import OffersList from '@/components/OffersList'
 import NotificationHeader from '@/components/NotificationHeader'
 import UserProfile from '@/components/UserProfile'
 import { useAuth as useAuthHook } from '@/hooks/useAuth'
@@ -16,6 +17,7 @@ import { useUserData } from '@/hooks/useUserData'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
+import { Offer } from '@/types/offer'
 import type { GoogleMap } from '@/types/google-maps'
 import { useRouter } from 'next/navigation'
 import { usePageView } from '@/hooks/useAudit'
@@ -45,6 +47,9 @@ export default function SellerPage() {
   const [chatConversationId, setChatConversationId] = useState<string | null>(null)
   const [showChatModal, setShowChatModal] = useState(false)
   const [favs, setFavs] = useState<UserPropertyFav[]>([])
+  const [offers, setOffers] = useState<Offer[]>([])
+  const [showOffersPopup, setShowOffersPopup] = useState(false)
+  const [offersPopupProperty, setOffersPopupProperty] = useState<Property | null>(null)
   const mapRef = useRef<HTMLDivElement>(null)
   const googleMapRef = useRef<GoogleMap | null>(null)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
@@ -154,6 +159,7 @@ export default function SellerPage() {
   useEffect(() => {
     if (userId) {
       fetchFavorites()
+      fetchOffers()
     }
   }, [userId])
 
@@ -189,6 +195,19 @@ export default function SellerPage() {
       }
     } catch (error) {
       console.error('Error fetching favorites:', error)
+    }
+  }
+
+  const fetchOffers = async () => {
+    if (!userId) return
+    try {
+      const response = await fetch(`https://buysel.azurewebsites.net/api/offer/seller/${userId}`)
+      if (response.ok) {
+        const data: Offer[] = await response.json()
+        setOffers(data)
+      }
+    } catch (error) {
+      console.error('Error fetching offers:', error)
     }
   }
 
@@ -341,7 +360,7 @@ export default function SellerPage() {
                     status:'draft',
                     rejecvtedreason: null,
                     contractsale:null,
-                    poolcert:null
+                    poolcert:null,smokealarm:null
                   }
                 )
               }}
@@ -453,7 +472,7 @@ export default function SellerPage() {
                     status:'draft',
                     rejecvtedreason: null,
                     contractsale:null,
-                    poolcert:null
+                    poolcert:null,smokealarm:null
                   }
                 )
               }}
@@ -461,6 +480,14 @@ export default function SellerPage() {
             >
               <ListPlus className="w-4 h-4" />
               <span>List Property</span>
+            </button>
+
+            <button
+              onClick={() => router.push('/seller/offers')}
+              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-bold"
+            >
+              <DollarSign className="w-4 h-4" />
+              <span>Offers</span>
             </button>
 
             <div className="flex gap-2">
@@ -568,7 +595,8 @@ export default function SellerPage() {
                       status:'draft',
                       rejecvtedreason: null,
                       contractsale:null,
-                      poolcert:null
+                      poolcert:null,
+                    smokealarm:null,
                     }
                   )
                 }}
@@ -592,9 +620,14 @@ export default function SellerPage() {
                     setChatProperty(prop)
                     setShowChatModal(true)
                   }}
+                  onViewOffersClick={(prop) => {
+                    setOffersPopupProperty(prop)
+                    setShowOffersPopup(true)
+                  }}
                   userId={userId}
                   fav={favs.some(f => f.property_id === property.id)}
                   onFavToggle={handleFavToggle}
+                  hasReceivedOffer={offers.some(o => o.property_id === property.id && o.status === 'pending')}
                 />
               ))}
             </div>
@@ -695,7 +728,39 @@ export default function SellerPage() {
           initialConversationId={chatConversationId}
         />
       )}
-      
+
+      {/* Offers Popup Dialog */}
+      {showOffersPopup && offersPopupProperty && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Offers Received</h2>
+                <p className="text-sm text-gray-500 mt-1">{offersPopupProperty.address}</p>
+                <p className="text-lg font-semibold text-[#FF6600]">${offersPopupProperty.price?.toLocaleString()}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowOffersPopup(false)
+                  setOffersPopupProperty(null)
+                  fetchOffers()
+                }}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors text-2xl text-gray-500"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <OffersList
+                propertyId={offersPopupProperty.id}
+                property={offersPopupProperty}
+                mode="seller"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {isAuthenticated && (
         <NotificationHeader
           onOpenChat={async (propertyId, conversationId) => {
