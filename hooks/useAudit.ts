@@ -71,7 +71,7 @@ export function useAudit() {
         propertyid: propertyid || 0
       }
 
-      const response = await fetch('https://buysel.azurewebsites.net/api/audit', {
+      const response = await fetch('/api/audit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,7 +83,6 @@ export function useAudit() {
         console.error('Audit log failed:', response.status, response.statusText)
       }
     } catch (error) {
-      // Don't throw errors from audit logging - fail silently
       console.error('Error logging audit:', error)
     }
   }, [user?.email])

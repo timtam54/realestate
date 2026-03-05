@@ -7,7 +7,7 @@ import type { GoogleAutocomplete } from '@/types/google-maps'
 import { Property } from '@/types/property'
 import toast from 'react-hot-toast'
 import { getPhotoUrl } from '@/lib/azure-config'
-
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 
 interface Photo {
@@ -29,6 +29,7 @@ interface AddPropertyDialogProps {
 type WizardStep = 'property-details' | 'price-terms' | 'photos-video' | 'compliance' | 'review'
 
 export default function AddPropertyDialog({  onClose, onSave, property: initialProperty, admin = false }: AddPropertyDialogProps) {
+  const { fetchWithAuth } = useFetchWithAuth()
   const [property, setProperty] = useState<Property>(initialProperty)
   const [currentStep, setCurrentStep] = useState<WizardStep>('property-details')
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null)
@@ -54,7 +55,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const correctDateForTimezone = useTimezoneCorrection()
   const fetchPhotos = useCallback(async () => {
     try {
-      const response = await fetch(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
       if (response.ok) {
         const data = await response.json()
         setPhotos(data)
@@ -274,11 +275,8 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     try {
       const blobUrl = await uploadPhotoToAzure(capturedPhoto)
 
-      await fetch('https://buysel.azurewebsites.net/api/propertyphoto', {
+      await fetchWithAuth('https://buysel.azurewebsites.net/api/propertyphoto', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           id: 0,
           propertyid: property.id,
@@ -416,11 +414,8 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
 
   const saveProperty = async () => {
     try {
-      const response = await fetch('https://buysel.azurewebsites.net/api/property', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property', {
         method: property.id === 0 ? 'POST' : 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(property),
       })
       

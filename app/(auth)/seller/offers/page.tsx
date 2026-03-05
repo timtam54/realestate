@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useUserData } from '@/hooks/useUserData'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import { Property } from '@/types/property'
 import { Offer } from '@/types/offer'
 import OffersList from '@/components/OffersList'
@@ -21,6 +22,7 @@ export default function SellerOffersPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { userId, isLoading: userLoading } = useUserData()
+  const { fetchWithAuth } = useFetchWithAuth()
 
   const [properties, setProperties] = useState<Property[]>([])
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null)
@@ -51,7 +53,7 @@ export default function SellerOffersPage() {
 
     try {
       // Fetch seller's properties
-      const response = await fetch(`https://buysel.azurewebsites.net/api/property`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property`)
       if (!response.ok) throw new Error('Failed to fetch properties')
 
       const allProperties: Property[] = await response.json()
@@ -101,16 +103,14 @@ export default function SellerOffersPage() {
         updated_at: new Date().toISOString()
       }
 
-      await fetch('https://buysel.azurewebsites.net/api/offer', {
+      await fetchWithAuth('https://buysel.azurewebsites.net/api/offer', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(originalOffer)
       })
 
       // Then create the counter offer
-      const response = await fetch('https://buysel.azurewebsites.net/api/offer', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/offer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(counterOffer)
       })
 

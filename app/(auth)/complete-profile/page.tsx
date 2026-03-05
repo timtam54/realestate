@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useRouter } from 'next/navigation'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import UserProfile from '@/components/UserProfile'
 import BuySelHeader from '@/components/BuySelHeader'
 import Footer from '@/components/Footer'
@@ -11,6 +12,7 @@ import { usePageView } from '@/hooks/useAudit'
 export default function CompleteProfilePage() {
   usePageView('complete-profile')
   const { user, isAuthenticated, isLoading } = useAuth()
+  const { fetchWithAuth } = useFetchWithAuth()
   const router = useRouter()
   const [showProfile, setShowProfile] = useState(false)
 
@@ -27,7 +29,7 @@ export default function CompleteProfilePage() {
 
   const checkExistingProfile = async () => {
     try {
-      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(user?.email || '')}`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(user?.email || '')}`)
       if (response.ok) {
         const userData = await response.json()
         if (userData && userData.id) {

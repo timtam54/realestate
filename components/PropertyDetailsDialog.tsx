@@ -10,6 +10,7 @@ import MakeOfferDialog from './MakeOfferDialog'
 import { useAuth } from '@/hooks/useAuth'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 import { useUserData } from '@/hooks/useUserData'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 interface Photo {
   id: number
   propertyid: number
@@ -26,7 +27,7 @@ interface PropertyDetailsDialogProps {
 
 export default function PropertyDetailsDialog({ property, onClose }: PropertyDetailsDialogProps) {
   const { userId, userRole } = useUserData()
-
+  const { fetchWithAuth } = useFetchWithAuth()
   const { isAuthenticated, user } = useAuth()
   const [photos, setPhotos] = useState<Photo[]>([])
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
@@ -48,7 +49,7 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
-        const response = await fetch(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
+        const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
         if (response.ok) {
           const data = await response.json()
           setPhotos(data.filter((p: Photo) => !p.doc))
@@ -73,7 +74,7 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
 
 
       // Fetch user data from email endpoint
-      const userResponse = await fetch(ep)
+      const userResponse = await fetchWithAuth(ep)
 
       if (!userResponse.ok) {
         setToast('Failed to fetch user data')
@@ -93,11 +94,8 @@ export default function PropertyDetailsDialog({ property, onClose }: PropertyDet
 
       const jsn = JSON.stringify(payload)
       console.log('Requesting '+req+' Inspection with payload:', payload)
-      const response = await fetch('https://buysel.azurewebsites.net/api/propertybuyerdoc', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/propertybuyerdoc', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: jsn
       })
 

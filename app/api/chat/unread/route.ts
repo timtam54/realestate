@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
+import { serverFetchWithAuth } from '@/lib/server-api'
 
 export async function GET(req: NextRequest) {
   const session = await getSession()
@@ -11,10 +12,11 @@ export async function GET(req: NextRequest) {
   try {
     // Get user's numeric ID from email
     const userEmailUrl = `https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(session.user.email!)}`
-    const userResponse = await fetch(userEmailUrl)
+    const userResponse = await serverFetchWithAuth(userEmailUrl)
     
     if (!userResponse.ok) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+      // User hasn't completed profile yet - no messages possible
+      return NextResponse.json({ conversations: [], totalUnread: 0 })
     }
     
     const userData = await userResponse.json()
@@ -23,7 +25,7 @@ export async function GET(req: NextRequest) {
     // Get unread conversations for the user
     const unreadConvUrl = `https://buysel.azurewebsites.net/api/conversation/unread/${userId}`
     console.log('Fetching unread conversations from:', unreadConvUrl)
-    const unreadConvResponse = await fetch(unreadConvUrl)
+    const unreadConvResponse = await serverFetchWithAuth(unreadConvUrl)
     
     if (!unreadConvResponse.ok) {
       console.log('No unread conversations found')
@@ -42,7 +44,7 @@ export async function GET(req: NextRequest) {
         // Get unread messages for this specific conversation
         const unreadMsgUrl = `https://buysel.azurewebsites.net/api/message/unread/${userId}/${conv.id}`
         console.log('Fetching unread messages from:', unreadMsgUrl)
-        const unreadMsgResponse = await fetch(unreadMsgUrl)
+        const unreadMsgResponse = await serverFetchWithAuth(unreadMsgUrl)
         
         let messages = []
         if (unreadMsgResponse.ok) {
@@ -55,12 +57,12 @@ export async function GET(req: NextRequest) {
         
         if (lastMessage) {
           // Get property details
-          const propResponse = await fetch(`https://buysel.azurewebsites.net/api/property/${conv.property_id}`)
+          const propResponse = await serverFetchWithAuth(`https://buysel.azurewebsites.net/api/property/${conv.property_id}`)
           const property = propResponse.ok ? await propResponse.json() : { title: 'Property' }
-          
+
           // Get other user's name
           const otherUserId = conv.buyer_id === userId ? conv.seller_id : conv.buyer_id
-          const otherUserResponse = await fetch(`https://buysel.azurewebsites.net/api/user/${otherUserId}`)
+          const otherUserResponse = await serverFetchWithAuth(`https://buysel.azurewebsites.net/api/user/${otherUserId}`)
           const otherUser = otherUserResponse.ok 
             ? await otherUserResponse.json() 
             : { firstname: 'User', lastname: '' }

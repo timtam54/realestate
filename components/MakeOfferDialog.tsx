@@ -6,6 +6,7 @@ import { Property } from '@/types/property'
 import { CreateOfferRequest, CreateOfferConditionRequest, CreateOfferHistoryRequest, QLD_STANDARD_CONDITIONS, SETTLEMENT_OPTIONS, OfferConditions } from '@/types/offer'
 import { useUserCache } from '@/hooks/useUserCache'
 import { Seller } from '@/types/seller'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 
 interface MakeOfferDialogProps {
   isOpen: boolean
@@ -23,6 +24,7 @@ export default function MakeOfferDialog({
   onOfferSubmitted
 }: MakeOfferDialogProps) {
   const { fetchUser } = useUserCache()
+  const { fetchWithAuth } = useFetchWithAuth()
   const [seller, setSeller] = useState<Seller | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -140,11 +142,8 @@ export default function MakeOfferDialog({
         version: 1
       }
 
-      const response = await fetch('https://buysel.azurewebsites.net/api/offer', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/offer', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(offerData)
       })
 
@@ -217,11 +216,8 @@ export default function MakeOfferDialog({
 
       // POST all conditions
       for (const condition of conditionsToCreate) {
-        await fetch('https://buysel.azurewebsites.net/api/offercondition', {
+        await fetchWithAuth('https://buysel.azurewebsites.net/api/offercondition', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify(condition)
         })
       }
@@ -236,11 +232,8 @@ export default function MakeOfferDialog({
         message: 'Offer submitted'
       }
 
-      await fetch('https://buysel.azurewebsites.net/api/offerhistory', {
+      await fetchWithAuth('https://buysel.azurewebsites.net/api/offerhistory', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(historyEntry)
       })
 

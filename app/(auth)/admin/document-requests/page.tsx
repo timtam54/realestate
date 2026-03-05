@@ -5,6 +5,7 @@ import { FileText, Search, Calendar, Home, ShoppingCart, CheckCircle, Loader2, R
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import AdminHeader from '@/components/AdminHeader'
 import Footer from '@/components/Footer'
 import { Property } from '@/types/property'
@@ -31,6 +32,7 @@ export interface Buyer {
 export default function AdminDocumentRequestsPage() {
   usePageView('admin-document-requests')
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { fetchWithAuth } = useFetchWithAuth()
   const router = useRouter()
   const [documents, setDocuments] = useState<PropertyBuyerDoc[]>([])
   const [properties, setProperties] = useState<Property[]>([])
@@ -78,7 +80,7 @@ export default function AdminDocumentRequestsPage() {
   const fetchDocuments = async () => {
     try {
       setLoading(true)
-      const response = await fetch('https://buysel.azurewebsites.net/api/propertybuyerdoc/all')
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/propertybuyerdoc/all')
       if (response.ok) {
         const data: PropertyBuyerDoc[] = await response.json()
         setDocuments(data)
@@ -94,7 +96,7 @@ export default function AdminDocumentRequestsPage() {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetch('https://buysel.azurewebsites.net/api/property/all')
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property/all')
       if (response.ok) {
         const data: Property[] = await response.json()
         setProperties(data)
@@ -110,7 +112,7 @@ export default function AdminDocumentRequestsPage() {
     try {
       const ep='https://buysel.azurewebsites.net/api/user';
      // alert(ep)
-      const response = await fetch(ep)
+      const response = await fetchWithAuth(ep)
 
       if (response.ok) {
         const data: Buyer[] = await response.json()
@@ -128,11 +130,8 @@ export default function AdminDocumentRequestsPage() {
     setProcessingDocId(doc.id)
     try {
       const updatedDoc = { ...doc, action }
-      const response = await fetch('https://buysel.azurewebsites.net/api/propertybuyerdoc', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/propertybuyerdoc', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(updatedDoc),
       })
 
@@ -159,7 +158,7 @@ export default function AdminDocumentRequestsPage() {
         }
 
         // Get current user's numeric ID from email
-        const userResponse = await fetch(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(currentUserEmail)}`)
+        const userResponse = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(currentUserEmail)}`)
         if (!userResponse.ok) {
           console.error('Failed to get user by email')
           return
@@ -175,11 +174,8 @@ export default function AdminDocumentRequestsPage() {
           seller_id: sellerId
         }
 
-        const conversationResponse = await fetch('https://buysel.azurewebsites.net/api/conversation', {
+        const conversationResponse = await fetchWithAuth('https://buysel.azurewebsites.net/api/conversation', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify(conversationPayload)
         })
 
@@ -201,7 +197,7 @@ export default function AdminDocumentRequestsPage() {
         let bloburl: string | null = null
         if (action === 'Approve') {
           try {
-            const propertyResponse = await fetch(`https://buysel.azurewebsites.net/api/property/${doc.propertyid}`)
+            const propertyResponse = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${doc.propertyid}`)
             if (propertyResponse.ok) {
               const propertyData:Property = await propertyResponse.json()
 
@@ -236,11 +232,8 @@ export default function AdminDocumentRequestsPage() {
         }
         const jsn=JSON.stringify(messagePayload)
        // alert(jsn)
-        const messageResponse = await fetch('https://buysel.azurewebsites.net/api/message', {
+        const messageResponse = await fetchWithAuth('https://buysel.azurewebsites.net/api/message', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: jsn
         })
 

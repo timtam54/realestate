@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
+import { serverFetchWithAuth } from '@/lib/server-api';
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,13 +56,10 @@ export async function POST(request: NextRequest) {
     console.log('[API] Request body:', JSON.stringify(requestBody, null, 2));
 
     // Send subscription to Azure backend using email
-    const response = await fetch(
+    const response = await serverFetchWithAuth(
       'https://buysel.azurewebsites.net/api/push/push_subscription',
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(requestBody),
       }
     );

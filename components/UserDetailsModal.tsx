@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import type { Seller } from '@/types/seller'
 import { getAzureBlobUrl } from '@/lib/config'
 import { invalidateUserDataCache } from '@/hooks/useUserData'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 
 interface UserDetailsModalProps {
   selectedSeller: Seller
@@ -26,6 +27,7 @@ export default function UserDetailsModal({
   users,
   initialTab = 'info'
 }: UserDetailsModalProps) {
+  const { fetchWithAuth } = useFetchWithAuth()
   const [activeModalTab, setActiveModalTab] = useState(initialTab)
   const [loadingPhoto, setLoadingPhoto] = useState(false)
   const [loadingId, setLoadingId] = useState(false)
@@ -132,9 +134,8 @@ export default function UserDetailsModal({
                               }
 
                               try {
-                                const response = await fetch('https://buysel.azurewebsites.net/api/user', {
+                                const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
                                   method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify(updatedData)
                                 })
 
@@ -230,9 +231,8 @@ export default function UserDetailsModal({
                               }
 
                               try {
-                                const response = await fetch('https://buysel.azurewebsites.net/api/user', {
+                                const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
                                   method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify(updatedData)
                                 })
 
@@ -328,9 +328,8 @@ export default function UserDetailsModal({
                               }
 
                               try {
-                                const response = await fetch('https://buysel.azurewebsites.net/api/user', {
+                                const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
                                   method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify(updatedData)
                                 })
 
@@ -526,9 +525,8 @@ export default function UserDetailsModal({
                               }
 
                               try {
-                                const response = await fetch('https://buysel.azurewebsites.net/api/user', {
+                                const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
                                   method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json' },
                                   body: JSON.stringify(updatedData)
                                 })
 

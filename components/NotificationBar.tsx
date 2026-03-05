@@ -5,6 +5,7 @@ import { MessageCircle, X } from 'lucide-react'
 import Pusher from 'pusher-js'
 import { useAuth } from '@/hooks/useAuth'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 interface Notification {
   id: string
   conversationId: string
@@ -23,6 +24,7 @@ export default function NotificationBar({ onOpenChat }: NotificationBarProps) {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isVisible, setIsVisible] = useState(false)
   const { user } = useAuth()
+  const { fetchWithAuth } = useFetchWithAuth()
   const pusherRef = useRef<Pusher | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const correctDateForTimezone = useTimezoneCorrection()
@@ -71,7 +73,7 @@ export default function NotificationBar({ onOpenChat }: NotificationBarProps) {
       
       // Fetch property details
       try {
-        const propResponse = await fetch(`https://buysel.azurewebsites.net/api/property/${data.propertyId}`)
+        const propResponse = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${data.propertyId}`)
         const property = await propResponse.json()
         
         const notification: Notification = {

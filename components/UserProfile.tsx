@@ -9,6 +9,7 @@ import { BlobServiceClient } from '@azure/storage-blob'
 import { getAzureBlobUrl, config } from '@/lib/config'
 import { invalidateUserDataCache } from '@/hooks/useUserData'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 interface User {
   id: number
   email: string
@@ -58,6 +59,7 @@ const tabs = [
 ]
 
 export default function UserProfile({ email, isOpen, onClose }: UserProfileProps) {
+  const { fetchWithAuth } = useFetchWithAuth()
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -92,7 +94,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${email}`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/email/${email}`)
       if (response.ok) {
         const data = await response.json()
         if (data) {
@@ -407,11 +409,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     try {
       const method = user.id === 0 ? 'POST' : 'PUT'
       const userDataToSave = prepareUserForSave(user)
-      const response = await fetch('https://buysel.azurewebsites.net/api/user', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(userDataToSave),
       })
 
@@ -444,11 +443,8 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     try {
       const method = user.id === 0 ? 'POST' : 'PUT'
       const userDataToSave = prepareUserForSave(user)
-      const response = await fetch('https://buysel.azurewebsites.net/api/user', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(userDataToSave),
       })
 
@@ -490,17 +486,14 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
 
   const saveAndSwitchTab = async (newTab: string) => {
     if (!user || saving) return
-    
+
     // Save current changes
     setSaving(true)
     try {
       const method = user.id === 0 ? 'POST' : 'PUT'
       const userDataToSave = prepareUserForSave(user)
-      const response = await fetch('https://buysel.azurewebsites.net/api/user', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(userDataToSave),
       })
 

@@ -14,6 +14,7 @@ import UserProfile from '@/components/UserProfile'
 import { useAuth as useAuthHook } from '@/hooks/useAuth'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useUserData } from '@/hooks/useUserData'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
@@ -34,6 +35,7 @@ export default function SellerPage() {
   const { isAuthenticated } = useAuthHook()
   const router = useRouter()
   const { userId, isProfileComplete, isLoading: userDataLoading, refetchUserData, dateofbirth, idbloburl, idverified } = useUserData()
+  const { fetchWithAuth } = useFetchWithAuth()
   const correctDateForTimezone = useTimezoneCorrection()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
@@ -169,7 +171,7 @@ export default function SellerPage() {
       setError(null)
       const ep='https://buysel.azurewebsites.net/api/property/sellerusername/'+user?.email
       //alert(ep)
-      const response = await fetch(ep)
+      const response = await fetchWithAuth(ep)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -188,7 +190,7 @@ export default function SellerPage() {
   const fetchFavorites = async () => {
     if (!userId) return
     try {
-      const response = await fetch(`https://buysel.azurewebsites.net/api/userpropertyfav/${userId}`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/userpropertyfav/${userId}`)
       if (response.ok) {
         const data = await response.json()
         setFavs(data)
@@ -201,7 +203,7 @@ export default function SellerPage() {
   const fetchOffers = async () => {
     if (!userId) return
     try {
-      const response = await fetch(`https://buysel.azurewebsites.net/api/offer/seller/${userId}`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/offer/seller/${userId}`)
       if (response.ok) {
         const data: Offer[] = await response.json()
         setOffers(data)
@@ -218,9 +220,8 @@ export default function SellerPage() {
       // Add to favorites
       try {
         const newFav = { id: 0, user_id: userId, property_id: propertyId }
-        const response = await fetch('https://buysel.azurewebsites.net/api/userpropertyfav', {
+        const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/userpropertyfav', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newFav)
         })
         if (response.ok) {
@@ -235,7 +236,7 @@ export default function SellerPage() {
       const favToRemove = favs.find(f => f.property_id === propertyId)
       if (favToRemove) {
         try {
-          const response = await fetch(`https://buysel.azurewebsites.net/api/userpropertyfav/${favToRemove.id}`, {
+          const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/userpropertyfav/${favToRemove.id}`, {
             method: 'DELETE'
           })
           if (response.ok) {
@@ -252,11 +253,8 @@ export default function SellerPage() {
     try {
       const jsn=JSON.stringify(property)
       //alert(jsn);
-      const response = await fetch('https://buysel.azurewebsites.net/api/property', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property', {
         method: (property.id==0)?'POST':'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: jsn,
       })
       if (response.ok) {
@@ -770,7 +768,7 @@ export default function SellerPage() {
             // If not found locally, fetch from API (could be another seller's property)
             if (!property) {
               try {
-                const response = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
                 if (response.ok) {
                   property = await response.json()
                 }

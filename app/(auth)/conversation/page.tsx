@@ -6,6 +6,7 @@ import Footer from '@/components/Footer'
 import ChatModal from '@/components/ChatModal'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useUserData } from '@/hooks/useUserData'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import { useRouter } from 'next/navigation'
 import toast, { Toaster } from 'react-hot-toast'
 import { Property } from '@/types/property'
@@ -43,6 +44,7 @@ export default function ConversationPage() {
   usePageView('conversation')
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
   const { userId, isLoading: userDataLoading } = useUserData()
+  const { fetchWithAuth } = useFetchWithAuth()
   const router = useRouter()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [properties, setProperties] = useState<PropertySummary[]>([])
@@ -83,7 +85,7 @@ export default function ConversationPage() {
       setError(null)
 
       // Fetch conversations
-      const conversationsResponse = await fetch(
+      const conversationsResponse = await fetchWithAuth(
         `https://buysel.azurewebsites.net/api/conversation/user/${userId}`
       )
       if (!conversationsResponse.ok) {
@@ -92,14 +94,14 @@ export default function ConversationPage() {
       const conversationsData: Conversation[] = await conversationsResponse.json()
 
       // Fetch all users
-      const usersResponse = await fetch('https://buysel.azurewebsites.net/api/user')
+      const usersResponse = await fetchWithAuth('https://buysel.azurewebsites.net/api/user')
       if (!usersResponse.ok) {
         throw new Error(`Failed to fetch users: ${usersResponse.status}`)
       }
       const usersData: User[] = await usersResponse.json()
 
       // Fetch all properties
-      const propertiesResponse = await fetch('https://buysel.azurewebsites.net/api/property/all')
+      const propertiesResponse = await fetchWithAuth('https://buysel.azurewebsites.net/api/property/all')
       if (!propertiesResponse.ok) {
         throw new Error(`Failed to fetch properties: ${propertiesResponse.status}`)
       }
@@ -132,7 +134,7 @@ export default function ConversationPage() {
   const handleConversationClick = async (conversation: Conversation) => {
     try {
       // Fetch the property data
-      const response = await fetch(`https://buysel.azurewebsites.net/api/property/${conversation.property_id}`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${conversation.property_id}`)
       if (!response.ok) {
         throw new Error('Failed to fetch property')
       }

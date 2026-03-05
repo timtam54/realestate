@@ -7,12 +7,14 @@ import type { ApiAuditLog } from '@/types/audit'
 import PushNotificationTestPanel from '@/components/PushNotificationTestPanel'
 import { usePageView } from '@/hooks/useAudit'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import AdminHeader from '@/components/AdminHeader'
 import Footer from '@/components/Footer'
 
 
 export default function AdminAuditLogPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { fetchWithAuth } = useFetchWithAuth()
   const router = useRouter()
   usePageView('admin-audit')
   const [logs, setLogs] = useState<ApiAuditLog[]>([])
@@ -56,7 +58,7 @@ export default function AdminAuditLogPage() {
   const fetchAuditLogs = async () => {
     try {
       setLoading(true)
-      const response = await fetch('https://buysel.azurewebsites.net/api/audit')
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/audit')
       if (response.ok) {
         const data: ApiAuditLog[] = await response.json()
         setLogs(data)

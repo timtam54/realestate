@@ -2,6 +2,7 @@
 
 import { Seller } from '@/types/seller'
 import { useState, useEffect, useCallback } from 'react'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 
 /*interface UserData {
   id: number
@@ -22,6 +23,8 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000 // 24 hours
 const memoryCache = new Map<number, Seller>()
 
 export function useUserCache() {
+  const { fetchWithAuth } = useFetchWithAuth()
+
   const getCachedUser = useCallback((userId: number): Seller | null => {
     // Check memory cache first
     if (memoryCache.has(userId)) {
@@ -82,7 +85,7 @@ export function useUserCache() {
     // Fetch from API
     try {
       console.log(`Fetching user ${userId} from API`)
-      const response = await fetch(`https://buysel.azurewebsites.net/api/user/${userId}`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/${userId}`)
       
       if (!response.ok) {
         console.error(`Failed to fetch user ${userId}: ${response.status}`)
@@ -99,7 +102,7 @@ export function useUserCache() {
       console.error(`Error fetching user ${userId}:`, error)
       return null
     }
-  }, [getCachedUser, setCachedUser])
+  }, [getCachedUser, setCachedUser, fetchWithAuth])
 
   const clearUserCache = useCallback((userId?: number) => {
     if (userId) {

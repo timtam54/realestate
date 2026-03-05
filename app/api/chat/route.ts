@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
+import { serverFetchWithAuth } from '@/lib/server-api'
 import { Property } from '@/types/property'
 
 export async function GET(req: NextRequest) {
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
       // Get messages for a specific conversation
       const messageUrl = `https://buysel.azurewebsites.net/api/message/conversation/${conversationId}`
       console.log('🔵 Fetching messages from:', messageUrl)
-      const response = await fetch(messageUrl)
+      const response = await serverFetchWithAuth(messageUrl)
       const messages = await response.json()
       return NextResponse.json(messages)
     } else {
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
       // First, we need to get the user's numeric ID from their email
       const userEmailUrl = `https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(session.user.email!)}`
       console.log('🔵 Fetching user by email from:', userEmailUrl)
-      const userResponse = await fetch(userEmailUrl)
+      const userResponse = await serverFetchWithAuth(userEmailUrl)
       if (!userResponse.ok) {
         console.error('Failed to fetch user by email:', session.user.email)
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -40,8 +41,8 @@ export async function GET(req: NextRequest) {
       console.log('User ID:', userId)
       console.log('Property ID filter:', propertyId)
       console.log('Seller ID filter:', sellerId)
-      
-      const response = await fetch(url)
+
+      const response = await serverFetchWithAuth(url)
       
       // Check if response is ok
       if (!response.ok) {
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
     // Get user's numeric ID from email
     const userEmailUrl = `https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(session.user.email!)}`
     console.log('🔵 POST: Fetching user by email from:', userEmailUrl)
-    const userResponse = await fetch(userEmailUrl)
+    const userResponse = await serverFetchWithAuth(userEmailUrl)
     if (!userResponse.ok) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
@@ -129,10 +130,9 @@ export async function POST(req: NextRequest) {
         buyer_id: userId,
         seller_id: sellerId
       })
-      
-      const convResponse = await fetch(convUrl, {
+
+      const convResponse = await serverFetchWithAuth(convUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: 0, // New record
           property_id: propertyId,
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
       console.log('🔵 Fetching conversation details from:', convDetailUrl)
       let convDetailResponse
       try {
-        convDetailResponse = await fetch(convDetailUrl)
+        convDetailResponse = await serverFetchWithAuth(convDetailUrl)
       } catch (fetchError) {
         console.error('Network error fetching conversation details:', fetchError)
         return NextResponse.json({ error: 'Network error fetching conversation details' }, { status: 500 })
@@ -206,9 +206,8 @@ export async function POST(req: NextRequest) {
       sender_id: userId,
       content: content
     })
-    const messageResponse = await fetch(messageUrl, {
+    const messageResponse = await serverFetchWithAuth(messageUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         id: 0, // New record
         conversation_id: parseInt(convId), // Convert to number
@@ -239,11 +238,11 @@ export async function POST(req: NextRequest) {
     })
     
     // Get sender info for notification
-    const senderResponse = await fetch(`https://buysel.azurewebsites.net/api/user/${userId}`)
+    const senderResponse = await serverFetchWithAuth(`https://buysel.azurewebsites.net/api/user/${userId}`)
     const senderData = await senderResponse.json()
 
     // Get property info for notification
-    const propertyResponse = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+    const propertyResponse = await serverFetchWithAuth(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
     const propertyData:Property = await propertyResponse.json()
 
     // Send Web Push notification to recipient

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import webpush from 'web-push';
+import { serverFetchWithAuth } from '@/lib/server-api';
 
 // Configure web-push with VAPID details
 webpush.setVapidDetails(
@@ -34,14 +35,8 @@ export async function POST(request: NextRequest) {
     console.log('[API] Sending push notification to user:', userId);
 
     // First, get user's email from userId
-    const userResponse = await fetch(
-      `https://buysel.azurewebsites.net/api/user/${userId}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+    const userResponse = await serverFetchWithAuth(
+      `https://buysel.azurewebsites.net/api/user/${userId}`
     );
 
     if (!userResponse.ok) {
@@ -66,14 +61,8 @@ export async function POST(request: NextRequest) {
     console.log('[API] Fetching subscriptions for email:', userEmail);
 
     // Fetch user's push subscriptions from Azure backend using email
-    const subscriptionsResponse = await fetch(
-      `https://buysel.azurewebsites.net/api/push/push_subscription/email/${encodeURIComponent(userEmail)}`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
+    const subscriptionsResponse = await serverFetchWithAuth(
+      `https://buysel.azurewebsites.net/api/push/push_subscription/email/${encodeURIComponent(userEmail)}`
     );
 
     if (!subscriptionsResponse.ok) {
@@ -113,7 +102,7 @@ export async function POST(request: NextRequest) {
         if (error.statusCode === 410) {
           console.log('[API] Subscription expired, removing...');
           // Call Azure backend to remove the subscription
-          await fetch(
+          await serverFetchWithAuth(
             `https://buysel.azurewebsites.net/api/push/push_subscription/${subscription.id}`,
             {
               method: 'DELETE',

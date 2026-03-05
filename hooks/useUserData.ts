@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 //import { useRouter } from 'next/navigation'
 
 interface UserData {
@@ -54,6 +55,7 @@ export function invalidateUserDataCache() {
 
 export function useUserData(): UseUserDataReturn {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { fetchWithAuth } = useFetchWithAuth()
   //const router = useRouter()
   const [userData, setUserData] = useState<UserData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -95,6 +97,7 @@ export function useUserData(): UseUserDataReturn {
 
     // If no valid cache, fetch from API
     fetchUserData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.email, isAuthenticated, authLoading])
 
   const fetchUserData = useCallback(async () => {
@@ -109,12 +112,19 @@ export function useUserData(): UseUserDataReturn {
       setError(null)
 
       console.log('Fetching user data for:', user.email)
-      const response = await fetch(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(user.email)}`)
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(user.email)}`)
       
       if (!response.ok) {
         if (response.status === 404) {
           // User profile doesn't exist
           console.log('User profile not found, needs to be created')
+          setUserData(null)
+          setIsLoading(false)
+          return
+        }
+        if (response.status === 401) {
+          // Token not ready yet or expired - will retry on next auth state change
+          console.log('Auth token not ready or expired, waiting for auth state')
           setUserData(null)
           setIsLoading(false)
           return
@@ -136,7 +146,7 @@ export function useUserData(): UseUserDataReturn {
     } finally {
       setIsLoading(false)
     }
-  }, [user?.email])
+  }, [user?.email, fetchWithAuth])
 
   const refetchUserData = useCallback(async () => {
     // Clear cache and refetch

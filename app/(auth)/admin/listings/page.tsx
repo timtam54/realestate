@@ -10,6 +10,7 @@ import AuditProperty from '@/components/AuditProperty'
 import UserProfile from '@/components/UserProfile'
 import { usePageView } from '@/hooks/useAudit'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import AdminHeader from '@/components/AdminHeader'
 import Footer from '@/components/Footer'
 
@@ -115,6 +116,7 @@ const getStatusBgColor = (status: string): string => {
 
 export default function AdminListingsPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { fetchWithAuth } = useFetchWithAuth()
   const router = useRouter()
   usePageView('admin-listings')
   const [properties, setProperties] = useState<Property[]>([])
@@ -172,7 +174,7 @@ export default function AdminListingsPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('https://buysel.azurewebsites.net/api/user')
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user')
       if (response.ok) {
         const data: User[] = await response.json()
         setUsers(data)
@@ -187,7 +189,7 @@ export default function AdminListingsPage() {
   const fetchProperties = async () => {
     try {
       setLoading(true)
-      const response = await fetch('https://buysel.azurewebsites.net/api/property/all')
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property/all')
       if (response.ok) {
         const data: Property[] = await response.json()
         setProperties(data)
@@ -239,11 +241,8 @@ export default function AdminListingsPage() {
     try {
       const updatedProperty = { ...selectedProperty, [field]: newValue }
 
-      const response = await fetch('https://buysel.azurewebsites.net/api/property', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(updatedProperty),
       })
 
@@ -263,7 +262,7 @@ export default function AdminListingsPage() {
     if (!showDeleteDialog) return
 
     try {
-      const response = await fetch(`https://buysel.azurewebsites.net/api/property/${showDeleteDialog.id}`, {
+      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${showDeleteDialog.id}`, {
         method: 'DELETE',
       })
 
@@ -289,11 +288,8 @@ export default function AdminListingsPage() {
 
   const handleSaveEditedProperty = async (property: Property) => {
     try {
-      const response = await fetch('https://buysel.azurewebsites.net/api/property', {
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(property),
       })
 

@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Home, User, Search, Briefcase, Settings, LogOut, Menu, X, MessageCircle } from 'lucide-react'
+import { Home, User, Search, Briefcase, Settings, LogOut, Menu, X, MessageCircle, BarChart3 } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Login from './Login'
@@ -22,6 +23,7 @@ interface BuySelHeaderProps {
 
 export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProps) {
   const { signOut: handleSignOut } = useAuth()
+  const { fetchWithAuth } = useFetchWithAuth()
   const pathname = usePathname()
   const router = useRouter()
   const [showLogin, setShowLogin] = useState(false)
@@ -85,6 +87,10 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <span><u>Sell</u></span>
               </button>
             )}
+            <Link href="/comparables" className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-2 rounded-lg hover:bg-orange-50">
+              <BarChart3 className="w-4 h-4" />
+              <span><u>Comparables</u></span>
+            </Link>
             <Link href="/how-it-works" className="flex items-center gap-2 text-[#000000] hover:text-[#FF6600] transition-all font-semibold px-4 py-2 rounded-lg hover:bg-orange-50">
               <Briefcase className="w-4 h-4" />
               <span><u>How it Works</u></span>
@@ -105,7 +111,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <UnreadMessagesIndicator
                   onOpenChat={async (propertyId, conversationId) => {
                     try {
-                      const response = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
                       if (response.ok) {
                         const property = await response.json()
                         setChatProperty(property)
@@ -204,7 +210,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <UnreadMessagesIndicator
                   onOpenChat={async (propertyId, conversationId) => {
                     try {
-                      const response = await fetch(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
                       if (response.ok) {
                         const property = await response.json()
                         setChatProperty(property)
@@ -291,6 +297,14 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 </button>
               )}
               <Link
+                href="/comparables"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2 text-[#333333] hover:text-[#FF6600] transition-all font-medium px-4 py-3 rounded-lg hover:bg-orange-50"
+              >
+                <BarChart3 className="w-4 h-4" />
+                <span>Comparables</span>
+              </Link>
+              <Link
                 href="/how-it-works"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 text-[#000000] hover:text-[#FF6600] transition-all font-semibold px-4 py-3 rounded-lg hover:bg-orange-50"
@@ -298,7 +312,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <Briefcase className="w-4 h-4" />
                 <span>How it Works</span>
               </Link>
-              
+
               {isAuthenticated && (
                 <>
                   <button

@@ -5,6 +5,7 @@ import { Users, User, Mail, Search, Ban, UserCheck, Edit, ShoppingCart, Home as 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import AdminHeader from '@/components/AdminHeader'
 import Footer from '@/components/Footer'
 import { getAzureBlobUrl } from '@/lib/config'
@@ -298,6 +299,7 @@ function MockUserDetailsModal({ user, onClose, onStatusChange }: MockUserDetails
 export default function AdminUsersPage() {
   usePageView('admin-users')
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { fetchWithAuth } = useFetchWithAuth()
   const router = useRouter()
   const [apiUsers, setApiUsers] = useState<Seller[]>([])
   const [sellersCount, setSellersCount] = useState(0)
@@ -350,7 +352,7 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const response = await fetch('https://buysel.azurewebsites.net/api/user')
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user')
       if (response.ok) {
         const data: Seller[] = await response.json()
         setApiUsers(data)
@@ -366,7 +368,7 @@ export default function AdminUsersPage() {
 
   const fetchSellersCount = async () => {
     try {
-      const response = await fetch('https://buysel.azurewebsites.net/api/user/sellers')
+      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user/sellers')
       if (response.ok) {
         const data: Seller[] = await response.json()
         setSellersCount(data.length)
