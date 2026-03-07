@@ -19,6 +19,7 @@ import {
 import { Offer, OfferConditions, OfferStatus, OfferConditionRecord, OfferHistoryRecord, CreateOfferHistoryRequest } from '@/types/offer'
 import { Property } from '@/types/property'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
+import { API_ENDPOINTS, API_BASE_URL } from '@/lib/config'
 
 interface OffersListProps {
   propertyId?: number
@@ -63,11 +64,11 @@ export default function OffersList({
     setError(null)
 
     try {
-      let url = 'https://buysel.azurewebsites.net/api/offer'
+      let url = API_ENDPOINTS.OFFER
       if (propertyId) {
-        url = `https://buysel.azurewebsites.net/api/offer/property/${propertyId}`
+        url = API_ENDPOINTS.OFFER_BY_PROPERTY(propertyId)
       } else if (buyerId) {
-        url = `https://buysel.azurewebsites.net/api/offer/buyer/${buyerId}`
+        url = API_ENDPOINTS.OFFER_BY_BUYER(buyerId)
       }
 
       const response = await fetchWithAuth(url)
@@ -103,7 +104,7 @@ export default function OffersList({
         updated_at: new Date().toISOString()
       }
 
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/offer', {
+      const response = await fetchWithAuth(API_ENDPOINTS.OFFER, {
         method: 'PUT',
         body: JSON.stringify(updatedOffer)
       })
@@ -178,7 +179,7 @@ export default function OffersList({
 
   const fetchConditions = async (offerId: number) => {
     try {
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/offercondition/${offerId}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.OFFER_CONDITION_BY_OFFER(offerId))
       if (response.ok) {
         const data = await response.json()
         setOfferConditions(prev => ({
@@ -200,7 +201,7 @@ export default function OffersList({
         satisfied_at: !condition.is_satisfied ? new Date().toISOString() : null
       }
 
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/offercondition', {
+      const response = await fetchWithAuth(API_ENDPOINTS.OFFER_CONDITION, {
         method: 'PUT',
         body: JSON.stringify(updatedCondition)
       })
@@ -243,7 +244,7 @@ export default function OffersList({
 
   const fetchHistory = async (offerId: number) => {
     try {
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/offerhistory/${offerId}`)
+      const response = await fetchWithAuth(`${API_BASE_URL}/api/offerhistory/${offerId}`)
       if (response.ok) {
         const data = await response.json()
         setOfferHistory(prev => ({
@@ -273,7 +274,7 @@ export default function OffersList({
       message: message
     }
 
-    await fetchWithAuth('https://buysel.azurewebsites.net/api/offerhistory', {
+    await fetchWithAuth(`${API_BASE_URL}/api/offerhistory`, {
       method: 'POST',
       body: JSON.stringify(historyEntry)
     })

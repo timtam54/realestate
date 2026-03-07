@@ -13,6 +13,7 @@ import { Property } from '@/types/property'
 import { ArrowUp, ArrowDown, MessageCircle, User, Calendar, Home, DollarSign, Filter } from 'lucide-react'
 import { getPhotoUrl } from '@/lib/azure-config'
 import { usePageView } from '@/hooks/useAudit'
+import { API_ENDPOINTS } from '@/lib/config'
 
 interface Conversation {
   id: number
@@ -86,7 +87,7 @@ export default function ConversationPage() {
 
       // Fetch conversations
       const conversationsResponse = await fetchWithAuth(
-        `https://buysel.azurewebsites.net/api/conversation/user/${userId}`
+        API_ENDPOINTS.CONVERSATION_BY_USER(userId)
       )
       if (!conversationsResponse.ok) {
         throw new Error(`Failed to fetch conversations: ${conversationsResponse.status}`)
@@ -94,14 +95,14 @@ export default function ConversationPage() {
       const conversationsData: Conversation[] = await conversationsResponse.json()
 
       // Fetch all users
-      const usersResponse = await fetchWithAuth('https://buysel.azurewebsites.net/api/user')
+      const usersResponse = await fetchWithAuth('API_ENDPOINTS.USER')
       if (!usersResponse.ok) {
         throw new Error(`Failed to fetch users: ${usersResponse.status}`)
       }
       const usersData: User[] = await usersResponse.json()
 
       // Fetch all properties
-      const propertiesResponse = await fetchWithAuth('https://buysel.azurewebsites.net/api/property/all')
+      const propertiesResponse = await fetchWithAuth(API_ENDPOINTS.PROPERTY_ALL)
       if (!propertiesResponse.ok) {
         throw new Error(`Failed to fetch properties: ${propertiesResponse.status}`)
       }
@@ -134,7 +135,7 @@ export default function ConversationPage() {
   const handleConversationClick = async (conversation: Conversation) => {
     try {
       // Fetch the property data
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${conversation.property_id}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(conversation.property_id))
       if (!response.ok) {
         throw new Error('Failed to fetch property')
       }

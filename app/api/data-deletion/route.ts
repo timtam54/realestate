@@ -1,16 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+
+// Zod schema for data deletion validation
+const dataDeletionSchema = z.object({
+  user_id: z.union([z.string().min(1), z.number().int().positive()]).optional(),
+  userId: z.union([z.string().min(1), z.number().int().positive()]).optional()
+}).refine(data => data.user_id || data.userId, {
+  message: 'user_id or userId is required'
+})
 
 export async function POST(req: NextRequest) {
+  let body
   try {
-    const body = await req.json()
-    const userId = body.user_id || body.userId
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      )
-    }
+  // Validate input with Zod
+  const parseResult = dataDeletionSchema.safeParse(body)
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: parseResult.error.flatten() },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const userId = parseResult.data.user_id || parseResult.data.userId
 
     const confirmationCode = `${userId}_${Date.now()}`
 

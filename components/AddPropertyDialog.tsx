@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { getPhotoUrl } from '@/lib/azure-config'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
+import { API_ENDPOINTS } from '@/lib/config'
 
 interface Photo {
   id: number
@@ -55,7 +56,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
   const correctDateForTimezone = useTimezoneCorrection()
   const fetchPhotos = useCallback(async () => {
     try {
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/propertyphoto/${property.id}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_PHOTO_BY_ID(property.id))
       if (response.ok) {
         const data = await response.json()
         setPhotos(data)
@@ -275,7 +276,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
     try {
       const blobUrl = await uploadPhotoToAzure(capturedPhoto)
 
-      await fetchWithAuth('https://buysel.azurewebsites.net/api/propertyphoto', {
+      await fetchWithAuth(API_ENDPOINTS.PROPERTY_PHOTO, {
         method: 'POST',
         body: JSON.stringify({
           id: 0,
@@ -414,7 +415,7 @@ export default function AddPropertyDialog({  onClose, onSave, property: initialP
 
   const saveProperty = async () => {
     try {
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property', {
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY, {
         method: property.id === 0 ? 'POST' : 'PUT',
         body: JSON.stringify(property),
       })

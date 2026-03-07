@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
+import { API_ENDPOINTS } from '@/lib/config'
 //import { useRouter } from 'next/navigation'
 
 interface UserData {
@@ -112,7 +113,7 @@ export function useUserData(): UseUserDataReturn {
       setError(null)
 
       console.log('Fetching user data for:', user.email)
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(user.email)}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.USER_BY_EMAIL(user.email))
       
       if (!response.ok) {
         if (response.status === 404) {

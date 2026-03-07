@@ -11,6 +11,7 @@ import UserProfile from './UserProfile'
 import UnreadMessagesIndicator from './UnreadMessagesIndicator'
 import ChatModal from './ChatModal'
 import { Property } from '@/types/property'
+import { API_ENDPOINTS } from '@/lib/config'
 
 interface BuySelHeaderProps {
   user: {
@@ -111,7 +112,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <UnreadMessagesIndicator
                   onOpenChat={async (propertyId, conversationId) => {
                     try {
-                      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(propertyId))
                       if (response.ok) {
                         const property = await response.json()
                         setChatProperty(property)
@@ -210,7 +211,7 @@ export default function BuySelHeader({ user, isAuthenticated }: BuySelHeaderProp
                 <UnreadMessagesIndicator
                   onOpenChat={async (propertyId, conversationId) => {
                     try {
-                      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(propertyId))
                       if (response.ok) {
                         const property = await response.json()
                         setChatProperty(property)

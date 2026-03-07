@@ -4,7 +4,7 @@ import { useState, Dispatch, SetStateAction } from 'react'
 import { X, CheckCircle, XCircle, User, Mail, Phone, MapPin, Calendar, Shield, Activity, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import type { Seller } from '@/types/seller'
-import { getAzureBlobUrl } from '@/lib/config'
+import { getAzureBlobUrl, API_ENDPOINTS } from '@/lib/config'
 import { invalidateUserDataCache } from '@/hooks/useUserData'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 
@@ -134,7 +134,7 @@ export default function UserDetailsModal({
                               }
 
                               try {
-                                const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
+                                const response = await fetchWithAuth('API_ENDPOINTS.USER', {
                                   method: 'PUT',
                                   body: JSON.stringify(updatedData)
                                 })
@@ -231,7 +231,7 @@ export default function UserDetailsModal({
                               }
 
                               try {
-                                const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
+                                const response = await fetchWithAuth('API_ENDPOINTS.USER', {
                                   method: 'PUT',
                                   body: JSON.stringify(updatedData)
                                 })
@@ -328,7 +328,7 @@ export default function UserDetailsModal({
                               }
 
                               try {
-                                const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
+                                const response = await fetchWithAuth('API_ENDPOINTS.USER', {
                                   method: 'PUT',
                                   body: JSON.stringify(updatedData)
                                 })
@@ -525,7 +525,7 @@ export default function UserDetailsModal({
                               }
 
                               try {
-                                const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
+                                const response = await fetchWithAuth('API_ENDPOINTS.USER', {
                                   method: 'PUT',
                                   body: JSON.stringify(updatedData)
                                 })

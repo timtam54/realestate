@@ -12,6 +12,7 @@ import { Property } from '@/types/property'
 import { Conversation } from '@/types/conversation'
 import { Message } from '@/types/message'
 import { usePageView } from '@/hooks/useAudit'
+import { API_ENDPOINTS } from '@/lib/config'
 
 interface PropertyBuyerDoc {
   id: number
@@ -80,7 +81,7 @@ export default function AdminDocumentRequestsPage() {
   const fetchDocuments = async () => {
     try {
       setLoading(true)
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/propertybuyerdoc/all')
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BUYER_DOC_ALL)
       if (response.ok) {
         const data: PropertyBuyerDoc[] = await response.json()
         setDocuments(data)
@@ -96,7 +97,7 @@ export default function AdminDocumentRequestsPage() {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property/all')
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_ALL)
       if (response.ok) {
         const data: Property[] = await response.json()
         setProperties(data)
@@ -110,7 +111,7 @@ export default function AdminDocumentRequestsPage() {
 
   const fetchBuyers = async () => {
     try {
-      const ep='https://buysel.azurewebsites.net/api/user';
+      const ep=API_ENDPOINTS.USER;
      // alert(ep)
       const response = await fetchWithAuth(ep)
 
@@ -130,7 +131,7 @@ export default function AdminDocumentRequestsPage() {
     setProcessingDocId(doc.id)
     try {
       const updatedDoc = { ...doc, action }
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/propertybuyerdoc', {
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BUYER_DOC, {
         method: 'PUT',
         body: JSON.stringify(updatedDoc),
       })
@@ -158,7 +159,7 @@ export default function AdminDocumentRequestsPage() {
         }
 
         // Get current user's numeric ID from email
-        const userResponse = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(currentUserEmail)}`)
+        const userResponse = await fetchWithAuth(API_ENDPOINTS.USER_BY_EMAIL(currentUserEmail))
         if (!userResponse.ok) {
           console.error('Failed to get user by email')
           return
@@ -174,7 +175,7 @@ export default function AdminDocumentRequestsPage() {
           seller_id: sellerId
         }
 
-        const conversationResponse = await fetchWithAuth('https://buysel.azurewebsites.net/api/conversation', {
+        const conversationResponse = await fetchWithAuth(API_ENDPOINTS.CONVERSATION, {
           method: 'POST',
           body: JSON.stringify(conversationPayload)
         })
@@ -197,7 +198,7 @@ export default function AdminDocumentRequestsPage() {
         let bloburl: string | null = null
         if (action === 'Approve') {
           try {
-            const propertyResponse = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${doc.propertyid}`)
+            const propertyResponse = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(doc.propertyid))
             if (propertyResponse.ok) {
               const propertyData:Property = await propertyResponse.json()
 
@@ -232,7 +233,7 @@ export default function AdminDocumentRequestsPage() {
         }
         const jsn=JSON.stringify(messagePayload)
        // alert(jsn)
-        const messageResponse = await fetchWithAuth('https://buysel.azurewebsites.net/api/message', {
+        const messageResponse = await fetchWithAuth(API_ENDPOINTS.MESSAGE, {
           method: 'POST',
           body: jsn
         })

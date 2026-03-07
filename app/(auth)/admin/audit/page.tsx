@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import AdminHeader from '@/components/AdminHeader'
 import Footer from '@/components/Footer'
+import { API_ENDPOINTS } from '@/lib/config'
 
 
 export default function AdminAuditLogPage() {
@@ -58,7 +59,7 @@ export default function AdminAuditLogPage() {
   const fetchAuditLogs = async () => {
     try {
       setLoading(true)
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/audit')
+      const response = await fetchWithAuth(API_ENDPOINTS.AUDIT)
       if (response.ok) {
         const data: ApiAuditLog[] = await response.json()
         setLogs(data)

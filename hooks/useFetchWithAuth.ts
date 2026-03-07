@@ -2,8 +2,7 @@
 
 import { useCallback } from 'react'
 import { useAuth } from '@/lib/auth/auth-context'
-
-export const API_BASE_URL = 'https://buysel.azurewebsites.net'
+import { API_BASE_URL } from '@/lib/config'
 
 export function useFetchWithAuth() {
   const { getToken } = useAuth()
@@ -21,8 +20,6 @@ export function useFetchWithAuth() {
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
-    } else {
-      console.warn('[fetchWithAuth] No token available for request:', url)
     }
 
     return fetch(url, {

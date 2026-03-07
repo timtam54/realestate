@@ -1,8 +1,7 @@
 // Server-side API utility for authenticated fetch calls to the C# backend
 import { getSession } from '@/lib/auth/session'
 import { signJWT } from '@/lib/auth/jwt'
-
-export const API_BASE_URL = 'https://buysel.azurewebsites.net'
+import { API_BASE_URL } from '@/lib/config'
 
 /**
  * Server-side authenticated fetch for API routes

@@ -7,6 +7,7 @@ import { CreateOfferRequest, CreateOfferConditionRequest, CreateOfferHistoryRequ
 import { useUserCache } from '@/hooks/useUserCache'
 import { Seller } from '@/types/seller'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
+import { API_ENDPOINTS, API_BASE_URL } from '@/lib/config'
 
 interface MakeOfferDialogProps {
   isOpen: boolean
@@ -142,7 +143,7 @@ export default function MakeOfferDialog({
         version: 1
       }
 
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/offer', {
+      const response = await fetchWithAuth(API_ENDPOINTS.OFFER, {
         method: 'POST',
         body: JSON.stringify(offerData)
       })
@@ -216,7 +217,7 @@ export default function MakeOfferDialog({
 
       // POST all conditions
       for (const condition of conditionsToCreate) {
-        await fetchWithAuth('https://buysel.azurewebsites.net/api/offercondition', {
+        await fetchWithAuth(API_ENDPOINTS.OFFER_CONDITION, {
           method: 'POST',
           body: JSON.stringify(condition)
         })
@@ -232,7 +233,7 @@ export default function MakeOfferDialog({
         message: 'Offer submitted'
       }
 
-      await fetchWithAuth('https://buysel.azurewebsites.net/api/offerhistory', {
+      await fetchWithAuth(`${API_BASE_URL}/api/offerhistory`, {
         method: 'POST',
         body: JSON.stringify(historyEntry)
       })

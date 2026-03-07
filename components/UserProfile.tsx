@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import type { GoogleAutocomplete } from '@/types/google-maps'
 import { loadGoogleMapsScript } from '@/utils/googleMapsLoader'
 import { BlobServiceClient } from '@azure/storage-blob'
-import { getAzureBlobUrl, config } from '@/lib/config'
+import { getAzureBlobUrl, config, API_ENDPOINTS } from '@/lib/config'
 import { invalidateUserDataCache } from '@/hooks/useUserData'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
@@ -94,10 +94,11 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     try {
       setLoading(true)
       setError(null)
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/email/${email}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.USER_BY_EMAIL(email))
       if (response.ok) {
         const data = await response.json()
         if (data) {
+          console.log('[UserProfile] User data received:', data)
           setUser(data)
           updateCompletedTabs(data)
           if (data.idbloburl) {
@@ -113,10 +114,14 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
             setPhotoPreview(getAzureBlobUrl(data.photoazurebloburl))
           }
         } else {
+          console.log('[UserProfile] No user data returned, creating empty user')
           setUser(createEmptyUser())
         }
       } else {
+        const errorText = await response.text()
+        console.error('[UserProfile] API error:', response.status, errorText)
         setUser(createEmptyUser())
+        setError(`Failed to load profile (${response.status}): ${errorText || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error fetching user:', error)
@@ -409,7 +414,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     try {
       const method = user.id === 0 ? 'POST' : 'PUT'
       const userDataToSave = prepareUserForSave(user)
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
+      const response = await fetchWithAuth('API_ENDPOINTS.USER', {
         method,
         body: JSON.stringify(userDataToSave),
       })
@@ -443,7 +448,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     try {
       const method = user.id === 0 ? 'POST' : 'PUT'
       const userDataToSave = prepareUserForSave(user)
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
+      const response = await fetchWithAuth('API_ENDPOINTS.USER', {
         method,
         body: JSON.stringify(userDataToSave),
       })
@@ -492,7 +497,7 @@ export default function UserProfile({ email, isOpen, onClose }: UserProfileProps
     try {
       const method = user.id === 0 ? 'POST' : 'PUT'
       const userDataToSave = prepareUserForSave(user)
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user', {
+      const response = await fetchWithAuth('API_ENDPOINTS.USER', {
         method,
         body: JSON.stringify(userDataToSave),
       })

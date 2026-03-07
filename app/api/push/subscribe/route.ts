@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { serverFetchWithAuth } from '@/lib/server-api';
+import { requireCsrf } from '@/lib/auth/csrf';
+import { API_ENDPOINTS } from '@/lib/config';
 
 export async function POST(request: NextRequest) {
+  // Validate CSRF token
+  const csrfResult = await requireCsrf(request);
+  if (!csrfResult.valid) {
+    return NextResponse.json({ error: csrfResult.error }, { status: 403 });
+  }
+
   try {
     const session = await getSession();
 
@@ -57,7 +65,7 @@ export async function POST(request: NextRequest) {
 
     // Send subscription to Azure backend using email
     const response = await serverFetchWithAuth(
-      'https://buysel.azurewebsites.net/api/push/push_subscription',
+      API_ENDPOINTS.PUSH_SUBSCRIPTION,
       {
         method: 'POST',
         body: JSON.stringify(requestBody),

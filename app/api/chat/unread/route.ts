@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { serverFetchWithAuth } from '@/lib/server-api'
+import { API_ENDPOINTS } from '@/lib/config'
 
 export async function GET(req: NextRequest) {
   const session = await getSession()
@@ -11,19 +12,19 @@ export async function GET(req: NextRequest) {
 
   try {
     // Get user's numeric ID from email
-    const userEmailUrl = `https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(session.user.email!)}`
+    const userEmailUrl = API_ENDPOINTS.USER_BY_EMAIL(session.user.email!)
     const userResponse = await serverFetchWithAuth(userEmailUrl)
-    
+
     if (!userResponse.ok) {
       // User hasn't completed profile yet - no messages possible
       return NextResponse.json({ conversations: [], totalUnread: 0 })
     }
-    
+
     const userData = await userResponse.json()
     const userId = userData.id
 
     // Get unread conversations for the user
-    const unreadConvUrl = `https://buysel.azurewebsites.net/api/conversation/unread/${userId}`
+    const unreadConvUrl = API_ENDPOINTS.CONVERSATION_UNREAD(userId)
     console.log('Fetching unread conversations from:', unreadConvUrl)
     const unreadConvResponse = await serverFetchWithAuth(unreadConvUrl)
     
@@ -42,29 +43,29 @@ export async function GET(req: NextRequest) {
     for (const conv of unreadConversations) {
       if (conv.unread > 0) {
         // Get unread messages for this specific conversation
-        const unreadMsgUrl = `https://buysel.azurewebsites.net/api/message/unread/${userId}/${conv.id}`
+        const unreadMsgUrl = API_ENDPOINTS.MESSAGE_UNREAD_BY_CONV(userId, conv.id)
         console.log('Fetching unread messages from:', unreadMsgUrl)
         const unreadMsgResponse = await serverFetchWithAuth(unreadMsgUrl)
-        
+
         let messages = []
         if (unreadMsgResponse.ok) {
           messages = await unreadMsgResponse.json()
           console.log(`Found ${messages.length} unread messages for conversation ${conv.id}`)
         }
-        
+
         // Get the last message
         const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null
-        
+
         if (lastMessage) {
           // Get property details
-          const propResponse = await serverFetchWithAuth(`https://buysel.azurewebsites.net/api/property/${conv.property_id}`)
+          const propResponse = await serverFetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(conv.property_id))
           const property = propResponse.ok ? await propResponse.json() : { title: 'Property' }
 
           // Get other user's name
           const otherUserId = conv.buyer_id === userId ? conv.seller_id : conv.buyer_id
-          const otherUserResponse = await serverFetchWithAuth(`https://buysel.azurewebsites.net/api/user/${otherUserId}`)
-          const otherUser = otherUserResponse.ok 
-            ? await otherUserResponse.json() 
+          const otherUserResponse = await serverFetchWithAuth(API_ENDPOINTS.USER_BY_ID(otherUserId))
+          const otherUser = otherUserResponse.ok
+            ? await otherUserResponse.json()
             : { firstname: 'User', lastname: '' }
           
           processedConversations.push({

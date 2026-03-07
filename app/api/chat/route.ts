@@ -2,6 +2,23 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { serverFetchWithAuth } from '@/lib/server-api'
 import { Property } from '@/types/property'
+import { z } from 'zod'
+import { requireCsrf } from '@/lib/auth/csrf'
+import { API_ENDPOINTS } from '@/lib/config'
+
+// Zod schemas for input validation
+const chatPostSchema = z.object({
+  propertyId: z.number().int().positive(),
+  sellerId: z.number().int().positive(),
+  content: z.string().min(1).max(5000),
+  conversationId: z.string().optional()
+})
+
+const chatGetParamsSchema = z.object({
+  conversationId: z.string().optional(),
+  propertyId: z.string().regex(/^\d+$/).optional(),
+  sellerId: z.string().regex(/^\d+$/).optional()
+})
 
 export async function GET(req: NextRequest) {
   const session = await getSession()
@@ -18,7 +35,7 @@ export async function GET(req: NextRequest) {
   try {
     if (conversationId) {
       // Get messages for a specific conversation
-      const messageUrl = `https://buysel.azurewebsites.net/api/message/conversation/${conversationId}`
+      const messageUrl = API_ENDPOINTS.MESSAGE_BY_CONVERSATION(conversationId)
       console.log('🔵 Fetching messages from:', messageUrl)
       const response = await serverFetchWithAuth(messageUrl)
       const messages = await response.json()
@@ -26,7 +43,7 @@ export async function GET(req: NextRequest) {
     } else {
       // Get all conversations for the user
       // First, we need to get the user's numeric ID from their email
-      const userEmailUrl = `https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(session.user.email!)}`
+      const userEmailUrl = API_ENDPOINTS.USER_BY_EMAIL(session.user.email!)
       console.log('🔵 Fetching user by email from:', userEmailUrl)
       const userResponse = await serverFetchWithAuth(userEmailUrl)
       if (!userResponse.ok) {
@@ -35,8 +52,8 @@ export async function GET(req: NextRequest) {
       }
       const userData = await userResponse.json()
       const userId = userData.id
-      
-      const url = `https://buysel.azurewebsites.net/api/conversation/user/${userId}`
+
+      const url = API_ENDPOINTS.CONVERSATION_BY_USER(userId)
       console.log('🔵 Fetching conversations from:', url)
       console.log('User ID:', userId)
       console.log('Property ID filter:', propertyId)
@@ -85,18 +102,39 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Validate CSRF token
+  const csrfResult = await requireCsrf(req)
+  if (!csrfResult.valid) {
+    return NextResponse.json({ error: csrfResult.error }, { status: 403 })
+  }
+
   const session = await getSession()
 
   if (!session?.user?.email) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = await req.json()
-  const { propertyId, sellerId, content, conversationId } = body
+  let body
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  // Validate input with Zod
+  const parseResult = chatPostSchema.safeParse(body)
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: parseResult.error.flatten() },
+      { status: 400 }
+    )
+  }
+
+  const { propertyId, sellerId, content, conversationId } = parseResult.data
 
   try {
     // Get user's numeric ID from email
-    const userEmailUrl = `https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(session.user.email!)}`
+    const userEmailUrl = API_ENDPOINTS.USER_BY_EMAIL(session.user.email!)
     console.log('🔵 POST: Fetching user by email from:', userEmailUrl)
     const userResponse = await serverFetchWithAuth(userEmailUrl)
     if (!userResponse.ok) {
@@ -104,7 +142,7 @@ export async function POST(req: NextRequest) {
     }
     const userData = await userResponse.json()
     const userId = userData.id
-    
+
     let convId = conversationId
     let buyerId: number
     let actualSellerId: number
@@ -112,17 +150,16 @@ export async function POST(req: NextRequest) {
     // Create conversation if it doesn't exist
     if (!convId) {
       // Check if current user is the seller
-      const providedSellerId = parseInt(sellerId)
-      if (userId === providedSellerId) {
+      if (userId === sellerId) {
         // Current user is the seller, so they can't be the buyer
         // This is an error case - seller can't initiate chat with themselves
         return NextResponse.json({ error: 'Seller cannot initiate chat with themselves' }, { status: 400 })
       }
-      
+
       // Current user is the buyer
       buyerId = userId
-      actualSellerId = providedSellerId
-      const convUrl = 'https://buysel.azurewebsites.net/api/conversation'
+      actualSellerId = sellerId
+      const convUrl = API_ENDPOINTS.CONVERSATION
       console.log('🔵 Creating conversation at:', convUrl)
       console.log('Payload:', {
         id: 0, // New record
@@ -168,7 +205,7 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // If using existing conversation, get buyer and seller IDs
-      const convDetailUrl = `https://buysel.azurewebsites.net/api/conversation/${convId}`
+      const convDetailUrl = API_ENDPOINTS.CONVERSATION_BY_ID(convId)
       console.log('🔵 Fetching conversation details from:', convDetailUrl)
       let convDetailResponse
       try {
@@ -198,11 +235,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Create message
-    const messageUrl = 'https://buysel.azurewebsites.net/api/message'
+    const messageUrl = API_ENDPOINTS.MESSAGE
     console.log('🔵 Sending message to:', messageUrl)
+    const conversationIdNum = convId ? parseInt(convId) : 0
     console.log('Message payload:', {
       id: 0, // New record
-      conversation_id: parseInt(convId), // Convert to number
+      conversation_id: conversationIdNum,
       sender_id: userId,
       content: content
     })
@@ -210,7 +248,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       body: JSON.stringify({
         id: 0, // New record
-        conversation_id: parseInt(convId), // Convert to number
+        conversation_id: conversationIdNum,
         sender_id: userId,
         content: content
       })
@@ -236,13 +274,13 @@ export async function POST(req: NextRequest) {
       sellerId: actualSellerId,
       notificationChannel: `user-notifications-${recipientId}`
     })
-    
+
     // Get sender info for notification
-    const senderResponse = await serverFetchWithAuth(`https://buysel.azurewebsites.net/api/user/${userId}`)
+    const senderResponse = await serverFetchWithAuth(API_ENDPOINTS.USER_BY_ID(userId))
     const senderData = await senderResponse.json()
 
     // Get property info for notification
-    const propertyResponse = await serverFetchWithAuth(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+    const propertyResponse = await serverFetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(propertyId))
     const propertyData:Property = await propertyResponse.json()
 
     // Send Web Push notification to recipient

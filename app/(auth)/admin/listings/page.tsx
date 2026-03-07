@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Home, Eye, Pause, Trash2, Star, AlertCircle, CheckCircle, Clock, Search, Filter, MoreVertical, Loader2, Edit, User, Calendar, FileCheck, Building2, MapPin, Bed, Bath, Car, Ruler, DollarSign, ListChecks, XCircle, ShieldCheck, Activity } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { getAzureBlobUrl } from '@/lib/config'
+import { getAzureBlobUrl, API_ENDPOINTS, API_BASE_URL } from '@/lib/config'
 import { Property } from '@/types/property'
 import AddPropertyDialog from '@/components/AddPropertyDialog'
 import AuditProperty from '@/components/AuditProperty'
@@ -174,7 +174,7 @@ export default function AdminListingsPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user')
+      const response = await fetchWithAuth('API_ENDPOINTS.USER')
       if (response.ok) {
         const data: User[] = await response.json()
         setUsers(data)
@@ -189,7 +189,7 @@ export default function AdminListingsPage() {
   const fetchProperties = async () => {
     try {
       setLoading(true)
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property/all')
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_ALL)
       if (response.ok) {
         const data: Property[] = await response.json()
         setProperties(data)
@@ -241,7 +241,7 @@ export default function AdminListingsPage() {
     try {
       const updatedProperty = { ...selectedProperty, [field]: newValue }
 
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property', {
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY, {
         method: 'PUT',
         body: JSON.stringify(updatedProperty),
       })
@@ -262,7 +262,7 @@ export default function AdminListingsPage() {
     if (!showDeleteDialog) return
 
     try {
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${showDeleteDialog.id}`, {
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(showDeleteDialog.id), {
         method: 'DELETE',
       })
 
@@ -288,7 +288,7 @@ export default function AdminListingsPage() {
 
   const handleSaveEditedProperty = async (property: Property) => {
     try {
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property', {
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY, {
         method: 'PUT',
         body: JSON.stringify(property),
       })

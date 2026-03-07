@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { getPhotoUrl } from '@/lib/azure-config'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 import { Seller } from '@/types/seller'
+import { API_ENDPOINTS } from '@/lib/config'
 
 interface ChatModalProps {
   isOpen: boolean
@@ -332,7 +333,7 @@ export default function ChatModal({ isOpen, onClose, property, currentUserId, in
       // Use the bulk endpoint to mark all messages in the conversation as read
       console.log(`Marking all messages as read for conversation ${conversationId} and user ${userId}`)
       
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/message/markread/${userId}/${conversationId}`, {
+      const response = await fetchWithAuth(API_ENDPOINTS.MESSAGE_MARK_READ(userId, conversationId), {
         method: 'PUT'
       })
       

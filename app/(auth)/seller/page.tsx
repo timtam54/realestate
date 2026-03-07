@@ -22,6 +22,7 @@ import { Offer } from '@/types/offer'
 import type { GoogleMap } from '@/types/google-maps'
 import { useRouter } from 'next/navigation'
 import { usePageView } from '@/hooks/useAudit'
+import { API_ENDPOINTS, API_BASE_URL } from '@/lib/config'
 
 interface UserPropertyFav {
   id: number
@@ -169,7 +170,7 @@ export default function SellerPage() {
     try {
       setLoading(true)
       setError(null)
-      const ep='https://buysel.azurewebsites.net/api/property/sellerusername/'+user?.email
+      const ep=API_ENDPOINTS.PROPERTY_BY_SELLER_EMAIL(user?.email || '')
       //alert(ep)
       const response = await fetchWithAuth(ep)
       if (!response.ok) {
@@ -190,7 +191,7 @@ export default function SellerPage() {
   const fetchFavorites = async () => {
     if (!userId) return
     try {
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/userpropertyfav/${userId}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.USER_PROPERTY_FAV_BY_USER(userId))
       if (response.ok) {
         const data = await response.json()
         setFavs(data)
@@ -203,7 +204,7 @@ export default function SellerPage() {
   const fetchOffers = async () => {
     if (!userId) return
     try {
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/offer/seller/${userId}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.OFFER_BY_SELLER(userId))
       if (response.ok) {
         const data: Offer[] = await response.json()
         setOffers(data)
@@ -220,7 +221,7 @@ export default function SellerPage() {
       // Add to favorites
       try {
         const newFav = { id: 0, user_id: userId, property_id: propertyId }
-        const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/userpropertyfav', {
+        const response = await fetchWithAuth(API_ENDPOINTS.USER_PROPERTY_FAV, {
           method: 'POST',
           body: JSON.stringify(newFav)
         })
@@ -236,7 +237,7 @@ export default function SellerPage() {
       const favToRemove = favs.find(f => f.property_id === propertyId)
       if (favToRemove) {
         try {
-          const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/userpropertyfav/${favToRemove.id}`, {
+          const response = await fetchWithAuth(`${API_BASE_URL}/api/userpropertyfav/${favToRemove.id}`, {
             method: 'DELETE'
           })
           if (response.ok) {
@@ -253,7 +254,7 @@ export default function SellerPage() {
     try {
       const jsn=JSON.stringify(property)
       //alert(jsn);
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/property', {
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY, {
         method: (property.id==0)?'POST':'PUT',
         body: jsn,
       })
@@ -768,7 +769,7 @@ export default function SellerPage() {
             // If not found locally, fetch from API (could be another seller's property)
             if (!property) {
               try {
-                const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${propertyId}`)
+                const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(propertyId))
                 if (response.ok) {
                   property = await response.json()
                 }

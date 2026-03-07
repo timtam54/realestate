@@ -17,6 +17,7 @@ import { Property } from '@/types/property'
 import { Offer } from '@/types/offer'
 import OffersList from '@/components/OffersList'
 import MakeOfferDialog from '@/components/MakeOfferDialog'
+import { API_ENDPOINTS } from '@/lib/config'
 
 export default function SellerOffersPage() {
   const router = useRouter()
@@ -53,7 +54,7 @@ export default function SellerOffersPage() {
 
     try {
       // Fetch seller's properties
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property`)
+      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY)
       if (!response.ok) throw new Error('Failed to fetch properties')
 
       const allProperties: Property[] = await response.json()
@@ -103,13 +104,13 @@ export default function SellerOffersPage() {
         updated_at: new Date().toISOString()
       }
 
-      await fetchWithAuth('https://buysel.azurewebsites.net/api/offer', {
+      await fetchWithAuth(API_ENDPOINTS.OFFER, {
         method: 'PUT',
         body: JSON.stringify(originalOffer)
       })
 
       // Then create the counter offer
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/offer', {
+      const response = await fetchWithAuth('API_ENDPOINTS.OFFER', {
         method: 'POST',
         body: JSON.stringify(counterOffer)
       })

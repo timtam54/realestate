@@ -1,5 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
+import { z } from 'zod'
+import { requireCsrf } from '@/lib/auth/csrf'
+
+// Zod schema for comparables input validation
+// Only allow URLs from specific trusted domains for security
+const comparablesSchema = z.object({
+  url: z.string().url().refine(
+    (url) => {
+      const hostname = new URL(url).hostname
+      return ['homely.com.au', 'www.homely.com.au', 'domain.com.au', 'www.domain.com.au', 'realestate.com.au', 'www.realestate.com.au'].includes(hostname)
+    },
+    { message: 'URL must be from homely.com.au, domain.com.au, or realestate.com.au' }
+  ).optional(),
+  suburb: z.string().min(2).max(100).regex(/^[a-zA-Z\s-]+$/, 'Suburb must contain only letters, spaces, and hyphens').optional(),
+  postcode: z.string().regex(/^\d{4}$/, 'Postcode must be 4 digits').optional()
+}).refine(data => data.url || data.suburb || data.postcode, {
+  message: 'Either url, suburb, or postcode must be provided'
+})
 
 export interface ComparableProperty {
   id: string
@@ -19,9 +37,31 @@ export interface ComparableProperty {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const { url, suburb, postcode } = await request.json()
+  // Validate CSRF token
+  const csrfResult = await requireCsrf(request)
+  if (!csrfResult.valid) {
+    return NextResponse.json({ error: csrfResult.error }, { status: 403 })
+  }
 
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
+  }
+
+  // Validate input with Zod
+  const parseResult = comparablesSchema.safeParse(body)
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: parseResult.error.flatten() },
+      { status: 400 }
+    )
+  }
+
+  const { url, suburb, postcode } = parseResult.data
+
+  try {
     if (url) {
       // Attempt to scrape from a provided URL
       const properties = await scrapeFromUrl(url)

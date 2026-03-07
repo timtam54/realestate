@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { serverFetchWithAuth } from '@/lib/server-api';
+import { z } from 'zod';
+import { API_ENDPOINTS } from '@/lib/config';
 
 // Configure web-push with VAPID details
 webpush.setVapidDetails(
@@ -9,34 +11,44 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 );
 
-interface PushPayload {
-  title: string;
-  body: string;
-  url?: string;
-  conversationId?: string;
-  propertyId?: number;
-}
+// Zod schema for input validation
+const pushSendSchema = z.object({
+  userId: z.number().int().positive(),
+  payload: z.object({
+    title: z.string().min(1).max(100),
+    body: z.string().min(1).max(500),
+    url: z.string().url().optional(),
+    conversationId: z.string().optional(),
+    propertyId: z.number().int().positive().optional()
+  })
+});
 
 export async function POST(request: NextRequest) {
+  let body;
   try {
-    const body = await request.json();
-    const { userId, payload } = body as {
-      userId: number;
-      payload: PushPayload;
-    };
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-    if (!userId || !payload) {
-      return NextResponse.json(
-        { error: 'Missing required fields: userId, payload' },
-        { status: 400 }
-      );
-    }
+  // Validate input with Zod
+  const parseResult = pushSendSchema.safeParse(body);
+  if (!parseResult.success) {
+    return NextResponse.json(
+      { error: 'Invalid input', details: parseResult.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const { userId, payload } = parseResult.data;
+
+  try {
 
     console.log('[API] Sending push notification to user:', userId);
 
     // First, get user's email from userId
     const userResponse = await serverFetchWithAuth(
-      `https://buysel.azurewebsites.net/api/user/${userId}`
+      API_ENDPOINTS.USER_BY_ID(userId)
     );
 
     if (!userResponse.ok) {
@@ -62,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch user's push subscriptions from Azure backend using email
     const subscriptionsResponse = await serverFetchWithAuth(
-      `https://buysel.azurewebsites.net/api/push/push_subscription/email/${encodeURIComponent(userEmail)}`
+      API_ENDPOINTS.PUSH_SUBSCRIPTION_BY_EMAIL(userEmail)
     );
 
     if (!subscriptionsResponse.ok) {
@@ -103,7 +115,7 @@ export async function POST(request: NextRequest) {
           console.log('[API] Subscription expired, removing...');
           // Call Azure backend to remove the subscription
           await serverFetchWithAuth(
-            `https://buysel.azurewebsites.net/api/push/push_subscription/${subscription.id}`,
+            API_ENDPOINTS.PUSH_SUBSCRIPTION_BY_ID(subscription.id),
             {
               method: 'DELETE',
             }

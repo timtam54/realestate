@@ -8,6 +8,7 @@ import UserProfile from '@/components/UserProfile'
 import BuySelHeader from '@/components/BuySelHeader'
 import Footer from '@/components/Footer'
 import { usePageView } from '@/hooks/useAudit'
+import { API_ENDPOINTS } from '@/lib/config'
 
 export default function CompleteProfilePage() {
   usePageView('complete-profile')
@@ -29,7 +30,7 @@ export default function CompleteProfilePage() {
 
   const checkExistingProfile = async () => {
     try {
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/email/${encodeURIComponent(user?.email || '')}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.USER_BY_EMAIL(user?.email || ''))
       if (response.ok) {
         const userData = await response.json()
         if (userData && userData.id) {

@@ -6,6 +6,7 @@ import Pusher from 'pusher-js'
 import { useAuth } from '@/hooks/useAuth'
 import { useTimezoneCorrection } from '@/hooks/useTimezoneCorrection'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
+import { API_ENDPOINTS } from '@/lib/config'
 interface Notification {
   id: string
   conversationId: string
@@ -73,7 +74,7 @@ export default function NotificationBar({ onOpenChat }: NotificationBarProps) {
       
       // Fetch property details
       try {
-        const propResponse = await fetchWithAuth(`https://buysel.azurewebsites.net/api/property/${data.propertyId}`)
+        const propResponse = await fetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(data.propertyId))
         const property = await propResponse.json()
         
         const notification: Notification = {

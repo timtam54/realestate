@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
 import AdminHeader from '@/components/AdminHeader'
 import Footer from '@/components/Footer'
-import { getAzureBlobUrl } from '@/lib/config'
+import { getAzureBlobUrl, API_ENDPOINTS } from '@/lib/config'
 import type { Seller } from '@/types/seller'
 import UserDetailsModal from '@/components/UserDetailsModal'
 import { usePageView } from '@/hooks/useAudit'
@@ -352,7 +352,7 @@ export default function AdminUsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user')
+      const response = await fetchWithAuth('API_ENDPOINTS.USER')
       if (response.ok) {
         const data: Seller[] = await response.json()
         setApiUsers(data)
@@ -368,7 +368,7 @@ export default function AdminUsersPage() {
 
   const fetchSellersCount = async () => {
     try {
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/user/sellers')
+      const response = await fetchWithAuth(API_ENDPOINTS.SELLERS)
       if (response.ok) {
         const data: Seller[] = await response.json()
         setSellersCount(data.length)

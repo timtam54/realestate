@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { X, Activity, User, Globe, Zap, FileText, Calendar, Hash, Loader2 } from 'lucide-react'
 import type { ApiAuditLog } from '@/types/audit'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
+import { API_ENDPOINTS } from '@/lib/config'
 
 interface AuditPropertyProps {
   propertyid: number
@@ -22,7 +23,7 @@ export default function AuditProperty({ propertyid, onClose }: AuditPropertyProp
   const fetchAudits = async () => {
     try {
       setLoading(true)
-      const response = await fetchWithAuth('https://buysel.azurewebsites.net/api/audit')
+      const response = await fetchWithAuth(API_ENDPOINTS.AUDIT)
       if (response.ok) {
         const data: ApiAuditLog[] = await response.json()
         // Filter by property ID in the page field

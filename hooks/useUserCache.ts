@@ -3,6 +3,7 @@
 import { Seller } from '@/types/seller'
 import { useState, useEffect, useCallback } from 'react'
 import { useFetchWithAuth } from '@/hooks/useFetchWithAuth'
+import { API_ENDPOINTS } from '@/lib/config'
 
 /*interface UserData {
   id: number
@@ -85,7 +86,7 @@ export function useUserCache() {
     // Fetch from API
     try {
       console.log(`Fetching user ${userId} from API`)
-      const response = await fetchWithAuth(`https://buysel.azurewebsites.net/api/user/${userId}`)
+      const response = await fetchWithAuth(API_ENDPOINTS.USER_BY_ID(userId))
       
       if (!response.ok) {
         console.error(`Failed to fetch user ${userId}: ${response.status}`)
