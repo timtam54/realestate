@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth/session'
 import { serverFetchWithAuth } from '@/lib/server-api'
-import { Property } from '@/types/property'
 import { z } from 'zod'
 import { requireCsrf } from '@/lib/auth/csrf'
 import { API_ENDPOINTS } from '@/lib/config'
@@ -36,7 +35,6 @@ export async function GET(req: NextRequest) {
     if (conversationId) {
       // Get messages for a specific conversation
       const messageUrl = API_ENDPOINTS.MESSAGE_BY_CONVERSATION(conversationId)
-      console.log('🔵 Fetching messages from:', messageUrl)
       const response = await serverFetchWithAuth(messageUrl)
       const messages = await response.json()
       return NextResponse.json(messages)
@@ -44,59 +42,45 @@ export async function GET(req: NextRequest) {
       // Get all conversations for the user
       // First, we need to get the user's numeric ID from their email
       const userEmailUrl = API_ENDPOINTS.USER_BY_EMAIL(session.user.email!)
-      console.log('🔵 Fetching user by email from:', userEmailUrl)
       const userResponse = await serverFetchWithAuth(userEmailUrl)
       if (!userResponse.ok) {
-        console.error('Failed to fetch user by email:', session.user.email)
         return NextResponse.json({ error: 'User not found' }, { status: 404 })
       }
       const userData = await userResponse.json()
       const userId = userData.id
 
       const url = API_ENDPOINTS.CONVERSATION_BY_USER(userId)
-      console.log('🔵 Fetching conversations from:', url)
-      console.log('User ID:', userId)
-      console.log('Property ID filter:', propertyId)
-      console.log('Seller ID filter:', sellerId)
 
       const response = await serverFetchWithAuth(url)
-      
+
       // Check if response is ok
       if (!response.ok) {
-        console.error('Response status:', response.status)
-        const text = await response.text()
-        console.error('Response text:', text)
-        return NextResponse.json({ error: `API error: ${response.status}` }, { status: response.status })
+        return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: response.status })
       }
-      
+
       // Check if response has content
       const text = await response.text()
       if (!text) {
-        console.log('Empty response, returning empty array')
         return NextResponse.json([])
       }
-      
+
       try {
         let conversations = JSON.parse(text)
-        
+
         // Filter by property ID if specified
         if (propertyId) {
-          console.log('Filtering conversations for property:', propertyId)
-          conversations = conversations.filter((conv: any) => 
+          conversations = conversations.filter((conv: any) =>
             conv.property_id === parseInt(propertyId)
           )
         }
-        
-        console.log('Returning conversations:', conversations)
+
         return NextResponse.json(conversations)
-      } catch (parseError) {
-        console.error('JSON parse error:', parseError)
-        console.error('Response text:', text)
-        return NextResponse.json({ error: 'Invalid JSON response' }, { status: 500 })
+      } catch {
+        return NextResponse.json({ error: 'Invalid response format' }, { status: 500 })
       }
     }
   } catch (error) {
-    console.error('Error fetching chat data:', error)
+    console.error('Chat API error:', error instanceof Error ? error.message : 'Unknown')
     return NextResponse.json({ error: 'Failed to fetch chat data' }, { status: 500 })
   }
 }
@@ -135,7 +119,6 @@ export async function POST(req: NextRequest) {
   try {
     // Get user's numeric ID from email
     const userEmailUrl = API_ENDPOINTS.USER_BY_EMAIL(session.user.email!)
-    console.log('🔵 POST: Fetching user by email from:', userEmailUrl)
     const userResponse = await serverFetchWithAuth(userEmailUrl)
     if (!userResponse.ok) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -151,8 +134,6 @@ export async function POST(req: NextRequest) {
     if (!convId) {
       // Check if current user is the seller
       if (userId === sellerId) {
-        // Current user is the seller, so they can't be the buyer
-        // This is an error case - seller can't initiate chat with themselves
         return NextResponse.json({ error: 'Seller cannot initiate chat with themselves' }, { status: 400 })
       }
 
@@ -160,143 +141,85 @@ export async function POST(req: NextRequest) {
       buyerId = userId
       actualSellerId = sellerId
       const convUrl = API_ENDPOINTS.CONVERSATION
-      console.log('🔵 Creating conversation at:', convUrl)
-      console.log('Payload:', {
-        id: 0, // New record
-        property_id: propertyId,
-        buyer_id: userId,
-        seller_id: sellerId
-      })
 
       const convResponse = await serverFetchWithAuth(convUrl, {
         method: 'POST',
         body: JSON.stringify({
-          id: 0, // New record
+          id: 0,
           property_id: propertyId,
           buyer_id: userId,
           seller_id: sellerId
         })
       })
-      
-      console.log('Conversation creation response status:', convResponse.status)
-      
+
       if (!convResponse.ok) {
-        const errorText = await convResponse.text()
-        console.error('Failed to create conversation:', errorText)
         return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 })
       }
-      
+
       const responseText = await convResponse.text()
-      console.log('Conversation response text:', responseText)
-      
+
       if (!responseText) {
         return NextResponse.json({ error: 'Empty response from conversation API' }, { status: 500 })
       }
-      
+
       try {
         const newConversation = JSON.parse(responseText)
-        convId = newConversation.id.toString() // Convert integer ID to string
+        convId = newConversation.id.toString()
         buyerId = newConversation.buyer_id
         actualSellerId = newConversation.seller_id
-        console.log('Created conversation with ID:', convId)
-      } catch (parseError) {
-        console.error('Failed to parse conversation response:', parseError)
+      } catch {
         return NextResponse.json({ error: 'Invalid conversation response' }, { status: 500 })
       }
     } else {
       // If using existing conversation, get buyer and seller IDs
       const convDetailUrl = API_ENDPOINTS.CONVERSATION_BY_ID(convId)
-      console.log('🔵 Fetching conversation details from:', convDetailUrl)
       let convDetailResponse
       try {
         convDetailResponse = await serverFetchWithAuth(convDetailUrl)
-      } catch (fetchError) {
-        console.error('Network error fetching conversation details:', fetchError)
+      } catch {
         return NextResponse.json({ error: 'Network error fetching conversation details' }, { status: 500 })
       }
       if (convDetailResponse.ok) {
         const convDetail = await convDetailResponse.json()
         buyerId = convDetail.buyer_id
         actualSellerId = convDetail.seller_id
-        console.log('🔍 Loaded conversation details:', {
-          conversation_id: convId,
-          buyer_id: buyerId,
-          seller_id: actualSellerId,
-          current_user_id: userId,
-          current_user_role: userId === buyerId ? 'BUYER' : userId === actualSellerId ? 'SELLER' : 'UNKNOWN'
-        })
       } else {
-        console.error('Failed to fetch conversation details. Status:', convDetailResponse.status)
-        const errorText = await convDetailResponse.text()
-        console.error('Error response:', errorText)
-        // Cannot proceed without knowing who to send notification to
         return NextResponse.json({ error: 'Failed to fetch conversation details' }, { status: 500 })
       }
     }
 
     // Create message
     const messageUrl = API_ENDPOINTS.MESSAGE
-    console.log('🔵 Sending message to:', messageUrl)
     const conversationIdNum = convId ? parseInt(convId) : 0
-    console.log('Message payload:', {
-      id: 0, // New record
-      conversation_id: conversationIdNum,
-      sender_id: userId,
-      content: content
-    })
     const messageResponse = await serverFetchWithAuth(messageUrl, {
       method: 'POST',
       body: JSON.stringify({
-        id: 0, // New record
+        id: 0,
         conversation_id: conversationIdNum,
         sender_id: userId,
         content: content
       })
     })
-    
+
     const message = await messageResponse.json()
 
     // Validate we have buyer and seller IDs
     if (!buyerId || !actualSellerId) {
-      console.error('Missing buyer or seller ID. Cannot send notification.')
-      console.error('buyerId:', buyerId, 'actualSellerId:', actualSellerId)
       return NextResponse.json({ ...message, conversationId: convId })
     }
-    
+
     // Determine recipient ID (if sender is buyer, recipient is seller and vice versa)
     const recipientId = (userId === actualSellerId) ? buyerId : actualSellerId
-    console.log('🔔 Notification routing:', {
-      senderId: userId,
-      senderType: userId === buyerId ? 'buyer' : 'seller',
-      recipientId: recipientId,
-      recipientType: recipientId === buyerId ? 'buyer' : 'seller',
-      buyerId: buyerId,
-      sellerId: actualSellerId,
-      notificationChannel: `user-notifications-${recipientId}`
-    })
 
     // Get sender info for notification
     const senderResponse = await serverFetchWithAuth(API_ENDPOINTS.USER_BY_ID(userId))
     const senderData = await senderResponse.json()
 
-    // Get property info for notification
+    // Verify property exists (response validates property is accessible)
     const propertyResponse = await serverFetchWithAuth(API_ENDPOINTS.PROPERTY_BY_ID(propertyId))
-    const propertyData:Property = await propertyResponse.json()
-
-    // Send Web Push notification to recipient
-    console.log('🔔 NOTIFICATION SUMMARY:')
-    console.log('  - Sender ID:', userId, '(', userId === buyerId ? 'BUYER' : 'SELLER', ')')
-    console.log('  - Recipient ID:', recipientId, '(', recipientId === buyerId ? 'BUYER' : 'SELLER', ')')
-    console.log('Notification data:', {
-      conversationId: convId,
-      propertyId: propertyId,
-      senderName: `${senderData.firstname} ${senderData.lastname}`,
-      senderId: userId,
-      recipientId: recipientId,
-      message: content.substring(0, 100)
-    })
-
-    console.log('🚀 Sending Web Push notification')
+    if (!propertyResponse.ok) {
+      return NextResponse.json({ error: 'Property not found' }, { status: 404 })
+    }
 
     try {
       // Send push notification via our API
@@ -315,20 +238,17 @@ export async function POST(req: NextRequest) {
         })
       })
 
-      if (pushResponse.ok) {
-        console.log('✅ Web Push notification sent successfully')
-      } else {
-        const errorText = await pushResponse.text()
-        console.error('❌ Failed to send Web Push notification:', errorText)
+      if (!pushResponse.ok) {
+        // Log minimally - no sensitive data
+        console.error('Push notification failed')
       }
-    } catch (pushError) {
-      console.error('❌ Error sending Web Push notification:', pushError)
+    } catch {
       // Don't fail the whole request if push fails
     }
 
     return NextResponse.json({ ...message, conversationId: convId })
   } catch (error) {
-    console.error('Error sending message:', error)
+    console.error('Message send error:', error instanceof Error ? error.message : 'Unknown')
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
   }
 }

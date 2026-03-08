@@ -43,16 +43,12 @@ export async function POST(request: NextRequest) {
   const { userId, payload } = parseResult.data;
 
   try {
-
-    console.log('[API] Sending push notification to user:', userId);
-
     // First, get user's email from userId
     const userResponse = await serverFetchWithAuth(
       API_ENDPOINTS.USER_BY_ID(userId)
     );
 
     if (!userResponse.ok) {
-      console.error('[API] Failed to fetch user:', userResponse.status);
       return NextResponse.json(
         { error: 'Failed to fetch user information' },
         { status: 500 }
@@ -63,14 +59,11 @@ export async function POST(request: NextRequest) {
     const userEmail = userData.email;
 
     if (!userEmail) {
-      console.error('[API] User has no email:', userId);
       return NextResponse.json(
         { error: 'User has no email' },
         { status: 400 }
       );
     }
-
-    console.log('[API] Fetching subscriptions for email:', userEmail);
 
     // Fetch user's push subscriptions from Azure backend using email
     const subscriptionsResponse = await serverFetchWithAuth(
@@ -78,7 +71,6 @@ export async function POST(request: NextRequest) {
     );
 
     if (!subscriptionsResponse.ok) {
-      console.error('[API] Failed to fetch subscriptions:', subscriptionsResponse.status);
       return NextResponse.json(
         { error: 'Failed to fetch user subscriptions' },
         { status: 500 }
@@ -89,14 +81,11 @@ export async function POST(request: NextRequest) {
     const subscriptions = subscriptionsData.subscriptions || [];
 
     if (subscriptions.length === 0) {
-      console.log('[API] No subscriptions found for user:', userId, 'email:', userEmail);
       return NextResponse.json({
         success: true,
         message: 'No subscriptions to send to'
       });
     }
-
-    console.log(`[API] Found ${subscriptions.length} subscription(s) for email:`, userEmail);
 
     // Send push notification to all user's subscriptions
     const pushPromises = subscriptions.map(async (subscription: any) => {
@@ -105,31 +94,25 @@ export async function POST(request: NextRequest) {
           subscription.subscription_data,
           JSON.stringify(payload)
         );
-        console.log('[API] Push notification sent successfully');
         return { success: true };
       } catch (error: any) {
-        console.error('[API] Error sending push notification:', error);
-
         // If the subscription is invalid (410 Gone), remove it
         if (error.statusCode === 410) {
-          console.log('[API] Subscription expired, removing...');
           // Call Azure backend to remove the subscription
           await serverFetchWithAuth(
             API_ENDPOINTS.PUSH_SUBSCRIPTION_BY_ID(subscription.id),
             {
               method: 'DELETE',
             }
-          ).catch(err => console.error('[API] Failed to remove expired subscription:', err));
+          ).catch(() => { /* silently fail */ });
         }
 
-        return { success: false, error: error.message };
+        return { success: false, error: 'Send failed' };
       }
     });
 
     const results = await Promise.all(pushPromises);
     const successCount = results.filter(r => r.success).length;
-
-    console.log(`[API] Sent ${successCount}/${subscriptions.length} notifications successfully`);
 
     return NextResponse.json({
       success: true,
@@ -137,10 +120,9 @@ export async function POST(request: NextRequest) {
       results
     });
 
-  } catch (error) {
-    console.error('[API] Error in push send endpoint:', error);
+  } catch {
     return NextResponse.json(
-      { error: 'Failed to send push notification', details: error instanceof Error ? error.message : 'Unknown error' },
+      { error: 'Failed to send push notification' },
       { status: 500 }
     );
   }

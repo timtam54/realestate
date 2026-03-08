@@ -2,14 +2,25 @@ import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
 import { z } from 'zod'
 import { requireCsrf } from '@/lib/auth/csrf'
+import { secureFetch, getSafeErrorMessage } from '@/lib/secure-fetch'
+
+// Allowed domains for scraping (case-insensitive comparison)
+const ALLOWED_DOMAINS = [
+  'homely.com.au',
+  'www.homely.com.au',
+  'domain.com.au',
+  'www.domain.com.au',
+  'realestate.com.au',
+  'www.realestate.com.au'
+]
 
 // Zod schema for comparables input validation
 // Only allow URLs from specific trusted domains for security
 const comparablesSchema = z.object({
   url: z.string().url().refine(
     (url) => {
-      const hostname = new URL(url).hostname
-      return ['homely.com.au', 'www.homely.com.au', 'domain.com.au', 'www.domain.com.au', 'realestate.com.au', 'www.realestate.com.au'].includes(hostname)
+      const hostname = new URL(url).hostname.toLowerCase()
+      return ALLOWED_DOMAINS.includes(hostname)
     },
     { message: 'URL must be from homely.com.au, domain.com.au, or realestate.com.au' }
   ).optional(),
@@ -18,6 +29,9 @@ const comparablesSchema = z.object({
 }).refine(data => data.url || data.suburb || data.postcode, {
   message: 'Either url, suburb, or postcode must be provided'
 })
+
+// Request timeout for external fetches (15 seconds)
+const FETCH_TIMEOUT = 15000
 
 export interface ComparableProperty {
   id: string
@@ -79,9 +93,10 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     )
   } catch (error) {
-    console.error('Web scraping error:', error)
+    // Log error internally but don't expose details to client
+    console.error('Web scraping error:', error instanceof Error ? error.message : 'Unknown error')
     return NextResponse.json(
-      { error: 'Web scraping error: No comparable properties found', details: String(error) },
+      { error: getSafeErrorMessage(error) },
       { status: 500 }
     )
   }
@@ -89,7 +104,8 @@ export async function POST(request: NextRequest) {
 
 async function scrapeFromUrl(url: string): Promise<ComparableProperty[]> {
   try {
-    const response = await fetch(url, {
+    const response = await secureFetch(url, {
+      timeout: FETCH_TIMEOUT,
       headers: {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -124,8 +140,9 @@ async function scrapeFromUrl(url: string): Promise<ComparableProperty[]> {
     // Generic scraping as fallback
     return scrapeGeneric(html, url)
   } catch (error) {
-    console.error('Error scraping URL:', error)
-    throw new Error(`Failed to scrape URL: ${error}`)
+    // Don't log full error details - could contain sensitive URL info
+    console.error('Error scraping URL')
+    throw error
   }
 }
 
@@ -710,7 +727,8 @@ async function findComparables(suburb?: string, postcode?: string): Promise<Comp
     const url = `https://www.homely.com.au/sold-properties/${searchTerm}-${state}-${postcode || ''}`
 
     try {
-      const response = await fetch(url, {
+      const response = await secureFetch(url, {
+        timeout: FETCH_TIMEOUT,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
@@ -725,8 +743,8 @@ async function findComparables(suburb?: string, postcode?: string): Promise<Comp
           return properties
         }
       }
-    } catch (e) {
-      console.error('Error fetching from Homely:', e)
+    } catch {
+      // Silently fail search - will return empty array
     }
   }
 

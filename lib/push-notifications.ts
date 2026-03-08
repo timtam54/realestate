@@ -3,6 +3,41 @@
 import { config } from './config'
 import toast from 'react-hot-toast'
 
+const CSRF_COOKIE_NAME = 'buysel_csrf'
+
+// Get CSRF token from cookie
+function getCsrfTokenFromCookie(): string | null {
+  if (typeof document === 'undefined') return null
+
+  const cookies = document.cookie.split(';')
+  for (const cookie of cookies) {
+    const [name, value] = cookie.trim().split('=')
+    if (name === CSRF_COOKIE_NAME) {
+      return value
+    }
+  }
+  return null
+}
+
+// Fetch CSRF token from server if not in cookie
+async function getCsrfToken(): Promise<string | null> {
+  // First check cookie
+  const cookieToken = getCsrfTokenFromCookie()
+  if (cookieToken) return cookieToken
+
+  // Otherwise fetch from server
+  try {
+    const response = await fetch('/api/auth/csrf')
+    if (response.ok) {
+      const data = await response.json()
+      return data.csrfToken
+    }
+  } catch {
+    // Silent failure
+  }
+  return null
+}
+
 export async function requestNotificationPermission() {
   console.log('[Push] Checking notification support');
 
@@ -102,13 +137,21 @@ export async function subscribeToPushNotifications() {
     // Send subscription to the backend (uses session email on server)
     console.log('[Push] Sending subscription to backend');
     const subscriptionJSON = subscription.toJSON();
-    console.log('[Push] Subscription data:', JSON.stringify(subscriptionJSON, null, 2));
+
+    // Get CSRF token for the POST request
+    const csrfToken = await getCsrfToken();
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
 
     const response = await fetch('/api/push/subscribe', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         subscription: subscriptionJSON
       }),

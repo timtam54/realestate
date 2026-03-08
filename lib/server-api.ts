@@ -1,11 +1,42 @@
-// Server-side API utility for authenticated fetch calls to the C# backend
+/**
+ * Server-side API utilities for Next.js API routes.
+ *
+ * Use this module for server-side (API route) calls to the C# backend.
+ * For client-side calls, use the useFetchWithAuth hook instead.
+ *
+ * This module handles:
+ * - Reading user session from iron-session cookie
+ * - Generating JWT tokens for backend authentication
+ * - Adding proper headers for API calls
+ */
 import { getSession } from '@/lib/auth/session'
 import { signJWT } from '@/lib/auth/jwt'
 import { API_BASE_URL } from '@/lib/config'
 
 /**
- * Server-side authenticated fetch for API routes
- * Gets the session and creates a JWT token for the backend
+ * Makes an authenticated fetch request to the C# backend from a Next.js API route.
+ *
+ * Automatically:
+ * - Retrieves user session from iron-session cookie
+ * - Generates a JWT token with user claims
+ * - Adds Authorization header with Bearer token
+ * - Sets Content-Type to application/json
+ *
+ * If no session exists, the request is made without auth headers.
+ *
+ * @param url - Full API URL (use API_ENDPOINTS from lib/config)
+ * @param options - Standard fetch options (method, body, etc.)
+ * @returns Promise resolving to fetch Response
+ *
+ * @example
+ * // GET request
+ * const res = await serverFetchWithAuth(API_ENDPOINTS.USER_BY_EMAIL(email))
+ *
+ * // POST request with body
+ * const res = await serverFetchWithAuth(API_ENDPOINTS.MESSAGE, {
+ *   method: 'POST',
+ *   body: JSON.stringify({ content: 'Hello', conversationId: 123 })
+ * })
  */
 export async function serverFetchWithAuth(
   url: string,
