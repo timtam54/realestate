@@ -20,18 +20,20 @@ interface AuditPayload {
 }
 
 /**
- * Get the user's IP address
- * This uses a free IP lookup service
+ * Get IP address - server will capture the real IP from request headers
+ * Client-side IP lookup removed due to CSP/service worker issues
  */
-async function getIPAddress(): Promise<string> {
-  try {
-    const response = await fetch('https://api.ipify.org?format=json')
-    const data = await response.json()
-    return data.ip || 'unknown'
-  } catch (error) {
-    console.error('Failed to get IP address:', error)
-    return 'unknown'
-  }
+function getIPAddress(): string {
+  return 'client'  // Server will use X-Forwarded-For header
+}
+
+/**
+ * Get CSRF token from cookie
+ */
+function getCsrfTokenFromCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  const match = document.cookie.match(/buysel_csrf=([^;]+)/)
+  return match ? match[1] : null
 }
 
 /**
@@ -41,25 +43,42 @@ async function getIPAddress(): Promise<string> {
 export function useAudit() {
   const { user } = useAuth()
   const ipAddressRef = useRef<string | null>(null)
+  const csrfTokenRef = useRef<string | null>(null)
 
-  // Fetch IP address once when hook is initialized
+  // Set IP placeholder and fetch CSRF token
   useEffect(() => {
     if (!ipAddressRef.current) {
-      getIPAddress().then(ip => {
-        ipAddressRef.current = ip
-      })
+      ipAddressRef.current = getIPAddress()
+    }
+    // Fetch CSRF token on mount
+    const fetchCsrf = async () => {
+      try {
+        const response = await fetch('/api/auth/csrf')
+        if (response.ok) {
+          const data = await response.json()
+          csrfTokenRef.current = data.csrfToken
+        }
+      } catch (error) {
+        console.error('Failed to fetch CSRF token:', error)
+      }
+    }
+    if (!csrfTokenRef.current) {
+      fetchCsrf()
     }
   }, [])
 
   const logAudit = useCallback(async ({ page, action, propertyid }: AuditParams) => {
     try {
       // Get IP address (use cached if available)
-      const ipaddress = ipAddressRef.current || await getIPAddress()
+      const ipaddress = ipAddressRef.current || getIPAddress()
 
       // Cache IP for future calls
       if (!ipAddressRef.current) {
         ipAddressRef.current = ipaddress
       }
+
+      // Get CSRF token from ref or cookie
+      const csrfToken = csrfTokenRef.current || getCsrfTokenFromCookie()
 
       const payload: AuditPayload = {
         ipaddress,
@@ -71,11 +90,16 @@ export function useAudit() {
         propertyid: propertyid || 0
       }
 
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken
+      }
+
       const response = await fetch('/api/audit', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(payload)
       })
 

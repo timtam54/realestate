@@ -7,7 +7,7 @@ interface User {
   email: string
   name: string
   image?: string
-  provider: 'google' | 'microsoft' | 'facebook'
+  provider: 'google' | 'microsoft'
   role?: string
 }
 
@@ -15,7 +15,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   isAuthenticated: boolean
-  signIn: (provider: 'google' | 'microsoft' | 'facebook', callbackUrl?: string) => void
+  signIn: (provider: 'google' | 'microsoft', callbackUrl?: string) => void
   signOut: () => Promise<void>
   getToken: () => Promise<string | null>
   refreshSession: () => Promise<void>
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchSession()
   }, [])
 
-  const signIn = (provider: 'google' | 'microsoft' | 'facebook', callbackUrl = '/') => {
+  const signIn = (provider: 'google' | 'microsoft', callbackUrl = '/') => {
     window.location.href = `/api/auth/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`
   }
 

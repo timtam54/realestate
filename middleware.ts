@@ -9,11 +9,10 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 // Rate limit configurations per route pattern
 const ROUTE_LIMITS: Record<string, { limit: number; window: number }> = {
-  '/api/auth': { limit: 10, window: 60 * 1000 }, // 10 requests per minute
+  '/api/auth': { limit: 60, window: 60 * 1000 }, // 60 requests per minute (OAuth needs multiple calls)
   '/api/chat': { limit: 60, window: 60 * 1000 }, // 60 requests per minute
   '/api/push': { limit: 30, window: 60 * 1000 }, // 30 requests per minute
   '/api/comparables': { limit: 10, window: 60 * 1000 }, // 10 requests per minute (scraping)
-  '/api/data-deletion': { limit: 5, window: 60 * 1000 }, // 5 requests per minute
   '/api': { limit: 100, window: 60 * 1000 }, // Default: 100 requests per minute
 };
 
@@ -78,8 +77,13 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Skip rate limiting for CSRF token endpoint (needed for other requests)
-  if (pathname === '/api/auth/csrf') {
+  // Skip rate limiting for auth flow endpoints
+  if (
+    pathname === '/api/auth/csrf' ||
+    pathname.includes('/callback') ||
+    pathname === '/api/auth/session' ||
+    pathname === '/api/auth/token'
+  ) {
     return NextResponse.next();
   }
 

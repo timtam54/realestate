@@ -17,15 +17,6 @@ export const MICROSOFT_CONFIG = {
   scope: 'openid email profile User.Read',
 }
 
-export const FACEBOOK_CONFIG = {
-  clientId: process.env.FACEBOOK_CLIENT_ID!,
-  clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
-  authorizationEndpoint: 'https://www.facebook.com/v18.0/dialog/oauth',
-  tokenEndpoint: 'https://graph.facebook.com/v18.0/oauth/access_token',
-  userInfoEndpoint: 'https://graph.facebook.com/v18.0/me',
-  scope: 'email public_profile',
-}
-
 export function getRedirectUri(provider: string) {
   // Use NEXTAUTH_URL for backward compatibility, or construct from request headers
   const baseUrl = process.env.NEXTAUTH_URL ||

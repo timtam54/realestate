@@ -71,7 +71,8 @@ export default function HomePage() {
 
   const fetchProperties = async () => {
     try {
-      const response = await fetchWithAuth(API_ENDPOINTS.PROPERTY)
+      // Use local proxy to avoid CORS/network issues
+      const response = await fetch('/api/properties')
       if (response.ok) {
         const data = await response.json()
         setProperties(data)

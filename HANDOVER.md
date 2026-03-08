@@ -279,12 +279,11 @@ Swagger UI available at `/swagger` (development only).
 |----------|--------------|
 | Google | `/api/auth/google/callback` |
 | Microsoft | `/api/auth/microsoft/callback` |
-| Facebook | `/api/auth/facebook/callback` |
 
 ### Authentication Flow
 
 ```
-1. User clicks "Sign in with [Provider]"
+1. User clicks "Sign in with Google" or "Sign in with Microsoft"
          |
          v
 2. Redirect to OAuth provider
@@ -613,8 +612,6 @@ const defaultConditions = {
 | GET | `/api/auth/google/callback` | Google OAuth callback |
 | GET | `/api/auth/microsoft` | Initiate Microsoft OAuth |
 | GET | `/api/auth/microsoft/callback` | Microsoft OAuth callback |
-| GET | `/api/auth/facebook` | Initiate Facebook OAuth |
-| GET | `/api/auth/facebook/callback` | Facebook OAuth callback |
 | GET | `/api/auth/session` | Get current session |
 | GET | `/api/auth/token` | Generate JWT for C# API |
 | POST | `/api/auth/signout` | Sign out user |
@@ -648,7 +645,6 @@ const defaultConditions = {
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/audit` | Create audit entry (CSRF protected) |
-| POST | `/api/data-deletion` | GDPR data deletion |
 | POST | `/api/comparables` | Property comparison data (CSRF protected) |
 
 ### Backend API Routes (C# Web API)
@@ -737,15 +733,6 @@ Scopes: openid email profile User.Read
 Callback: /api/auth/microsoft/callback
 ```
 
-### Facebook OAuth
-
-```
-App ID: FACEBOOK_CLIENT_ID
-API Version: v18.0
-Scopes: email public_profile
-Callback: /api/auth/facebook/callback
-```
-
 ### Google Maps API
 
 ```
@@ -798,10 +785,6 @@ GOOGLE_CLIENT_SECRET=<google-client-secret>
 AZURE_AD_CLIENT_ID=<azure-ad-client-id>
 AZURE_AD_CLIENT_SECRET=<azure-ad-client-secret>
 AZURE_AD_TENANT_ID=<azure-ad-tenant-id>
-
-# Facebook OAuth
-FACEBOOK_CLIENT_ID=<facebook-app-id>
-FACEBOOK_CLIENT_SECRET=<facebook-app-secret>
 
 # Backend API
 NEXT_PUBLIC_API_URL=https://buysel.azurewebsites.net

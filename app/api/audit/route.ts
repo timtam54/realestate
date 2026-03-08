@@ -7,7 +7,7 @@ import { API_ENDPOINTS } from '@/lib/config'
 const auditSchema = z.object({
   action: z.string().min(1).max(200),
   page: z.string().min(1).max(200),
-  username: z.string().email().optional(),
+  username: z.string().max(200).optional(), // Can be email or 'anonymous'
   propertyid: z.number().int().optional(),
   ipaddress: z.string().max(50).optional()
 })
@@ -35,13 +35,25 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Get real IP from request headers (set by proxy/load balancer)
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  const realIp = forwardedFor
+    ? forwardedFor.split(',')[0].trim()
+    : request.headers.get('x-real-ip') || 'unknown'
+
+  // Override client IP with server-detected IP
+  const auditData = {
+    ...parseResult.data,
+    ipaddress: realIp,
+  }
+
   try {
     const response = await fetch(API_ENDPOINTS.AUDIT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(parseResult.data),
+      body: JSON.stringify(auditData),
     })
 
     if (!response.ok) {
