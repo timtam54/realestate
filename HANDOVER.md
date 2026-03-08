@@ -165,7 +165,14 @@ realestate/
 |   +-- auth/                # Authentication utilities
 |   |   +-- session.ts       # iron-session config
 |   |   +-- csrf.ts          # CSRF protection
+|   |   +-- jwt.ts           # JWT signing/verification
 |   |   +-- auth-context.tsx # Auth context
+|   +-- config.ts            # Centralized API endpoints
+|   +-- server-api.ts        # Server-side fetch with auth
+|   +-- secure-fetch.ts      # Fetch with timeout protection
+|   +-- rate-limit.ts        # Rate limiting utility
+|   +-- api-validation.ts    # Zod response validation schemas
+|   +-- push-notifications.ts # Web push client utilities
 +-- services/                # API service functions
 +-- types/                   # TypeScript types
 +-- public/                  # Static assets
@@ -348,6 +355,36 @@ Centralized authentication utility:
 
 ### Frontend Security
 
+#### Security Headers (next.config.ts)
+
+Production-only security headers applied to all routes:
+
+| Header | Value |
+|--------|-------|
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
+| `X-Frame-Options` | `SAMEORIGIN` |
+| `X-Content-Type-Options` | `nosniff` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(self)` |
+| `Content-Security-Policy` | Strict CSP (production only) |
+
+**Note:** CSP is disabled in development to avoid blocking external API calls during testing.
+
+#### Rate Limiting (middleware.ts)
+
+Edge-compatible rate limiting middleware protects all API routes:
+
+| Route Pattern | Limit |
+|---------------|-------|
+| `/api/auth/*` | 10 requests/minute |
+| `/api/chat/*` | 60 requests/minute |
+| `/api/push/*` | 30 requests/minute |
+| `/api/comparables` | 10 requests/minute |
+| `/api/*` (default) | 100 requests/minute |
+
+Returns HTTP 429 with `Retry-After` header when exceeded.
+
 #### CSRF Protection
 All mutating API routes (POST, PUT, DELETE, PATCH) are protected with CSRF tokens:
 
@@ -370,12 +407,37 @@ const { fetchWithCsrf } = useCsrf()
 await fetchWithCsrf('/api/chat', { method: 'POST', body: JSON.stringify(data) })
 ```
 
+#### Secure Fetch Utility (lib/secure-fetch.ts)
+
+Fetch wrapper with timeout protection for external API calls:
+
+```typescript
+import { secureFetch } from '@/lib/secure-fetch'
+
+// Default 10-second timeout
+const response = await secureFetch(url, { timeout: 15000 })
+```
+
+- Automatic timeout (default 10s, max 60s)
+- Custom error types: `FetchTimeoutError`, `FetchNetworkError`
+- Safe error messages for client responses
+
 #### Input Validation
 All API routes validate input with Zod schemas before processing:
 - `/api/chat` - chatPostSchema, chatGetParamsSchema
 - `/api/push/send` - pushSendSchema
 - `/api/audit` - auditSchema
 - `/api/comparables` - comparablesSchema (URL whitelist: homely.com.au, domain.com.au, realestate.com.au)
+
+#### Response Validation (lib/api-validation.ts)
+
+Zod schemas for validating backend API responses:
+- `userSchema` - User data validation
+- `propertySchema` - Property data validation
+- `conversationSchema` - Conversation data validation
+- `messageSchema` - Message data validation
+- `safeParseResponse()` - Parse with null on failure
+- `parseResponse()` - Parse with exception on failure
 
 ### Backend Security
 
@@ -574,6 +636,13 @@ const defaultConditions = {
 | POST | `/api/push/subscribe` | Register push subscription (CSRF protected) |
 | POST | `/api/push/send` | Send push notification (internal) |
 
+#### Blob Storage (Secure Proxy)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/blob/upload` | Upload file to Azure Blob (CSRF protected) |
+| POST | `/api/blob/signed-url` | Generate short-lived signed URL |
+
 #### Other
 
 | Method | Endpoint | Description |
@@ -753,9 +822,12 @@ VAPID_EMAIL=mailto:admin@buysel.com.au
 
 ### Environment Files
 
+- `.env.example` - Template with all required variables (committed)
 - `.env.local` - Local development (not committed)
 - `.env.production` - Production values (committed without secrets)
 - GitHub Secrets - CI/CD deployment secrets
+
+**Important:** Use `.env.example` as a template. Never commit actual secrets to `.env.local` or `.env.production`.
 
 ---
 
@@ -926,6 +998,10 @@ export async function serverFetchWithAuth(url: string, options?: RequestInit) {
 - [ ] No EF migrations tracked in repo
 - [ ] Large component files (ChatModal, AddPropertyDialog)
 - [ ] ESLint/TypeScript warnings ignored in build
+- [x] ~~Azure Blob SAS token exposed client-side~~ (Fixed: Server-side proxy added)
+- [x] ~~No rate limiting on API routes~~ (Fixed: middleware.ts added)
+- [x] ~~No security headers~~ (Fixed: next.config.ts headers)
+- [x] ~~Console logging of sensitive data~~ (Fixed: PII removed from logs)
 
 ### Future Enhancements
 
@@ -1009,5 +1085,18 @@ npx web-push generate-vapid-keys
 
 ---
 
-*Document generated: March 2026*
-*Version: 0.2.0*
+*Document last updated: March 2026*
+*Version: 0.3.0*
+
+---
+
+## Changelog
+
+### v0.3.0 (March 2026)
+- Added security headers section (HSTS, CSP, X-Frame-Options)
+- Added rate limiting middleware documentation
+- Added secure fetch utility documentation
+- Added API response validation schemas
+- Added blob upload proxy endpoints
+- Updated lib/ directory structure
+- Marked resolved technical debt items
